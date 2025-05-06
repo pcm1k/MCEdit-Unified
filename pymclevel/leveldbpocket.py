@@ -5,9 +5,10 @@ dimension = '' #overworld
 import itertools
 import time
 from math import floor, ceil, log
-from level import FakeChunk, MCLevel
+from level import FakeChunk, GAME_PLATFORM_POCKET
+from id_definitions import PLATFORM_POCKET
 import logging
-from materials import pocketMaterials
+from materials import getMaterials
 
 import os
 
@@ -15,7 +16,8 @@ from mclevelbase import ChunkNotPresent, ChunkMalformed
 import nbt
 import numpy
 import struct
-from infiniteworld import ChunkedLevelMixin, SessionLockLost, AnvilChunkData, AnvilWorldFolder, unpackNibbleArray, packNibbleArray
+from infiniteworld import SessionLockLost, AnvilChunkData, AnvilWorldFolder, unpackNibbleArray, packNibbleArray
+from pocket import PocketWorldBase
 from level import LightedChunk
 from contextlib import contextmanager
 from pymclevel import entity, BoundingBox, Entity, TileEntity
@@ -172,7 +174,7 @@ class InvalidPocketLevelDBWorldException(Exception):
 
 
 # =====================================================================
-def get_blocks_storage_from_blocks_and_data(blocks, data):
+def get_blocks_storage_from_blocks_and_data(blocks, data, level):
     blocksCombined = numpy.stack((blocks, data))
     uniqueBlocks = numpy.transpose(numpy.unique(blocksCombined, axis=1))
     palette = []
@@ -180,7 +182,7 @@ def get_blocks_storage_from_blocks_and_data(blocks, data):
     for index, (blockID, blockData) in enumerate(uniqueBlocks):
         try:
             if blockID != 0:
-                block_string = "minecraft:" + pocketMaterials.idStr[blockID]
+                block_string = "minecraft:" + level.materials.idStr[blockID]
                 block_data = blockData
             else:
                 block_string = "minecraft:air"
@@ -530,7 +532,7 @@ class PocketLeveldbDatabase(object):
         with nbt.littleEndianNBT():
             mcedit_defs = self.level.defsIds.mcedit_defs
             defs_get = mcedit_defs.get
-            ids_get = self.level.defsIds.mcedit_ids.get
+            ids_get = self.level.defsIds.mcedit_ids["entities"].get
             tileEntityData = ''
             for ent in chunk.TileEntities:
                 tileEntityData += ent.save(compressed=False)
@@ -547,9 +549,8 @@ class PocketLeveldbDatabase(object):
                 else:
                     try:
                         v = ent["id"].value
-                        ent_data = defs_get(ids_get(v, v), {'id': -1})
-                        id = ent_data['id']
-                        ent['id'] = nbt.TAG_Int(id + mcedit_defs['entity_types'].get(ent_data.get('type', None),0))
+                        ent_data = defs_get(ids_get(v, v), {"id": -1, "fullid": -1})
+                        ent["id"] = nbt.TAG_Int(ent_data["fullid"])
                         entityData += ent.save(compressed=False)
                         # We have to re-invert after saving otherwise the next save will fail.
                         ent["id"] = nbt.TAG_String(v)
@@ -584,12 +585,12 @@ class PocketLeveldbDatabase(object):
 
             blocks = chunk._Blocks.binary_data[y].ravel()
             blockData = chunk._Data.binary_data[y].ravel()
-            blocks_storage = get_blocks_storage_from_blocks_and_data(blocks, blockData)
+            blocks_storage = get_blocks_storage_from_blocks_and_data(blocks, blockData, self.level)
 
             if hasattr(chunk, "_extra_blocks") and chunk._extra_blocks.binary_data[y].max() > 0:
                 extra_blocks = chunk._extra_blocks.binary_data[y].ravel()
                 extra_blocks_data = chunk._extra_blocks_data.binary_data[y].ravel()
-                extra_blocks_storage = get_blocks_storage_from_blocks_and_data(extra_blocks, extra_blocks_data)
+                extra_blocks_storage = get_blocks_storage_from_blocks_and_data(extra_blocks, extra_blocks_data, self.level)
                 num_of_storages = 2
             else:
                 extra_blocks_storage = ""
@@ -768,7 +769,7 @@ class PocketLeveldbDatabase(object):
 
 
 # =====================================================================
-class PocketLeveldbWorld(ChunkedLevelMixin, MCLevel):
+class PocketLeveldbWorld(PocketWorldBase):
 
     # Methods are missing and prvent some parts of MCEdit to work properly.
     # brush.py need copyChunkFrom()
@@ -778,7 +779,7 @@ class PocketLeveldbWorld(ChunkedLevelMixin, MCLevel):
     Length = 0
 
     isInfinite = True
-    materials = pocketMaterials
+    materialsName = "Pocket"
     noTileTicks = True
     _bounds = None
     oldPlayerFolderFormat = False
@@ -789,13 +790,12 @@ class PocketLeveldbWorld(ChunkedLevelMixin, MCLevel):
     playerTagCache = {}
     _playerList = None
 
-    entityClass = entity.PocketEntity
-
     world_version = None # to be set to 'pre1.0' or '1.plus'
     # It may happen that 1+ world has a an internale .dat version set to pre 1 (0x04).
     # Let store this internal .dat version to be able to deal with mixed pre 1 and 1+ chunks.
     dat_world_version = None
-    _gamePlatform = 'PE'
+    _gamePlatform = GAME_PLATFORM_POCKET
+    _defsPlatform = PLATFORM_POCKET
 
     @property
     def LevelName(self):
@@ -1105,6 +1105,25 @@ class PocketLeveldbWorld(ChunkedLevelMixin, MCLevel):
         size = ((max_cx - min_cx + 1) << 4, self.Height, (max_cz - min_cz + 1) << 4)
 
         return BoundingBox(origin, size)
+
+    def _findGameVersionNumber(self):
+        version = self._findGameVersionId()
+        if not version:
+            return None
+        return ".".join([str(num) for num in version])
+
+    def _findGameVersionId(self):
+        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+            return None
+        data = self.root_tag["Data"]
+        if "lastOpenedWithVersion" not in data or not isinstance(data["lastOpenedWithVersion"], nbt.TAG_List):
+            return None
+        if data["lastOpenedWithVersion"].list_type != nbt.TAG_INT:
+            return None
+        return [num.value for num in data["lastOpenedWithVersion"]]
+
+    def _loadMaterials(self):
+        return getMaterials(self.defsIds, forceNew=True, name="Pocket", defaultName="Future Block!")
 
     @classmethod
     def _isLevel(cls, filename):
@@ -1520,7 +1539,7 @@ class PocketLeveldbWorld(ChunkedLevelMixin, MCLevel):
 
         Return tile_entity
         """
-        fullid = self.defsIds.mcedit_defs.get(self.defsIds.mcedit_ids.get(mob_id, "Unknown"), {}).get("fullid", None)
+        fullid = self.defsIds.mcedit_defs.get(self.defsIds.mcedit_ids["entities"].get(mob_id, "Unknown"), {}).get("fullid", None)
 #         print fullid
         if fullid is not None:
             # This is mostly a copy of what we have in camera.py.
@@ -1598,7 +1617,7 @@ class PocketLeveldbChunkPre1(LightedChunk):
                 # PE saves entities with their int ID instead of string name. We swap them to make it work in mcedit.
                 # Whenever we save an entity, we need to make sure to swap back.
                 defs_get = self.world.defsIds.mcedit_defs.get
-                ids_get = self.world.defsIds.mcedit_ids.get
+                ids_get = self.world.defsIds.mcedit_ids["entities"].get
                 for ent in Entities:
                     # Get the string id, or a build one
                     # ! For PE debugging
@@ -1686,7 +1705,7 @@ class PocketLeveldbChunkPre1(LightedChunk):
             entityData = ""
             tileEntityData = ""
             defs_get = self.world.defsIds.mcedit_defs.get
-            ids_get = self.world.defsIds.mcedit_ids.get
+            ids_get = self.world.defsIds.mcedit_ids["entities"].get
 
             for ent in self.TileEntities:
                 tileEntityData += ent.save(compressed=False)
@@ -1857,9 +1876,9 @@ class PocketLeveldbChunk1Plus(LightedChunk):
         self.subchunks_versions = {}
 
         possible_dtypes = [2 ** x for x in range(3, 8)]
-        max_blocks_dtype = int(ceil(log(max([i for i,x in enumerate(pocketMaterials.idStr) if x]), 2)))
+        max_blocks_dtype = int(ceil(log(max([i for i,x in enumerate(world.materials.idStr) if x]), 2)))
         max_blocks_dtype = next(possible_dtype for possible_dtype in possible_dtypes if possible_dtype >= max_blocks_dtype)
-        max_data_dtype = int(ceil(log(max([x[1] for x in pocketMaterials.blocksByID.keys()]), 2)))
+        max_data_dtype = int(ceil(log(max([x[1] for x in world.materials.blocksByID.keys()]), 2)))
         max_data_dtype = next(possible_dtype for possible_dtype in possible_dtypes if possible_dtype >= max_data_dtype)
 
         self._Blocks = PE1PlusDataContainer(4096, 'uint'+str(max_blocks_dtype), name='Blocks', chunk_height=self.Height)
@@ -1908,8 +1927,8 @@ class PocketLeveldbChunk1Plus(LightedChunk):
         # This might be varint and not just 4 bytes, need to make sure
         palette_size, palette = struct.unpack("<i", storage[:4])[0], storage[4:]
         palette_nbt, storage = loadNBTCompoundList(palette, partNBT=True, count=palette_size)
-        if not hasattr(pocketMaterials, 'tempBlockID'):
-            pocketMaterials.tempBlockID = max([numID for numID, item in enumerate(pocketMaterials.idStr) if item]) + 1
+        if not hasattr(self.world.materials, 'tempBlockID'):
+            self.world.materials.tempBlockID = max([numID for numID, item in enumerate(self.world.materials.idStr) if item]) + 1
         ids = []
         data = []
         for item in palette_nbt:
@@ -1917,13 +1936,14 @@ class PocketLeveldbChunk1Plus(LightedChunk):
             if idStr == '':
                 idStr = 'air'
                 item["val"] = nbt.TAG_Short(0)
-            if idStr != 'air' and idStr not in pocketMaterials.idStr:
-                pocketMaterials.addJSONBlock({"id": pocketMaterials.tempBlockID, "name": idStr, "idStr": idStr, "mapcolor": [214, 127, 255], "data": {n: {"name": idStr} for n in range(16)}})
-                pocketMaterials.tempBlockID += 1
+            if idStr != 'air' and idStr not in self.world.materials.idStr:
+                # pcm1k - how would adding these fake ids work if the materials object is not global?
+                self.world.materials.addJSONBlock({"id": self.world.materials.tempBlockID, "name": idStr, "idStr": idStr, "mapcolor": [214, 127, 255], "data": {n: {"name": idStr} for n in range(16)}})
+                self.world.materials.tempBlockID += 1
             if idStr == 'air':
                 ids.append(0)
-            elif idStr in pocketMaterials.idStr:
-                ids.append(pocketMaterials.idStr.index(idStr))
+            elif idStr in self.world.materials.idStr:
+                ids.append(self.world.materials.idStr.index(idStr))
             else:
                 ids.append(255)
             data.append(item["val"].value)
@@ -2003,7 +2023,7 @@ class PocketLeveldbChunk1Plus(LightedChunk):
         if entities:
             mcedit_defs = self.world.defsIds.mcedit_defs
             defs_get = mcedit_defs.get
-            ids_get = self.world.defsIds.mcedit_ids.get
+            ids_get = self.world.defsIds.mcedit_ids["entities"].get
             if DEBUG_PE:
                 write_dump(('\\' * 80) + '\nParsing Entities in chunk %s,%s\n' % (self.chunkPosition[0], self.chunkPosition[1]))
             try:
@@ -2053,7 +2073,7 @@ class PocketLeveldbChunk1Plus(LightedChunk):
                                           'type': 'Unknown'}
                                          )
                         _tn = ent_def.get('type', 'Unknown')
-                        _tv = mcedit_defs['entity_types'].get(_tn, 'Unknown')
+                        _tv = ent_def["fullid"] & ~0xFF
                         write_dump("* Internal ID: {id}, raw ID: {_v}, filtered ID: {_fid}, filter: {_f1} ({_f2}), type name {_tn}, type value: {_tv}\n".format(
                                                         id=id,
                                                         _v=_v,

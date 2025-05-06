@@ -1,0 +1,661 @@
+{
+    "actorTypes": {
+        "AbstractArrow": 8388608,
+        "Ambient": [
+            32768,
+            "Mob"
+        ],
+        "Animal": [
+            4096,
+            "PathfinderMob"
+        ],
+        "Arthropod": [
+            262144,
+            "Monster"
+        ],
+        "EquineAnimal": [
+            2097152,
+            "TamableAnimal"
+        ],
+        "Minecart": 524288,
+        "Mob": 256,
+        "Monster": [
+            2048,
+            "PathfinderMob"
+        ],
+        "PathfinderMob": [
+            512,
+            "Mob"
+        ],
+        "Projectile": 4194304,
+        "SkeletonMonster": [
+            1048576,
+            "UndeadMob"
+        ],
+        "TamableAnimal": [
+            16384,
+            "Animal"
+        ],
+        "UndeadMob": [
+            65536,
+            "Monster"
+        ],
+        "VillagerBase": [
+            16777216,
+            "PathfinderMob"
+        ],
+        "WaterAnimal": [
+            8192,
+            "PathfinderMob"
+        ],
+        "ZombieMonster": [
+            131072,
+            "UndeadMob"
+        ]
+    },
+    "entities": [
+        {
+            "actorType": "Mob",
+            "id": 61,
+            "idStr": "armor_stand",
+            "name": "Armor stand",
+            "type": "Other"
+        },
+        {
+            "id": 64,
+            "idStr": "item",
+            "name": "Dropped item",
+            "type": "Drops"
+        },
+        {
+            "id": 69,
+            "idStr": "xp_orb",
+            "name": "Experience Orb",
+            "type": "Drops"
+        },
+        {
+            "id": 65,
+            "idStr": "tnt",
+            "name": "Primed TNT",
+            "type": "Blocks"
+        },
+        {
+            "id": 66,
+            "idStr": "falling_block",
+            "name": "Falling block",
+            "type": "Blocks"
+        },
+        {
+            "id": 67,
+            "idStr": "moving_block",
+            "name": "Moving Block",
+            "type": "Blocks"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 68,
+            "idStr": "xp_bottle",
+            "name": "Thrown Bottle o' Enchanting",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 70,
+            "idStr": "eye_of_ender_signal",
+            "name": "Eye Of Ender",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 71,
+            "idStr": "ender_crystal",
+            "name": "Ender Crystal",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 72,
+            "idStr": "fireworks_rocket",
+            "name": "Firework Rocket",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 76,
+            "idStr": "shulker_bullet",
+            "name": "Shulker bullet",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 77,
+            "idStr": "fishing_hook",
+            "name": "Fishing Rod hook",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 79,
+            "idStr": "dragon_fireball",
+            "name": "Dragon fireball",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": [
+                "Projectile",
+                "AbstractArrow"
+            ],
+            "id": 80,
+            "idStr": "arrow",
+            "name": "Shot arrow",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 81,
+            "idStr": "snowball",
+            "name": "Thrown snowball",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 82,
+            "idStr": "egg",
+            "name": "Thrown egg",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 83,
+            "idStr": "painting",
+            "name": "Painting",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Minecart",
+            "id": 84,
+            "idStr": "minecart",
+            "name": "Minecart",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 85,
+            "idStr": "large_fireball",
+            "name": "Ghast fireball",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 86,
+            "idStr": "splash_potion",
+            "name": "splash potion",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 87,
+            "idStr": "ender_pearl",
+            "name": "Thrown Ender Pearl",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 88,
+            "idStr": "leash_knot",
+            "name": "Leash knot",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 89,
+            "idStr": "wither_skull",
+            "name": "Wither skull",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 90,
+            "idStr": "boat",
+            "name": "Boat",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 91,
+            "idStr": "wither_skull_dangerous",
+            "name": "Blue wither skull",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 93,
+            "idStr": "lightning_bolt",
+            "name": "Lightning Bolt",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 94,
+            "idStr": "small_fireball",
+            "name": "Blaze fireball",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "id": 95,
+            "idStr": "area_effect_cloud",
+            "name": "Area Effect Cloud",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Minecart",
+            "id": 96,
+            "idStr": "hopper_minecart",
+            "name": "Minecart with Hopper",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Minecart",
+            "id": 97,
+            "idStr": "tnt_minecart",
+            "name": "Minecart with TNT",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Minecart",
+            "id": 98,
+            "idStr": "chest_minecart",
+            "name": "Minecart with Chest",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Minecart",
+            "id": 100,
+            "idStr": "command_block_minecart",
+            "name": "Minecart with Command Block",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 101,
+            "idStr": "lingering_potion",
+            "name": "Thrown lingering potion",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 102,
+            "idStr": "llama_spit",
+            "name": "Llama Spit",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 103,
+            "idStr": "evocation_fang",
+            "name": "Evocation Fangs",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "Monster",
+            "id": 104,
+            "idStr": "evocation_illager",
+            "name": "Evoker Illager",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 105,
+            "idStr": "vex",
+            "name": "Vex",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "ZombieMonster",
+            "id": 32,
+            "idStr": "zombie",
+            "name": "Zombie",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 33,
+            "idStr": "creeper",
+            "name": "Creeper",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "SkeletonMonster",
+            "id": 34,
+            "idStr": "skeleton",
+            "name": "Skeleton",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Arthropod",
+            "id": 35,
+            "idStr": "spider",
+            "name": "Spider",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "UndeadMob",
+            "id": 36,
+            "idStr": "zombie_pigman",
+            "name": "Zombie Pigman",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 37,
+            "idStr": "slime",
+            "name": "Slime",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 38,
+            "idStr": "enderman",
+            "name": "Enderman",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Arthropod",
+            "id": 39,
+            "idStr": "silverfish",
+            "name": "Silverfish",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Arthropod",
+            "id": 40,
+            "idStr": "cave_spider",
+            "name": "Cave Spider",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 41,
+            "idStr": "ghast",
+            "name": "Ghast",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 42,
+            "idStr": "magma_cube",
+            "name": "Magma Cube",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 43,
+            "idStr": "blaze",
+            "name": "Blaze",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "ZombieMonster",
+            "id": 44,
+            "idStr": "zombie_villager",
+            "name": "Zombie Villager",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 45,
+            "idStr": "witch",
+            "name": "Witch",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "SkeletonMonster",
+            "id": 46,
+            "idStr": "stray",
+            "name": "Stray",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "ZombieMonster",
+            "id": 47,
+            "idStr": "husk",
+            "name": "Husk",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "SkeletonMonster",
+            "id": 48,
+            "idStr": "wither_skeleton",
+            "name": "Wither Skeleton",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 49,
+            "idStr": "guardian",
+            "name": "Guardian",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 50,
+            "idStr": "elder_guardian",
+            "name": "Elder Guardian",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "UndeadMob",
+            "id": 52,
+            "idStr": "wither",
+            "name": "Wither",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 53,
+            "idStr": "ender_dragon",
+            "name": "Ender Dragon",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 54,
+            "idStr": "shulker",
+            "name": "Shulker",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Arthropod",
+            "id": 55,
+            "idStr": "endermite",
+            "name": "Endermite",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Monster",
+            "id": 57,
+            "idStr": "vindicator",
+            "name": "Vindicator",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "Animal",
+            "id": 10,
+            "idStr": "chicken",
+            "name": "Chicken",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Animal",
+            "id": 11,
+            "idStr": "cow",
+            "name": "Cow",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Animal",
+            "id": 12,
+            "idStr": "pig",
+            "name": "Pig",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Animal",
+            "id": 13,
+            "idStr": "sheep",
+            "name": "Sheep",
+            "type": "Animals"
+        },
+        {
+            "actorType": "TamableAnimal",
+            "id": 14,
+            "idStr": "wolf",
+            "name": "Wolf",
+            "type": "Tamable mobs"
+        },
+        {
+            "actorType": "VillagerBase",
+            "id": 15,
+            "idStr": "villager",
+            "name": "Villager",
+            "type": "Passive mobs"
+        },
+        {
+            "actorType": "Animal",
+            "id": 16,
+            "idStr": "mooshroom",
+            "name": "Mooshroom",
+            "type": "Animals"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 17,
+            "idStr": "squid",
+            "name": "Squid",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "Animal",
+            "id": 18,
+            "idStr": "rabbit",
+            "name": "Rabbit",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Ambient",
+            "id": 19,
+            "idStr": "bat",
+            "name": "Bat",
+            "type": "Flying mobs"
+        },
+        {
+            "actorType": "PathfinderMob",
+            "id": 20,
+            "idStr": "iron_golem",
+            "name": "Iron Golem",
+            "type": "Passive mobs"
+        },
+        {
+            "actorType": "PathfinderMob",
+            "id": 21,
+            "idStr": "snow_golem",
+            "name": "Snow Golem",
+            "type": "Passive mobs"
+        },
+        {
+            "actorType": "TamableAnimal",
+            "id": 22,
+            "idStr": "ocelot",
+            "name": "Ocelot",
+            "type": "Tamable mobs"
+        },
+        {
+            "actorType": "EquineAnimal",
+            "id": 23,
+            "idStr": "horse",
+            "name": "Horse",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": "EquineAnimal",
+            "id": 24,
+            "idStr": "donkey",
+            "name": "Donkey",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": "EquineAnimal",
+            "id": 25,
+            "idStr": "mule",
+            "name": "Mule",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": [
+                "EquineAnimal",
+                "UndeadMob"
+            ],
+            "id": 26,
+            "idStr": "skeleton_horse",
+            "name": "Skeleton Horse",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": [
+                "EquineAnimal",
+                "UndeadMob"
+            ],
+            "id": 27,
+            "idStr": "zombie_horse",
+            "name": "Zombie Horse",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": "Animal",
+            "id": 28,
+            "idStr": "polar_bear",
+            "name": "Polar Bear",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Animal",
+            "id": 29,
+            "idStr": "llama",
+            "name": "Llama",
+            "type": "Rideable mobs"
+        },
+        {
+            "actorType": "TamableAnimal",
+            "id": 30,
+            "idStr": "parrot",
+            "name": "Parrot",
+            "type": "Animals"
+        },
+        {
+            "actorType": "Mob",
+            "id": 63,
+            "idStr": "player",
+            "name": "Player",
+            "type": "Other"
+        },
+        {
+            "actorType": "Mob",
+            "id": 51,
+            "idStr": "npc",
+            "name": "NPC",
+            "type": "Education Edition"
+        },
+        {
+            "actorType": "Mob",
+            "id": 56,
+            "idStr": "learn_to_code_mascot",
+            "name": "Learn To Code Mascot",
+            "type": "Education Edition"
+        },
+        {
+            "actorType": "Mob",
+            "id": 62,
+            "idStr": "tripod_camera",
+            "name": "Camera",
+            "type": "Education Edition"
+        },
+        {
+            "id": 78,
+            "idStr": "chalkboard",
+            "name": "Chalkboard",
+            "type": "Education Edition"
+        }
+    ]
+}

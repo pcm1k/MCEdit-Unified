@@ -1,0 +1,18 @@
+{
+    "entities": [
+        {
+            "actorType": "Animal",
+            "id": 74,
+            "idStr": "turtle",
+            "name": "Turtle",
+            "type": "Animals"
+        },
+        {
+            "id": 107,
+            "idStr": "balloon",
+            "name": "Balloon",
+            "type": "Education Edition"
+        }
+    ],
+    "load": "1.4"
+}

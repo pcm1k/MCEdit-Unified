@@ -1,0 +1,1101 @@
+{
+    "blocks": [
+        {
+            "data": {
+                "0": {
+                    "name": "White Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "White Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        13,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "White Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        13,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "White Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        13,
+                        26
+                    ]
+                }
+            },
+            "id": 235,
+            "idStr": "white_glazed_terracotta",
+            "name": "White Glazed Terracotta",
+            "tex": [
+                13,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Orange Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Orange Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        15,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Orange Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        15,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Orange Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        15,
+                        26
+                    ]
+                }
+            },
+            "id": 236,
+            "idStr": "orange_glazed_terracotta",
+            "name": "Orange Glazed Terracotta",
+            "tex": [
+                15,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Magenta Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Magenta Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        23,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Magenta Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        23,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Magenta Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        23,
+                        26
+                    ]
+                }
+            },
+            "id": 237,
+            "idStr": "magenta_glazed_terracotta",
+            "name": "Magenta Glazed Terracotta",
+            "tex": [
+                23,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Light Blue Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Light Blue Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        20,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Light Blue Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        20,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Light Blue Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        20,
+                        26
+                    ]
+                }
+            },
+            "id": 238,
+            "idStr": "light_blue_glazed_terracotta",
+            "name": "Light Blue Glazed Terracotta",
+            "tex": [
+                20,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Yellow Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Yellow Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        16,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Yellow Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        16,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Yellow Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        16,
+                        26
+                    ]
+                }
+            },
+            "id": 239,
+            "idStr": "yellow_glazed_terracotta",
+            "name": "Yellow Glazed Terracotta",
+            "tex": [
+                16,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Lime Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Lime Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        17,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Lime Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        17,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Lime Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        17,
+                        26
+                    ]
+                }
+            },
+            "id": 240,
+            "idStr": "lime_glazed_terracotta",
+            "name": "Lime Glazed Terracotta",
+            "tex": [
+                17,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Pink Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Pink Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        24,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Pink Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        24,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Pink Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        24,
+                        26
+                    ]
+                }
+            },
+            "id": 241,
+            "idStr": "pink_glazed_terracotta",
+            "name": "Pink Glazed Terracotta",
+            "tex": [
+                24,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Gray Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Gray Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        11,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Gray Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        11,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Gray Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        11,
+                        26
+                    ]
+                }
+            },
+            "id": 242,
+            "idStr": "gray_glazed_terracotta",
+            "name": "Gray Glazed Terracotta",
+            "tex": [
+                11,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Light Gray Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Light Gray Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        12,
+                        25
+                    ]
+                },
+                "2": {
+                    "name": "Light Gray Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        12,
+                        26
+                    ]
+                },
+                "3": {
+                    "name": "Light Gray Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        12,
+                        23
+                    ]
+                }
+            },
+            "id": 243,
+            "idStr": "silver_glazed_terracotta",
+            "name": "Light Gray Glazed Terracotta",
+            "tex": [
+                12,
+                24
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Cyan Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Cyan Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        19,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Cyan Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        19,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Cyan Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        19,
+                        26
+                    ]
+                }
+            },
+            "id": 244,
+            "idStr": "cyan_glazed_terracotta",
+            "name": "Cyan Glazed Terracotta",
+            "tex": [
+                19,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Purple Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Purple Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        22,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Purple Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        22,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Purple Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        22,
+                        26
+                    ]
+                }
+            },
+            "id": 245,
+            "idStr": "purple_glazed_terracotta",
+            "name": "Purple Glazed Terracotta",
+            "tex": [
+                22,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Blue Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Blue Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        21,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Blue Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        21,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Blue Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        21,
+                        26
+                    ]
+                }
+            },
+            "id": 246,
+            "idStr": "blue_glazed_terracotta",
+            "name": "Blue Glazed Terracotta",
+            "tex": [
+                21,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Brown Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Brown Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        25,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Brown Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        25,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Brown Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        25,
+                        26
+                    ]
+                }
+            },
+            "id": 247,
+            "idStr": "brown_glazed_terracotta",
+            "name": "Brown Glazed Terracotta",
+            "tex": [
+                25,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Green Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Green Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        18,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Green Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        18,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Green Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        18,
+                        26
+                    ]
+                }
+            },
+            "id": 248,
+            "idStr": "green_glazed_terracotta",
+            "name": "Green Glazed Terracotta",
+            "tex": [
+                18,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Red Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Red Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        14,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Red Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        14,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Red Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        14,
+                        26
+                    ]
+                }
+            },
+            "id": 249,
+            "idStr": "red_glazed_terracotta",
+            "name": "Red Glazed Terracotta",
+            "tex": [
+                14,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Black Glazed Terracotta (South)",
+                    "properties": {
+                        "facing": "south"
+                    }
+                },
+                "1": {
+                    "name": "Black Glazed Terracotta (West)",
+                    "properties": {
+                        "facing": "west"
+                    },
+                    "tex": [
+                        10,
+                        24
+                    ]
+                },
+                "2": {
+                    "name": "Black Glazed Terracotta (North)",
+                    "properties": {
+                        "facing": "north"
+                    },
+                    "tex": [
+                        10,
+                        25
+                    ]
+                },
+                "3": {
+                    "name": "Black Glazed Terracotta (East)",
+                    "properties": {
+                        "facing": "east"
+                    },
+                    "tex": [
+                        10,
+                        26
+                    ]
+                }
+            },
+            "id": 250,
+            "idStr": "black_glazed_terracotta",
+            "name": "Black Glazed Terracotta",
+            "tex": [
+                10,
+                23
+            ]
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "White Concrete",
+                    "properties": {
+                        "color": "white"
+                    },
+                    "tex": [
+                        13,
+                        21
+                    ]
+                },
+                "1": {
+                    "name": "Orange Concrete",
+                    "properties": {
+                        "color": "orange"
+                    },
+                    "tex": [
+                        15,
+                        21
+                    ]
+                },
+                "10": {
+                    "name": "Purple Concrete",
+                    "properties": {
+                        "color": "purple"
+                    },
+                    "tex": [
+                        22,
+                        21
+                    ]
+                },
+                "11": {
+                    "name": "Blue Concrete",
+                    "properties": {
+                        "color": "blue"
+                    },
+                    "tex": [
+                        21,
+                        21
+                    ]
+                },
+                "12": {
+                    "name": "Brown Concrete",
+                    "properties": {
+                        "color": "brown"
+                    },
+                    "tex": [
+                        25,
+                        21
+                    ]
+                },
+                "13": {
+                    "name": "Green Concrete",
+                    "properties": {
+                        "color": "green"
+                    },
+                    "tex": [
+                        18,
+                        21
+                    ]
+                },
+                "14": {
+                    "name": "Red Concrete",
+                    "properties": {
+                        "color": "red"
+                    },
+                    "tex": [
+                        14,
+                        21
+                    ]
+                },
+                "15": {
+                    "name": "Black Concrete",
+                    "properties": {
+                        "color": "black"
+                    },
+                    "tex": [
+                        10,
+                        21
+                    ]
+                },
+                "2": {
+                    "name": "Magenta Concrete",
+                    "properties": {
+                        "color": "magenta"
+                    },
+                    "tex": [
+                        23,
+                        21
+                    ]
+                },
+                "3": {
+                    "name": "Light Blue Concrete",
+                    "properties": {
+                        "color": "light_blue"
+                    },
+                    "tex": [
+                        20,
+                        21
+                    ]
+                },
+                "4": {
+                    "name": "Yellow Concrete",
+                    "properties": {
+                        "color": "yellow"
+                    },
+                    "tex": [
+                        16,
+                        21
+                    ]
+                },
+                "5": {
+                    "name": "Lime Concrete",
+                    "properties": {
+                        "color": "lime"
+                    },
+                    "tex": [
+                        17,
+                        21
+                    ]
+                },
+                "6": {
+                    "name": "Pink Concrete",
+                    "properties": {
+                        "color": "pink"
+                    },
+                    "tex": [
+                        24,
+                        21
+                    ]
+                },
+                "7": {
+                    "name": "Gray Concrete",
+                    "properties": {
+                        "color": "gray"
+                    },
+                    "tex": [
+                        11,
+                        21
+                    ]
+                },
+                "8": {
+                    "name": "Light Gray Concrete",
+                    "properties": {
+                        "color": "silver"
+                    },
+                    "tex": [
+                        12,
+                        21
+                    ]
+                },
+                "9": {
+                    "name": "Cyan Concrete",
+                    "properties": {
+                        "color": "cyan"
+                    },
+                    "tex": [
+                        19,
+                        21
+                    ]
+                }
+            },
+            "id": 251,
+            "idStr": "concrete",
+            "mapcolor": [
+                128,
+                128,
+                128
+            ],
+            "name": "Concrete"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "White Concrete Powder",
+                    "properties": {
+                        "color": "white"
+                    },
+                    "tex": [
+                        13,
+                        22
+                    ]
+                },
+                "1": {
+                    "name": "Orange Concrete Powder",
+                    "properties": {
+                        "color": "orange"
+                    },
+                    "tex": [
+                        15,
+                        22
+                    ]
+                },
+                "10": {
+                    "name": "Purple Concrete Powder",
+                    "properties": {
+                        "color": "purple"
+                    },
+                    "tex": [
+                        22,
+                        22
+                    ]
+                },
+                "11": {
+                    "name": "Blue Concrete Powder",
+                    "properties": {
+                        "color": "blue"
+                    },
+                    "tex": [
+                        21,
+                        22
+                    ]
+                },
+                "12": {
+                    "name": "Brown Concrete Powder",
+                    "properties": {
+                        "color": "brown"
+                    },
+                    "tex": [
+                        25,
+                        22
+                    ]
+                },
+                "13": {
+                    "name": "Green Concrete Powder",
+                    "properties": {
+                        "color": "green"
+                    },
+                    "tex": [
+                        18,
+                        22
+                    ]
+                },
+                "14": {
+                    "name": "Red Concrete Powder",
+                    "properties": {
+                        "color": "red"
+                    },
+                    "tex": [
+                        14,
+                        22
+                    ]
+                },
+                "15": {
+                    "name": "Black Concrete Powder",
+                    "properties": {
+                        "color": "black"
+                    },
+                    "tex": [
+                        10,
+                        22
+                    ]
+                },
+                "2": {
+                    "name": "Magenta Concrete Powder",
+                    "properties": {
+                        "color": "magenta"
+                    },
+                    "tex": [
+                        23,
+                        22
+                    ]
+                },
+                "3": {
+                    "name": "Light Blue Concrete Powder",
+                    "properties": {
+                        "color": "light_blue"
+                    },
+                    "tex": [
+                        20,
+                        22
+                    ]
+                },
+                "4": {
+                    "name": "Yellow Concrete Powder",
+                    "properties": {
+                        "color": "yellow"
+                    },
+                    "tex": [
+                        16,
+                        22
+                    ]
+                },
+                "5": {
+                    "name": "Lime Concrete Powder",
+                    "properties": {
+                        "color": "lime"
+                    },
+                    "tex": [
+                        17,
+                        22
+                    ]
+                },
+                "6": {
+                    "name": "Pink Concrete Powder",
+                    "properties": {
+                        "color": "pink"
+                    },
+                    "tex": [
+                        24,
+                        22
+                    ]
+                },
+                "7": {
+                    "name": "Gray Concrete Powder",
+                    "properties": {
+                        "color": "gray"
+                    },
+                    "tex": [
+                        11,
+                        22
+                    ]
+                },
+                "8": {
+                    "name": "Light Gray Concrete Powder",
+                    "properties": {
+                        "color": "silver"
+                    },
+                    "tex": [
+                        12,
+                        22
+                    ]
+                },
+                "9": {
+                    "name": "Cyan Concrete Powder",
+                    "properties": {
+                        "color": "cyan"
+                    },
+                    "tex": [
+                        19,
+                        22
+                    ]
+                }
+            },
+            "id": 252,
+            "idStr": "concrete_powder",
+            "mapcolor": [
+                128,
+                128,
+                128
+            ],
+            "name": "Concrete powder"
+        }
+    ],
+    "load": "819"
+}

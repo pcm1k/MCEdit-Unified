@@ -1,0 +1,21 @@
+{
+    "entities": [
+        {
+            "id": 37,
+            "idStr": "illusion_illager",
+            "name": "Illusion Illager",
+            "type": "Hostile mobs"
+        },
+        {
+            "id": 105,
+            "idStr": "parrot",
+            "name": "Parrot",
+            "type": "Passive mobs"
+        }
+    ],
+    "load": "819",
+    "spawner_monsters": [
+        "illusion_illager",
+        "parrot"
+    ]
+}

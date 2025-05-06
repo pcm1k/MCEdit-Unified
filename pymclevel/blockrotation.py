@@ -860,7 +860,7 @@ def _get_attribute(obj, attr):
 def masterRotationTable(attrname):
     # compute a materials.id_limitx16 table mapping each possible blocktype/data combination to
     # the resulting data when the block is rotated
-    table = zeros((materials.id_limit, 16), dtype='uint8')
+    table = zeros((materials.id_limit, materials.data_limit), dtype='uint8')
     table[:] = arange(16, dtype='uint8')
     for cls in rotationClasses:
         if hasattr(cls, attrname):

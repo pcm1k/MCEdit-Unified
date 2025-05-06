@@ -48,6 +48,7 @@ from pymclevel.mclevelbase import exhaust
 from pymclevel.entity import TileEntity
 import types
 from pymclevel.materials import Block
+from pymclevel.level import GAME_PLATFORM_POCKET
 from locale import getdefaultlocale
 DEF_ENC = getdefaultlocale()[1]
 if DEF_ENC is None:
@@ -838,16 +839,14 @@ class BrushTool(CloneTool):
 
         class FakeLevel(pymclevel.MCLevel):
             filename = "Fake Level"
-            materials = self.editor.level.materials
+            _materials = self.editor.level.materials
             root_tag = "Dummy"
-
-            _gamePlatform = "Unknown"
 
             def __init__(self):
                 self.chunkCache = {}
 
             Width, Height, Length = brushSize
-            if self.editor.level.gamePlatform == "PE" and self.editor.level.world_version == "1.plus":
+            if self.editor.level.gamePlatform == GAME_PLATFORM_POCKET and self.editor.level.world_version == "1.plus":
                 Height = 16
             else:
                 Height = self.editor.level.Height
@@ -1152,16 +1151,16 @@ def createBrushMask(shape, style="Round", offset=(0, 0, 0), box=None, chance=100
 
 
 def createTileEntities(block, box, chunk, defsIds=None):
-    # If defIds is not None, it must be an instance of pymclevel.id_definitions.MCEditDefsIds.
+    # If defsIds is not None, it must be an instance of pymclevel.id_definitions.MCEditDefsIds.
     # Every Level instance has such an object attached as defsIds.
-    if box is None or block.stringID not in TileEntity.stringNames.keys():
+    if box is None or block.stringID not in chunk.world.tileEntityDefs.stringNames:
         return
 
-    tileEntity = TileEntity.stringNames[block.stringID]
+    tileEntity = chunk.world.tileEntityDefs.stringNames[block.stringID]
     for (x, y, z) in box.positions:
         if chunk.world.blockAt(x, y, z) == block.ID:
             if chunk.tileEntityAt(x, y, z):
                 chunk.removeTileEntitiesInBox(BoundingBox((x, y, z), (1, 1, 1)))
-            tileEntityObject = TileEntity.Create(tileEntity, (x, y, z), defsIds=defsIds)
+            tileEntityObject = chunk.world.tileEntityDefs.Create(tileEntity, (x, y, z), defsIds=defsIds)
             chunk.TileEntities.append(tileEntityObject)
             chunk._fakeEntities = None

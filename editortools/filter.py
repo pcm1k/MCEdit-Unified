@@ -32,9 +32,7 @@ import mcplatform
 from operation import Operation
 from albow.dialogs import wrapped_label, alert, Dialog
 import pymclevel
-# from pymclevel import BoundingBox, MCEDIT_DEFS, MCEDIT_IDS
 from pymclevel import BoundingBox
-from pymclevel.id_definitions import version_defs_ids
 import json
 import directories
 import sys
@@ -377,11 +375,12 @@ class FilterModuleOptions(Widget):
                             blockButton.blockInfo = tool.editor.level.materials[optionType[1]]
                         except AttributeError:
                             blockButton.blockInfo = tool.editor.level.materials[0]
-                        except KeyError:
-                            if tool.editor.level.materials == pymclevel.pocketMaterials:
-                                blockButton.blockInfo = pymclevel.alphaMaterials[optionType[1]]
-                            else:
-                                raise
+#                        except KeyError:
+#                            if tool.editor.level.materials == pymclevel.pocketMaterials:
+                                # pcm1k - But if it's pocketMaterials, would it even make sense to use alphaMaterials? Might just remove this code
+#                                blockButton.blockInfo = pymclevel.alphaMaterials[optionType[1]]
+#                            else:
+#                                raise
                 
                         row = Column((Label(oName, doNotTranslate=True), blockButton))
                         page.optionDict[optionName] = AttrRef(blockButton, 'blockInfo')
@@ -912,9 +911,8 @@ class FilterOperation(Operation):
             self.undoLevel = self.extractUndo(self.level, self.box)
 
         # Inject the defs for blocks/entities in the module
-        # Need to reimport the defs and ids to get the 'fresh' ones
-#         from pymclevel import MCEDIT_DEFS, MCEDIT_IDS 
         self.filter.MCEDIT_DEFS = self.level.defsIds.mcedit_defs
+        # pcm1k - we changed how mcedit_ids works anyways, so we can probably remove it from filters and it wouldn't matter
         self.filter.MCEDIT_IDS = self.level.defsIds.mcedit_ids
         self.filter.perform(self.level, BoundingBox(self.box), self.options)
 
@@ -939,6 +937,9 @@ class MacroOperation(Operation):
             self.undoLevel = self.extractUndo(self.level, self._box)
 
         for o, f in zip(self.options, self.filters):
+            # Inject the defs for blocks/entities in the module
+            f.MCEDIT_DEFS = self.level.defsIds.mcedit_defs
+            f.MCEDIT_IDS = self.level.defsIds.mcedit_ids
             f.perform(self.level, BoundingBox(self._box), o)
         self.canUndo = True
 
@@ -1106,6 +1107,7 @@ class FilterTool(EditorTool):
 #-# The 'new_method' variable is used to select the latest working code or the actual under development one.
 #-# This variable must be on False when releasing unless the actual code is fully working.
 
+# pcm1k - is it working yet?
 new_method = True
 
 def tryImport_old(_root, name, org_lang, stock=False, subFolderString="", unicode_name=False, notify=True):

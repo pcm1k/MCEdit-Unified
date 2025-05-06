@@ -13,7 +13,7 @@ from logging import getLogger
 import blockrotation
 from box import BoundingBox
 import infiniteworld
-from level import MCLevel, EntityLevel
+from level import MCLevel, EntityLevel, GAME_PLATFORM_SCHEMATIC
 from materials import alphaMaterials, MCMaterials, namedMaterials
 from mclevelbase import exhaust
 import nbt
@@ -30,7 +30,8 @@ DEBUG = True
 
 
 class MCSchematic(EntityLevel):
-    materials = alphaMaterials
+    _materials = alphaMaterials
+    _gamePlatform = GAME_PLATFORM_SCHEMATIC
 
     def __init__(self, shape=None, root_tag=None, filename=None, mats='Alpha'):
         """ shape is (x,y,z) for a new level's shape.  if none, takes
@@ -258,7 +259,6 @@ class MCSchematic(EntityLevel):
         blockrotation.RotateLeft(self.Blocks, self.Data)
 
         log.info(u"Relocating entities...")
-        mcedit_ids_get = self.defsIds.mcedit_ids.get
         for entity in self.Entities:
             for p in "Pos", "Motion":
                 if p == "Pos":
@@ -272,7 +272,7 @@ class MCSchematic(EntityLevel):
                     entity[p][0].value = newX
                     entity[p][2].value = newZ
             entity["Rotation"][0].value -= 90.0
-            if entity["id"].value in ("Painting", "ItemFrame") or mcedit_ids_get(entity["id"].value) in ('DEFS_ENTITIES_PAINTING', 'DEFS_ENTITIES_ITEM_FRAME'):
+            if self.entityDefs.getDefId(entity["id"].value) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
                 x, z = entity["TileX"].value, entity["TileZ"].value
                 newx = z
                 newz = self.Length - x - 1
@@ -327,7 +327,6 @@ class MCSchematic(EntityLevel):
         blockrotation.Roll(self.Blocks, self.Data)
 
         log.info(u"N/S Roll: Relocating entities...")
-        mcedit_ids_get = self.defsIds.mcedit_ids.get
         for i, entity in enumerate(self.Entities):
             newX = self.Width - entity["Pos"][1].value
             newY = entity["Pos"][0].value
@@ -346,7 +345,7 @@ class MCSchematic(EntityLevel):
             entity["Rotation"][0].value = newX
             entity["Rotation"][1].value = newY
 
-            if entity["id"].value in ("Painting", "ItemFrame") or mcedit_ids_get(entity["id"].value) in ('DEFS_ENTITIES_PAINTING', 'DEFS_ENTITIES_ITEM_FRAME'):
+            if self.entityDefs.getDefId(entity["id"].value) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
                 newX = self.Width - entity["TileY"].value - 1
                 newY = entity["TileX"].value
                 entity["TileX"].value = newX
@@ -376,14 +375,13 @@ class MCSchematic(EntityLevel):
         self.root_tag["Data"].value = self.root_tag["Data"].value[::-1, :, :]
 
         log.info(u"N/S Flip: Relocating entities...")
-        mcedit_ids_get = self.defsIds.mcedit_ids.get
         for entity in self.Entities:
             ent_id_val = entity["id"].value
             entity["Pos"][1].value = self.Height - entity["Pos"][1].value
             if "Motion" in entity:
                 entity["Motion"][1].value = -entity["Motion"][1].value
             entity["Rotation"][1].value = -entity["Rotation"][1].value
-            if ent_id_val in ("Painting", "ItemFrame") or mcedit_ids_get(ent_id_val) in ('DEFS_ENTITIES_PAINTING', 'DEFS_ENTITIES_ITEM_FRAME'):
+            if self.entityDefs.getDefId(ent_id_val) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
                 entity["TileY"].value = self.Height - entity["TileY"].value - 1
         for tileEntity in self.TileEntities:
             tileEntity["y"].value = self.Height - tileEntity["y"].value - 1
@@ -434,7 +432,6 @@ class MCSchematic(EntityLevel):
         northSouthPaintingMap = [0, 3, 2, 1]
 
         log.info(u"N/S Flip: Relocating entities...")
-        mcedit_ids_get = self.defsIds.mcedit_ids.get
         for entity in self.Entities:
 
             try:
@@ -455,8 +452,8 @@ class MCSchematic(EntityLevel):
 
             try:
                 ent_id_val = entity["id"].value
-                mce_ent_id_val = mcedit_ids_get(ent_id_val)
-                if ent_id_val in ("Painting", "ItemFrame") or mce_ent_id_val in ('DEFS_ENTITIES_PAINTING', 'DEFS_ENTITIES_ITEM_FRAME'):
+                mce_ent_id_val = self.entityDefs.getDefId(ent_id_val)
+                if mce_ent_id_val in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
                     facing = entity.get("Facing", entity.get("Direction"))
                     if facing is None:
                         dirFacing = entity.get("Dir")
@@ -469,7 +466,7 @@ class MCSchematic(EntityLevel):
                         else:
                             raise Exception("None of tags Facing/Direction/Dir found in entity %s during flipping -  %r" % (ent_id_val, entity))
 
-                if ent_id_val == "Painting" or mce_ent_id_val == 'DEFS_ENTITIES_PAINTING':
+                if mce_ent_id_val == "DEF_ENTITIES_PAINTING":
                     if facing.value == 2:
                         entity["TileX"].value = self.Width - entity["TileX"].value - self.paintingMap[entity["Motive"].value] % 2
                     elif facing.value == 0:
@@ -481,7 +478,7 @@ class MCSchematic(EntityLevel):
                     elif facing.value == 1:
                         entity["TileZ"].value = entity["TileZ"].value + 1 - self.paintingMap[entity["Motive"].value] % 2
                     facing.value = northSouthPaintingMap[facing.value]
-                elif ent_id_val == "ItemFrame" or mce_ent_id_val == 'DEFS_ENTITIES_ITEM_FRAME':
+                elif mce_ent_id_val == "DEF_ENTITIES_ITEM_FRAME":
                     entity["TileX"].value = self.Width - entity["TileX"].value - 1
                     facing.value = northSouthPaintingMap[facing.value]
             except:
@@ -512,7 +509,6 @@ class MCSchematic(EntityLevel):
         eastWestPaintingMap = [2, 1, 0, 3]
 
         log.info(u"E/W Flip: Relocating entities...")
-        mcedit_ids_get = self.defsIds.mcedit_ids.get
         for entity in self.Entities:
 
             try:
@@ -533,8 +529,8 @@ class MCSchematic(EntityLevel):
 
             try:
                 ent_id_val = entity["id"].value
-                mce_ent_id_val = mcedit_ids_get(ent_id_val)
-                if ent_id_val in ("Painting", "ItemFrame") or mce_ent_id_val in ('DEFS_ENTITIES_PAINTING', 'DEFS_ENTITIES_ITEM_FRAME'):
+                mce_ent_id_val = self.entityDefs.getDefId(ent_id_val)
+                if mce_ent_id_val in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
                     facing = entity.get("Facing", entity.get("Direction"))
                     if facing is None:
                         dirFacing = entity.get("Dir")
@@ -547,7 +543,7 @@ class MCSchematic(EntityLevel):
                         else:
                             raise Exception("None of tags Facing/Direction/Dir found in entity %s during flipping -  %r" % (entity["id"].value, entity))
 
-                if ent_id_val == "Painting" or mce_ent_id_val == 'DEFS_ENTITIES_PAINTING':
+                if mce_ent_id_val == "DEF_ENTITIES_PAINTING":
                     if facing.value == 1:
                         entity["TileZ"].value = self.Length - entity["TileZ"].value - 2 + self.paintingMap[entity["Motive"].value] % 2
                     elif facing.value == 3:
@@ -559,7 +555,7 @@ class MCSchematic(EntityLevel):
                     elif facing.value == 2:
                         entity["TileX"].value = entity["TileX"].value - 1 + self.paintingMap[entity["Motive"].value] % 2
                     facing.value = eastWestPaintingMap[facing.value]
-                elif ent_id_val == "ItemFrame" or mce_ent_id_val == 'DEFS_ENTITIES_ITEM_FRAME':
+                elif mce_ent_id_val == "DEF_ENTITIES_ITEM_FRAME":
                     entity["TileZ"].value = self.Length - entity["TileZ"].value - 1
                     facing.value = eastWestPaintingMap[facing.value]
             except:
@@ -577,6 +573,7 @@ class MCSchematic(EntityLevel):
             return 0
         if x >= self.Width or y >= self.Height or z >= self.Length:
             return 0
+        # pcm1k - data limit?
         self.Data[x, z, y] = (newdata & 0xf)
 
     def blockDataAt(self, x, y, z):
@@ -621,7 +618,7 @@ class INVEditChest(MCSchematic):
     Length = 1
     Data = array([[[0]]], 'uint8')
     Entities = nbt.TAG_List()
-    Materials = alphaMaterials
+    _materials = alphaMaterials
 
     @classmethod
     def _isTagLevel(cls, root_tag):
@@ -629,7 +626,7 @@ class INVEditChest(MCSchematic):
 
     def __init__(self, root_tag, filename):
 
-        self.Blocks = array([[[alphaMaterials.Chest.ID]]], 'uint8')
+        self.Blocks = array([[[self.materials.Chest.ID]]], 'uint8')
 
         if filename:
             self.filename = filename
@@ -655,14 +652,7 @@ class INVEditChest(MCSchematic):
     @property
     def TileEntities(self):
         chestTag = nbt.TAG_Compound()
-        chest_id = "Chest"
-        if self.gamePlatform == "Java":
-            split_ver = self.gameVersionNumber.split('.')
-        else:
-            split_ver = self.gamePlatform.split('.')
-        if int(split_ver[0]) >= 1 and int(split_ver[1]) >= 11:
-            chest_id = "minecraft:chest"
-        chestTag["id"] = nbt.TAG_String(chest_id)
+        chestTag["id"] = nbt.TAG_String("Chest")
         chestTag["Items"] = nbt.TAG_List(self.root_tag["Inventory"])
         chestTag["x"] = nbt.TAG_Int(0)
         chestTag["y"] = nbt.TAG_Int(0)
@@ -926,7 +916,10 @@ class StructureNBT(object):
                                               ]
                                              )
         
-        blockstate_api = self.blockstate.material_map.get(self._mat, self.blockstate.material_map[alphaMaterials])
+        if hasattr(self._mat, "blockstate_api"):
+            blockstate_api = self._mat.blockstate_api
+        else:
+            blockstate_api = alphaMaterials.blockstate_api
         for z in xrange(self._blocks.shape[2]):  # For some reason, ndenumerate() didn't work, but this does
             for x in xrange(self._blocks.shape[0]):
                 for y in xrange(self._blocks.shape[1]):

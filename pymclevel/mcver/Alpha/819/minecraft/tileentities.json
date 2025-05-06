@@ -1,0 +1,280 @@
+{
+    "tileentities": [
+        {
+            "id": "banner",
+            "idStr": "banner",
+            "name": "Banner"
+        },
+        {
+            "id": "beacon",
+            "idStr": "beacon",
+            "name": "Beacon"
+        },
+        {
+            "baseStructure": {
+                "BrewTime": {
+                    "type": "Int"
+                },
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "brewing_stand",
+            "idStr": "brewing_stand",
+            "maxItems": 4,
+            "name": "Brewing Stand",
+            "slotNames": {
+                "0": "Potion",
+                "1": "Potion",
+                "2": "Potion",
+                "3": "Reagent"
+            }
+        },
+        {
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "chest",
+            "idStr": "chest",
+            "maxItems": 27,
+            "name": "Chest"
+        },
+        {
+            "id": "comparator",
+            "idStr": "comparator",
+            "name": "Comparator"
+        },
+        {
+            "baseStructure": {
+                "Command": {
+                    "type": "String"
+                },
+                "CustomName": {
+                    "type": "String",
+                    "value": "@"
+                },
+                "SuccessCount": {
+                    "type": "Int",
+                    "value": 0
+                },
+                "TrackOutput": {
+                    "type": "Byte"
+                }
+            },
+            "id": "command_block",
+            "idStr": "command_block",
+            "name": "Command Block"
+        },
+        {
+            "id": "daylight_detector",
+            "idStr": "daylight_detector",
+            "name": "Daylight Sensor"
+        },
+        {
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "dispenser",
+            "idStr": "dispenser",
+            "maxItems": 9,
+            "name": "Dispenser"
+        },
+        {
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "dropper",
+            "idStr": "dropper",
+            "maxItems": 9,
+            "name": "Dropper"
+        },
+        {
+            "baseStructure": {
+                "CustomName": {
+                    "type": "String"
+                }
+            },
+            "id": "enchanting_table",
+            "idStr": "enchanting_table",
+            "name": "Enchantment Table"
+        },
+        {
+            "id": "ender_chest",
+            "idStr": "ender_chest",
+            "name": "Ender Chest"
+        },
+        {
+            "id": "end_gateway",
+            "idStr": "end_gateway",
+            "name": "End Gateway"
+        },
+        {
+            "id": "end_portal",
+            "idStr": "end_portal",
+            "name": "End Portal"
+        },
+        {
+            "baseStructure": {
+                "Data": {
+                    "type": "Int"
+                },
+                "Item": {
+                    "type": "String"
+                }
+            },
+            "id": "flower_pot",
+            "idStr": "flower_pot",
+            "name": "Flower Pot"
+        },
+        {
+            "baseStructure": {
+                "BurnTime": {
+                    "type": "Short"
+                },
+                "CookTime": {
+                    "type": "Short"
+                },
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "furnace",
+            "idStr": "furnace",
+            "maxItems": 3,
+            "name": "Furnace",
+            "slotNames": {
+                "0": "Raw",
+                "1": "Fuel",
+                "2": "Product"
+            }
+        },
+        {
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "hopper",
+            "idStr": "hopper",
+            "maxItems": 5,
+            "name": "Hopper"
+        },
+        {
+            "baseStructure": {
+                "Record": {
+                    "type": "Int"
+                }
+            },
+            "id": "jukebox",
+            "idStr": "jukebox",
+            "name": "Jukebox"
+        },
+        {
+            "baseStructure": {
+                "Delay": {
+                    "type": "Short",
+                    "value": 120
+                },
+                "EntityId": {
+                    "type": "String"
+                },
+                "SpawnData": {
+                    "type": "Compound"
+                }
+            },
+            "id": "mob_spawner",
+            "idStr": "mob_spawner",
+            "name": "Monster Spawner"
+        },
+        {
+            "baseStructure": {
+                "note": {
+                    "type": "Byte"
+                }
+            },
+            "id": "noteblock",
+            "idStr": "noteblock",
+            "name": "Note Block"
+        },
+        {
+            "baseStructure": {
+                "blockData": {
+                    "type": "Int"
+                },
+                "blockId": {
+                    "type": "Int"
+                },
+                "extending": {
+                    "type": "Byte"
+                },
+                "facing": {
+                    "type": "Int"
+                },
+                "progress": {
+                    "type": "Float"
+                }
+            },
+            "id": "piston",
+            "idStr": "piston",
+            "name": "Piston Moving"
+        },
+        {
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "shulker_box",
+            "idStr": "shulker_box",
+            "maxItems": 27,
+            "name": "Shulker Box"
+        },
+        {
+            "baseStructure": {
+                "Text1": {
+                    "type": "String"
+                },
+                "Text2": {
+                    "type": "String"
+                },
+                "Text3": {
+                    "type": "String"
+                },
+                "Text4": {
+                    "type": "String"
+                }
+            },
+            "id": "sign",
+            "idStr": "sign",
+            "name": "Sign"
+        },
+        {
+            "baseStructure": {
+                "Owner": {
+                    "type": "Compound"
+                },
+                "Rot": {
+                    "type": "Byte"
+                },
+                "SkullType": {
+                    "type": "Byte",
+                    "value": 3
+                }
+            },
+            "id": "skull",
+            "idStr": "skull",
+            "name": "Mob Head"
+        },
+        {
+            "id": "structure_block",
+            "idStr": "structure_block",
+            "name": "Structure Block"
+        }
+    ]
+}

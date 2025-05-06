@@ -26,6 +26,7 @@ Block.wildcard = False  # True if
 class BlockPicker(Dialog):
     is_gl_container = True
 
+    # pcm1k - this is unused, right?
     def __init__old(self, blockInfo, materials, *a, **kw):
         self.root = get_root()
         self.allowWildcards = False
@@ -324,6 +325,7 @@ class BlockPicker(Dialog):
         try:
             if ":" in text:
                 text, num = text.split(":", 1)
+                # pcm1k - data limit
                 blockData = int(num) & 0xf
                 blockID = int(text) % materials.id_limit
             else:

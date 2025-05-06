@@ -106,6 +106,8 @@ from renderer import MCRenderer
 #from pymclevel.entity import Entity
 from pymclevel.infiniteworld import AnvilWorldFolder, SessionLockLost, MCAlphaDimension,\
     MCInfdevOldLevel
+from pymclevel.level import GAME_PLATFORM_POCKET, GAME_PLATFORM_SCHEMATIC
+from pymclevel.id_definitions import VERSION_UNKNOWN
 # Block and item translation
 from mclangres import translate as trn
 from mclangres import buildResources
@@ -832,7 +834,7 @@ class LevelEditor(GLViewport):
                 types[:b.shape[0]] = types[:b.shape[0]].astype(int) + b
 
                 for ent in chunk.getEntitiesInBox(box):
-                    entID = level.__class__.entityClass.getId(ent["id"].value)
+                    entID = level.entityDefs.getId(ent["id"].value)
                     if ent["id"].value == "Item":
                         try:
                             v = pymclevel.items.items.findItem(ent["Item"]["id"].value,
@@ -962,14 +964,15 @@ class LevelEditor(GLViewport):
 
         def save_as_nbt(schem, filename):
             structure = StructureNBT.fromSchematic(schem)
-            if 'Version' in self.level.root_tag['Data']:
-                structure._version = self.level.root_tag['Data']['Version'].get('Id', pymclevel.TAG_Int(1)).value
+            if self.level.gameVersionId:
+                structure._version = self.level.gameVersionId[0]
             structure.save(filename)
 
         if filename:
             if filename.endswith(".schematic"):
                 schematic.saveToFile(filename)
             elif filename.endswith(".nbt"):
+                # pcm1k - I believe tuples compare lexicographically...
                 if (schematic.Height, schematic.Length, schematic.Width) >= (50, 50, 50):
                     result = ask("You're trying to export a large selection as a Structure NBT file, this is not recommended " +
                                  "and may cause MCEdit to hang and/or crash. We recommend you export this selection as a Schematic instead.",
@@ -1338,8 +1341,7 @@ class LevelEditor(GLViewport):
         assert level
         log.debug("Loaded world is %s" % repr(level))
 
-        if hasattr(level, 'materials'):
-            level.materials.addJSONBlocksFromVersion(level.gamePlatform, level.gameVersionNumber)
+        level.loadVersionData()
 
         if addToRecent:
             self.mcedit.addRecentWorld(filename)
@@ -1378,13 +1380,13 @@ class LevelEditor(GLViewport):
 
         gamePlatform = level.gamePlatform
         gameVersionNumber = level.gameVersionNumber
-        if gamePlatform == 'Schematic':
+        if gamePlatform == GAME_PLATFORM_SCHEMATIC:
             log.info('Loading \'Schematic\' file.')
-        elif gamePlatform == 'PE':
+        elif gamePlatform == GAME_PLATFORM_POCKET:
             log.info('Loading \'Bedrock\' world.')
             buildResources(gamePlatform, getLang())
         else:
-            log.info('Loading world for version {}.'.format({True: "prior to 1.9 (detection says 'Unknown')", False: gameVersionNumber}[gameVersionNumber == 'Unknown']))
+            log.info('Loading world for version {}.'.format("prior to 1.9 (detection says 'Unknown')" if gameVersionNumber == VERSION_UNKNOWN else gameVersionNumber))
             buildResources(gameVersionNumber, getLang())
 
         self.loadLevel(level)
@@ -2288,6 +2290,7 @@ class LevelEditor(GLViewport):
         items = []
 
         #t = functools.partial(isinstance, self.level)
+        # pcm1k - this should be in the class itself
         if isinstance(self.level, pymclevel.MCInfdevOldLevel):
             if self.level.version == pymclevel.MCInfdevOldLevel.VERSION_ANVIL:
                 levelFormat = "Minecraft Infinite World (Anvil Format)"

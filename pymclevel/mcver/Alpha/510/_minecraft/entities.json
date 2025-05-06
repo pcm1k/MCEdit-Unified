@@ -1,0 +1,540 @@
+{
+    "entities": [
+        {
+            "_name": "item",
+            "id": 1,
+            "idStr": "Item",
+            "mapcolor": [
+                34,
+                255,
+                34,
+                95
+            ],
+            "name": "Dropped item",
+            "type": "Drops"
+        },
+        {
+            "_name": "xp_orb",
+            "id": 2,
+            "idStr": "XPOrb",
+            "name": "Experience Orb",
+            "type": "Drops"
+        },
+        {
+            "_name": "area_effect_cloud",
+            "id": 3,
+            "idStr": "AreaEffectCloud",
+            "name": "Area effect cloud",
+            "type": "Immobile"
+        },
+        {
+            "_name": "leash_knot",
+            "id": 8,
+            "idStr": "LeashKnot",
+            "name": "Lead knot",
+            "type": "Immobile"
+        },
+        {
+            "_name": "painting",
+            "id": 9,
+            "idStr": "Painting",
+            "mapcolor": [
+                134,
+                96,
+                67,
+                95
+            ],
+            "name": "Painting",
+            "type": "Immobile"
+        },
+        {
+            "_name": "item_frame",
+            "id": 18,
+            "idStr": "ItemFrame",
+            "mapcolor": [
+                134,
+                96,
+                67,
+                95
+            ],
+            "name": "Item Frame",
+            "type": "Immobile"
+        },
+        {
+            "_name": "armor_stand",
+            "id": 30,
+            "idStr": "ArmorStand",
+            "mapcolor": [
+                34,
+                255,
+                34,
+                95
+            ],
+            "name": "Armor Stand",
+            "type": "Immobile"
+        },
+        {
+            "_name": "ender_crystal",
+            "id": 200,
+            "idStr": "EnderCrystal",
+            "name": "Ender Crystal",
+            "type": "Immobile"
+        },
+        {
+            "_name": "egg",
+            "id": 7,
+            "idStr": "ThrownEgg",
+            "name": "Thrown egg",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "arrow",
+            "id": 10,
+            "idStr": "Arrow",
+            "name": "Shot arrow",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "snowball",
+            "id": 11,
+            "idStr": "Snowball",
+            "name": "Thrown snowball",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "fireball",
+            "id": 12,
+            "idStr": "Fireball",
+            "name": "Ghast fireball",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "small_fireball",
+            "id": 13,
+            "idStr": "SmallFireball",
+            "name": "Blaze fireball",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "ender_pearl",
+            "id": 14,
+            "idStr": "ThrownEnderpearl",
+            "name": "Thrown Ender Pearl",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "eye_of_ender_signal",
+            "id": 15,
+            "idStr": "EyeOfEnderSignal",
+            "name": "Thrown Eye of Ender",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "potion",
+            "id": 16,
+            "idStr": "ThrownPotion",
+            "name": "Thrown splash potion",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "xp_bottle",
+            "id": 17,
+            "idStr": "ThrownExpBottle",
+            "name": "Thrown Bottle o' Enchanting",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "wither_skull",
+            "id": 19,
+            "idStr": "WitherSkull",
+            "name": "Wither Skull",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "fireworks_rocket",
+            "id": 22,
+            "idStr": "FireworksRocketEntity",
+            "name": "Firework Rocket",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "spectral_arrow",
+            "id": 24,
+            "idStr": "SpectralArrow",
+            "name": "Shot spectral arrow",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "shulker_bullet",
+            "id": 25,
+            "idStr": "ShulkerBullet",
+            "name": "Shulker bullet",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "dragon_fireball",
+            "id": 26,
+            "idStr": "DragonFireball",
+            "name": "Dragon fireball",
+            "type": "Projectiles"
+        },
+        {
+            "_name": "tnt",
+            "id": 20,
+            "idStr": "PrimedTnt",
+            "name": "Primed TNT",
+            "type": "Blocks"
+        },
+        {
+            "_name": "falling_block",
+            "id": 21,
+            "idStr": "FallingSand",
+            "name": "Falling Block",
+            "type": "Blocks"
+        },
+        {
+            "_name": "commandblock_minecart",
+            "id": 40,
+            "idStr": "MinecartCommandBlock",
+            "name": "Minecart with Command Block",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "boat",
+            "id": 41,
+            "idStr": "Boat",
+            "name": "Boat",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "minecart",
+            "id": 42,
+            "idStr": "MinecartRideable",
+            "name": "Minecart",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "chest_minecart",
+            "id": 43,
+            "idStr": "MinecartChest",
+            "maxItems": 27,
+            "name": "Minecart with Chest",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "furnace_minecart",
+            "id": 44,
+            "idStr": "MinecartFurnace",
+            "name": "Minecart with Furnace",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "tnt_minecart",
+            "id": 45,
+            "idStr": "MinecartTNT",
+            "name": "Minecart with TNT",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "hopper_minecart",
+            "id": 46,
+            "idStr": "MinecartHopper",
+            "maxItems": 5,
+            "name": "Minecart with Hopper",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "spawner_minecart",
+            "id": 47,
+            "idStr": "MinecartSpawner",
+            "name": "Minecart with Spawner",
+            "type": "Vehicles"
+        },
+        {
+            "_name": "mob",
+            "id": 48,
+            "idStr": "Mob",
+            "name": "Empty Entity",
+            "type": "Generic"
+        },
+        {
+            "_name": "monster",
+            "id": 49,
+            "idStr": "Monster",
+            "name": "Human",
+            "type": "Generic"
+        },
+        {
+            "_name": "creeper",
+            "id": 50,
+            "idStr": "Creeper",
+            "name": "Creeper",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "skeleton",
+            "id": 51,
+            "idStr": "Skeleton",
+            "name": "Skeleton",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "spider",
+            "id": 52,
+            "idStr": "Spider",
+            "name": "Spider",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "giant",
+            "id": 53,
+            "idStr": "Giant",
+            "name": "Giant",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "zombie",
+            "id": 54,
+            "idStr": "Zombie",
+            "name": "Zombie",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "slime",
+            "id": 55,
+            "idStr": "Slime",
+            "name": "Slime",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "ghast",
+            "id": 56,
+            "idStr": "Ghast",
+            "name": "Ghast",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "zombie_pigman",
+            "id": 57,
+            "idStr": "PigZombie",
+            "name": "Zombie Pigman",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "enderman",
+            "id": 58,
+            "idStr": "Enderman",
+            "name": "Enderman",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "cave_spider",
+            "id": 59,
+            "idStr": "CaveSpider",
+            "name": "Cave Spider",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "silverfish",
+            "id": 60,
+            "idStr": "Silverfish",
+            "name": "Silverfish",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "blaze",
+            "id": 61,
+            "idStr": "Blaze",
+            "name": "Blaze",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "magma_cube",
+            "id": 62,
+            "idStr": "LavaSlime",
+            "name": "Magma Cube",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "ender_dragon",
+            "id": 63,
+            "idStr": "EnderDragon",
+            "name": "Ender Dragon",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "wither",
+            "id": 64,
+            "idStr": "WitherBoss",
+            "name": "Wither",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "witch",
+            "id": 66,
+            "idStr": "Witch",
+            "name": "Witch",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "endermite",
+            "id": 67,
+            "idStr": "Endermite",
+            "name": "Endermite",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "guardian",
+            "id": 68,
+            "idStr": "Guardian",
+            "name": "Guardian",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "shulker",
+            "id": 69,
+            "idStr": "Shulker",
+            "name": "Shulker",
+            "type": "Hostile mobs"
+        },
+        {
+            "_name": "bat",
+            "id": 65,
+            "idStr": "Bat",
+            "name": "Bat",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "pig",
+            "id": 90,
+            "idStr": "Pig",
+            "name": "Pig",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "sheep",
+            "id": 91,
+            "idStr": "Sheep",
+            "name": "Sheep",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "cow",
+            "id": 92,
+            "idStr": "Cow",
+            "name": "Cow",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "chicken",
+            "id": 93,
+            "idStr": "Chicken",
+            "name": "Chicken",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "squid",
+            "id": 94,
+            "idStr": "Squid",
+            "name": "Squid",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "wolf",
+            "id": 95,
+            "idStr": "Wolf",
+            "name": "Wolf",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "mooshroom",
+            "id": 96,
+            "idStr": "MushroomCow",
+            "name": "Mooshroom",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "snowman",
+            "id": 97,
+            "idStr": "SnowMan",
+            "name": "Snow Golem",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "ocelot",
+            "id": 98,
+            "idStr": "Ozelot",
+            "name": "Ocelot",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "villager_golem",
+            "id": 99,
+            "idStr": "VillagerGolem",
+            "name": "Iron Golem",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "horse",
+            "id": 100,
+            "idStr": "EntityHorse",
+            "maxItems": 15,
+            "name": "Horse",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "rabbit",
+            "id": 101,
+            "idStr": "Rabbit",
+            "name": "Rabbit",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "polar_bear",
+            "id": 102,
+            "idStr": "PolarBear",
+            "name": "Polar Bear",
+            "type": "Passive mobs"
+        },
+        {
+            "_name": "villager",
+            "id": 120,
+            "idStr": "Villager",
+            "name": "Villager",
+            "type": "Passive mobs"
+        }
+    ],
+    "spawner_monsters": [
+        "creeper",
+        "skeleton",
+        "spider",
+        "cave_spider",
+        "giant",
+        "zombie",
+        "slime",
+        "zombie_pigman",
+        "ghast",
+        "pig",
+        "sheep",
+        "cow",
+        "chicken",
+        "squid",
+        "wolf",
+        "enderman",
+        "silverfish",
+        "blaze",
+        "villager",
+        "magma_cube",
+        "wither",
+        "witch",
+        "endermite",
+        "guardian",
+        "rabbit",
+        "bat",
+        "mooshroom",
+        "snowman",
+        "ocelot",
+        "villager_golem",
+        "horse"
+    ]
+}

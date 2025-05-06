@@ -1,0 +1,26 @@
+{
+    "items": [
+        {
+            "id": 449,
+            "idStr": "totem_of_undying",
+            "maxdamage": 0,
+            "name": "Totem of Undying",
+            "stacksize": 1
+        },
+        {
+            "id": 452,
+            "idStr": "iron_nugget",
+            "maxdamage": 0,
+            "name": "Iron Nugget",
+            "stacksize": 64
+        },
+        {
+            "id": 453,
+            "idStr": "knowledge_book",
+            "maxdamage": 0,
+            "name": "Knowledge Book",
+            "stacksize": 64
+        }
+    ],
+    "load": "819"
+}

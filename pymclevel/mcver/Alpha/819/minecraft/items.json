@@ -1,0 +1,20 @@
+{
+    "items": [
+        {
+            "_name": "totem_of_undying",
+            "id": 449,
+            "idStr": "totem",
+            "maxdamage": 0,
+            "name": "Totem of Undying",
+            "stacksize": 1
+        },
+        {
+            "id": 450,
+            "idStr": "shulker_shell",
+            "maxdamage": 0,
+            "name": "Shulker Shell",
+            "stacksize": 64
+        }
+    ],
+    "load": "510"
+}

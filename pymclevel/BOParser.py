@@ -1,5 +1,5 @@
 import ConfigParser
-from pymclevel import schematic, materials
+from pymclevel import schematic
 from entity import TileEntity
 import nbt
 import logging
@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 # Load the bo3.def file (internal BO3 block names).
 bo3_blocks = {}
 #if not os.path.exists(os.path.join(getDataDir(), 'bo3.def')):
+# pcm1k - this is outside the pymclevel directory
 if not os.path.exists(getDataFile('bo3.def')):
     log.warning('The `bo3.def` file is missing in `%s`. The BO3 support will not be complete...'%getDataFile())
 else:
@@ -25,15 +26,16 @@ else:
 corrected_states = {'CHEST':(2,6)}
 
 class BO3:
-    def __init__(self, filename=''):
+    def __init__(self, mats, filename=''):
         if isinstance(filename, (str, unicode)):
             self.delta_x, self.delta_y, self.delta_z = 0, 0, 0
             self.size_x, self.size_y, self.size_z = 0, 0, 0
             map_block = {}
             not_found = []
-            tileentities_list = [a.lower() for a in TileEntity.baseStructures.keys()]
-            for k, v in materials.block_map.items():
-                map_block[v.replace('minecraft:', '')] = k
+            tileentities_list = [a.lower() for a in TileEntity.knownIDs]
+            if hasattr(mats, 'blockstate_api'):
+                for k, v in mats.blockstate_api.block_map.items():
+                    map_block[v.replace('minecraft:', '')] = k
 
             def get_delta(x, y, z, debug=False, f_obj=None):
                 if x < 0 and abs(x) > self.delta_x:
@@ -60,7 +62,7 @@ class BO3:
             # Rework the get_delta function?
             [get_delta(*b) for b in [eval(','.join(a.split('(')[1].split(')')[0].split(',', 3)[:3])) for a in lines]]
             [get_delta(*b) for b in [eval(','.join(a.split('(')[1].split(')')[0].split(',', 3)[:3])) for a in lines]]
-            self.__schem = schematic.MCSchematic(shape=(self.size_x, self.size_y, self.size_z))
+            self.__schem = schematic.MCSchematic(shape=(self.size_x, self.size_y, self.size_z), mats=mats)
 
             def get_block_data(args):
                 x, y, z = args[:3]

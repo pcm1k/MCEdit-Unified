@@ -472,7 +472,7 @@ class mce(object):
                 logging.info("Chunk {0}...".format(i))
 
         for blockID in range(materials.id_limit):
-            for data in range(16):
+            for data in range(materials.data_limit):
                 i = (data << 12) + blockID
                 if blockCounts[i]:
                     idstring = "({id}:{data})".format(id=blockID, data=data)

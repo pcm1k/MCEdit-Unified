@@ -1,0 +1,10 @@
+{
+    "blocks": [
+        {
+            "id": 416,
+            "idStr": "barrier",
+            "name": "Barrier"
+        }
+    ],
+    "load": "1.5"
+}

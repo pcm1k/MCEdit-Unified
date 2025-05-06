@@ -206,6 +206,8 @@ class MCRegionFile(object):
             return nbt.gunzip(data)
         if format == self.VERSION_DEFLATE:
             return inflate(data)
+        if format == self.VERSION_UNCOMPRESSED:
+            return data
 
         raise IOError("Unknown compress format: {0}".format(format))
 
@@ -220,9 +222,14 @@ class MCRegionFile(object):
             pass
 
     def saveChunk(self, cx, cz, uncompressedData):
-        data = deflate(uncompressedData)
+        if self.compressMode == self.VERSION_DEFLATE:
+            data = deflate(uncompressedData)
+        elif self.compressMode == self.VERSION_UNCOMPRESSED:
+            data = uncompressedData
+        else:
+            raise IOError("Unsupported compress format: {0}".format(self.compressMode))
         try:
-            self._saveChunk(cx, cz, data, self.VERSION_DEFLATE)
+            self._saveChunk(cx, cz, data, self.compressMode)
         except ChunkTooBig as e:
             raise ChunkTooBig(e.message + " (%d uncompressed)" % len(uncompressedData))
 
@@ -347,6 +354,7 @@ class MCRegionFile(object):
     CHUNK_HEADER_SIZE = 5
     VERSION_GZIP = 1
     VERSION_DEFLATE = 2
+    VERSION_UNCOMPRESSED = 3
 
     compressMode = VERSION_DEFLATE
 

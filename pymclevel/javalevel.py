@@ -8,7 +8,8 @@ __all__ = ["MCJavaLevel"]
 
 from cStringIO import StringIO
 import gzip
-from level import MCLevel
+from level import MCLevel, GAME_PLATFORM_CLASSIC
+from id_definitions import PLATFORM_CLASSIC
 from logging import getLogger
 from numpy import fromstring
 import os
@@ -19,7 +20,8 @@ log = getLogger(__name__)
 
 class MCJavaLevel(MCLevel):
 
-    _gamePlatform = 'javalevel'
+    _gamePlatform = GAME_PLATFORM_CLASSIC
+    _defsPlatform = PLATFORM_CLASSIC
 
     def setBlockDataAt(self, *args):
         pass

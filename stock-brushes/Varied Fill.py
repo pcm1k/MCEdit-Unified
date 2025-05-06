@@ -47,7 +47,7 @@ def applyToChunkSlices(self, op, chunk, slices, brushBox, brushBoxThisChunk):
         return
 
     if not airFill:
-        airtable = numpy.zeros((materials.id_limit, 16), dtype='bool')
+        airtable = numpy.zeros((materials.id_limit, materials.data_limit), dtype='bool')
         airtable[0] = True
         replaceMaskAir = airtable[blocks, data]
         brushMask &= ~replaceMaskAir

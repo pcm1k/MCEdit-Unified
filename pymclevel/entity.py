@@ -2,6 +2,7 @@
 Created on Jul 23, 2011
 @author: Rio
 '''
+from logging import getLogger
 from math import isnan
 
 import random
@@ -12,185 +13,131 @@ __all__ = ["Entity", "TileEntity", "TileTick"]
 
 UNKNOWN_ENTITY_MASK = 1000
 
+logger = getLogger(__name__)
 
-class TileEntity(object):
-    baseStructures = {
-        "Furnace": (
-            ("BurnTime", nbt.TAG_Short),
-            ("CookTime", nbt.TAG_Short),
-            ("Items", nbt.TAG_List),
-        ),
-        "Sign": (
-            ("Text1", nbt.TAG_String),
-            ("Text2", nbt.TAG_String),
-            ("Text3", nbt.TAG_String),
-            ("Text4", nbt.TAG_String),
-        ),
-        "MobSpawner": (
-            ("EntityId", nbt.TAG_String),
-            ("SpawnData", nbt.TAG_Compound),
-        ),
-        "Chest": (
-            ("Items", nbt.TAG_List),
-        ),
-        "Music": (
-            ("note", nbt.TAG_Byte),
-        ),
-        "Trap": (
-            ("Items", nbt.TAG_List),
-        ),
-        "RecordPlayer": (
-            ("Record", nbt.TAG_Int),
-        ),
-        "Piston": (
-            ("blockId", nbt.TAG_Int),
-            ("blockData", nbt.TAG_Int),
-            ("facing", nbt.TAG_Int),
-            ("progress", nbt.TAG_Float),
-            ("extending", nbt.TAG_Byte),
-        ),
-        "Cauldron": (
-            ("Items", nbt.TAG_List),
-            ("BrewTime", nbt.TAG_Int),
-        ),
-        "Control": (
-            ("Command", nbt.TAG_String),
-            ("CustomName", nbt.TAG_String),
-            ("TrackOutput", nbt.TAG_Byte),
-            ("SuccessCount", nbt.TAG_Int)
-        ),
-        "FlowerPot": (
-            ("Item", nbt.TAG_String),
-            ("Data", nbt.TAG_Int),
-        ),
-        "Bed": (
-            ("color", nbt.TAG_Int),
-        ),
-        "EnchantTable": (
-            ("CustomName", nbt.TAG_String),
-        ),
-        "Dropper": (
-            ("Items", nbt.TAG_List),
-        ),
-        "Dispenser": (
-            ("Items", nbt.TAG_List),
-        ),
-        "Hopper": (
-            ("Items", nbt.TAG_List),
-        ),
-        "MobHead": {
-            ("SkullType", nbt.TAG_Byte),
-            ("Rot", nbt.TAG_Byte),
-            ("Owner", nbt.TAG_Compound),
-        }
+
+class TileEntityDefs(object):
+    _oldToDefIds = {
+        "Airportal": "DEF_TILEENTITIES_END_PORTAL",
+        "Banner": "DEF_TILEENTITIES_BANNER",
+        "Beacon": "DEF_TILEENTITIES_BEACON",
+        "Cauldron": "DEF_TILEENTITIES_BREWING_STAND",
+        "Chest": "DEF_TILEENTITIES_CHEST",
+        "Comparator": "DEF_TILEENTITIES_COMPARATOR",
+        "Control": "DEF_TILEENTITIES_COMMAND_BLOCK",
+        "DLDetector": "DEF_TILEENTITIES_DAYLIGHT_DETECTOR",
+        "Dropper": "DEF_TILEENTITIES_DROPPER",
+        "EnchantTable": "DEF_TILEENTITIES_ENCHANTING_TABLE",
+        "EnderChest": "DEF_TILEENTITIES_ENDER_CHEST",
+        "EndGateway": "DEF_TILEENTITIES_END_GATEWAY",
+        "FlowerPot": "DEF_TILEENTITIES_FLOWER_POT",
+        "Furnace": "DEF_TILEENTITIES_FURNACE",
+        "Hopper": "DEF_TILEENTITIES_HOPPER",
+        "MobSpawner": "DEF_TILEENTITIES_MOB_SPAWNER",
+        "Music": "DEF_TILEENTITIES_NOTEBLOCK",
+        "Piston": "DEF_TILEENTITIES_PISTON",
+        "RecordPlayer": "DEF_TILEENTITIES_JUKEBOX",
+        "Sign": "DEF_TILEENTITIES_SIGN",
+        "Skull": "DEF_TILEENTITIES_SKULL",
+        "Structure": "DEF_TILEENTITIES_STRUCTURE_BLOCK",
+        "Trap": "DEF_TILEENTITIES_DISPENSER",
     }
 
-    otherNames = {
-        "Furnace": "Furnace",
-        "Sign": "Sign",
-        "Monster Spawner": "MobSpawner",
-        "Chest": "Chest",
-        "Bed": "Bed",
-        "Note Block": "Music",
-        "Trapped Chest": "Chest",
-        "Jukebox": "RecordPlayer",
-        "Piston": "Piston",
-        "Cauldron": "Cauldron",
-        "Command Block": "Control",
-        "FlowerPot": "FlowerPot",
-        "EnchantTable": "EnchantTable",
-        "Dropper": "Dropper",
-        "Dispenser": "Dispenser",
-        "Hopper": "Hopper",
-        "MobHead": "Skull",
-    }
+    _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
-    stringNames = {
-        "furnace": "Furnace",
-        "lit_furnace": "Furnace",
-        "standing_sign": "Sign",
-        "wall_sign": "Sign",
-        "mob_spawner": "MobSpawner",
-        "chest": "Chest",
-        "bed": "Bed",
-        "ender_chest": "Chest",
-        "noteblock": "Music",
-        "trapped_chest": "Chest",
-        "jukebox": "RecordPlayer",
-        "sticky_piston": "Piston",
-        "piston": "Piston",
-        "cauldron": "Cauldron",
-        "command_block": "Control",
-        "repeating_command_block": "Control",
-        "chain_command_block": "Control",
-        "flower_pot": "FlowerPot",
-        "enchanting_table": "EnchantTable",
-        "dropper": "Dropper",
-        "dispenser": "Dispenser",
-        "hopper": "Hopper",
-        "skull": "MobHead",
-    }
+    def __init__(self, defsIds):
+        self.defsIds = defsIds
 
-    knownIDs = baseStructures.keys()
-    maxItems = {
-        "Furnace": 3,
-        "Chest": 27,
-        "Trap": 9,
-        "Cauldron": 4,
-        "Dropper": 9,
-        "Hopper": 5,
-        "Dispenser": 9,
-    }
-    slotNames = {
-        "Furnace": {
-            0: "Raw",
-            1: "Fuel",
-            2: "Product"
-        },
-        "Cauldron": {
-            0: "Potion",
-            1: "Potion",
-            2: "Potion",
-            3: "Reagent",
-        }
-    }
+        self.baseStructures = {}
+        self.otherNames = {}
+        self.stringNames = {}
+        self.knownIDs = []
+        self.maxItems = {}
+        self.slotNames = {}
 
-    @classmethod
-    def Create(cls, tileEntityID, pos=(0, 0, 0), defsIds=None, **kw):
+        if defsIds is None:
+            return
+
+        def parseBaseStruct(jsonStruct):
+            result = []
+            for name, data in jsonStruct.iteritems():
+                tagType = getattr(nbt, "TAG_%s" % data["type"])
+                entry = (name, tagType, data.get("value"))
+                result.append(entry)
+            return tuple(result)
+
+        for idStr, defId in defsIds.mcedit_ids["tileentities"].iteritems():
+            item = defsIds.mcedit_defs[defId]
+            self.knownIDs.append(idStr)
+#            if "name" in item:
+#                self.otherNames[idStr] = item["name"]
+            if "maxItems" in item and isinstance(item["maxItems"], int):
+                self.maxItems[idStr] = item["maxItems"]
+            if "slotNames" in item and isinstance(item["slotNames"], dict):
+                self.slotNames[idStr] = {int(slot): slotName for slot, slotName in item["slotNames"].iteritems()}
+            if "baseStructure" in item and isinstance(item["baseStructure"], dict):
+                self.baseStructures[idStr] = parseBaseStruct(item["baseStructure"])
+        for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
+            item = defsIds.mcedit_defs[defId]
+            if "tileentity" in item and isinstance(item["tileentity"], basestring):
+                defIdTe = defsIds.formatDefId("tileentities", item["tileentity"])
+                idStrTe = self.getStrId(defIdTe)
+                if idStrTe is None:
+                    logger.warn("Could not find tileentity %s", defIdTe)
+                    continue
+                self.stringNames[idStr] = idStrTe
+
+    def _handleSpecialStruct(self, tileEntityTag, defId, name, tag, **kw):
+        if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
+            if self.defsIds is None:
+                return False
+
+            entity = kw.get("entity")
+            if name == "EntityId":
+                entityDefs = getEntityDefs(self.defsIds)
+                tileEntityTag[name] = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
+                return True
+            if name == "SpawnData":
+                entityDefs = getEntityDefs(self.defsIds)
+                spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
+                tileEntityTag["SpawnData"] = tag()
+                if entity:
+                    for k, v in entity.iteritems():
+                        tileEntityTag["SpawnData"][k] = deepcopy(v)
+                else:
+                    tileEntityTag["SpawnData"].add(spawn_id)
+                return True
+        return False
+
+    def _createBaseStruct(self, tileEntityID, tileEntityTag, **kw):
+        defId = self.getDefId(tileEntityID)
+
+        for name, tag, value in self.baseStructures[tileEntityID]:
+            if not self._handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
+                tileEntityTag[name] = tag(value) if value is not None else tag()
+        return True
+
+    def _getNewId(self, oldId):
+        if oldId not in self._oldToDefIds:
+            return oldId
+        item = self.defsIds.get_def(self._oldToDefIds[oldId])
+        if item is None:
+            return oldId
+        return item.get("idStr", oldId)
+
+    def Create(self, tileEntityID, pos=(0, 0, 0), defsIds=None, convertOld=True, **kw):
+        if defsIds is not None and defsIds is not self.defsIds:
+            # redirect to the correct TileEntityDefs object
+            entityDefs = getTileEntityDefs(defsIds)
+            return entityDefs.Create(tileEntityID, pos=pos, defsIds=None, **kw)
+
         tileEntityTag = nbt.TAG_Compound()
-        # If defsIds is None, lets use the current MCEDIT_DEFS and MCEDIT_IDS objects.
-        if not defsIds:
-            from pymclevel import MCEDIT_DEFS
-        else:
-            MCEDIT_DEFS = defsIds.mcedit_defs
-        _id = MCEDIT_DEFS.get(tileEntityID, tileEntityID)
-        tileEntityTag["id"] = nbt.TAG_String(_id)
-        base = cls.baseStructures.get(tileEntityID, None)
-        if base:
-            for (name, tag) in base:
-                tileEntityTag[name] = tag()
-                if tileEntityID == "Control":
-                    if name == "CustomName":
-                        tileEntityTag[name] = nbt.TAG_String("@")
-                    elif name == "SuccessCount":
-                        tileEntityTag[name] = nbt.TAG_Int(0)
-                elif tileEntityID == "MobSpawner":
-                    entity = kw.get("entity")
-                    if name == "EntityId":
-                        tileEntityTag[name] = nbt.TAG_String(MCEDIT_DEFS.get("Pig", "Pig"))
-                    if name == "SpawnData":
-                        spawn_id = nbt.TAG_String(MCEDIT_DEFS.get("Pig", "Pig"), "id")
-                        tileEntityTag["SpawnData"] = tag()
-                        if entity:
-                            for k, v in entity.iteritems():
-                                tileEntityTag["SpawnData"][k] = deepcopy(v)
-                        else:
-                            tileEntityTag["SpawnData"].add(spawn_id)
-                elif tileEntityID == "Bed":
-                    if name == "color":
-                        tileEntityTag[name] = nbt.TAG_Int(14)
+        if convertOld:
+            tileEntityID = self._getNewId(tileEntityID)
+        tileEntityTag["id"] = nbt.TAG_String(tileEntityID)
+        self._createBaseStruct(tileEntityID, tileEntityTag, **kw)
 
-        cls.setpos(tileEntityTag, pos)
+        self.setpos(tileEntityTag, pos)
         return tileEntityTag
 
     @classmethod
@@ -202,16 +149,15 @@ class TileEntity(object):
         for a, p in zip('xyz', pos):
             tag[a] = nbt.TAG_Int(p)
 
-    @classmethod
-    def copyWithOffset(cls, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
+    def copyWithOffset(self, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
         # You'll need to use this function twice
         # The first time with first equals to True
         # The second time with first equals to False
-        # If defsIds is None, lets use the current MCEDIT_DEFS and MCEDIT_IDS objects.
-        if not defsIds:
-            from pymclevel import MCEDIT_IDS
-        else:
-            MCEDIT_IDS = defsIds.mcedit_ids
+        if defsIds is not None and defsIds is not self.defsIds:
+            # redirect to the correct TileEntityDefs object
+            entityDefs = getTileEntityDefs(defsIds)
+            return entityDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset, defsIds=None)
+
         eTag = deepcopy(tileEntity)
         eTag['x'] = nbt.TAG_Int(tileEntity['x'].value + copyOffset[0])
         eTag['y'] = nbt.TAG_Int(tileEntity['y'].value + copyOffset[1])
@@ -262,7 +208,7 @@ class TileEntity(object):
                 z = coordZ(z, argument)
             return x, y, z
 
-        if eTag['id'].value == 'MobSpawner' or MCEDIT_IDS.get(eTag['id'].value) == 'DEF_BLOCKS_MOB_SPAWNER':
+        if self.getDefId(eTag["id"].value) == "DEF_TILEENTITIES_MOB_SPAWNER":
             mobs = []
             if 'SpawnData' in eTag:
                 mob = eTag['SpawnData']
@@ -302,7 +248,7 @@ class TileEntity(object):
                         pos = [float(p) for p in coords(x, y, z, moveSpawnerPos)]
                         Entity.setpos(mob, pos)
 
-        if (eTag['id'].value == "Control" or MCEDIT_IDS.get(eTag['id'].value) == 'DEF_BLOCKS_COMMAND_BLOCK') and not cancelCommandBlockOffset:
+        if not cancelCommandBlockOffset and self.getDefId(eTag["id"].value) == "DEF_TILEENTITIES_COMMAND_BLOCK":
             command = eTag['Command'].value
             oldCommand = command
 
@@ -488,104 +434,129 @@ class TileEntity(object):
 
         return eTag
 
+    @staticmethod
+    def _getDefId(defsIds, oldToDefIds, prefix, entityId, default, fallbackOld):
+        if defsIds is None:
+            if fallbackOld:
+                # fallback to oldIds
+                return oldToDefIds.get(entityId, default)
+            return default
 
-class Entity(object):
-    entityList = {
-        "Item": 1,
-        "XPOrb": 2,
-        "LeashKnot": 8,
-        "Painting": 9,
-        "Arrow": 10,
-        "Snowball": 11,
-        "Fireball": 12,
-        "SmallFireball": 13,
-        "ThrownEnderpearl": 14,
-        "EyeOfEnderSignal": 15,
-        "ThrownPotion": 16,
-        "ThrownExpBottle": 17,
-        "ItemFrame": 18,
-        "WitherSkull": 19,
-        "PrimedTnt": 20,
-        "FallingSand": 21,
-        "FireworksRocketEntity": 22,
-        "ArmorStand": 30,
-        "MinecartCommandBlock": 40,
-        "Boat": 41,
-        "MinecartRideable": 42,
-        "MinecartChest": 43,
-        "MinecartFurnace": 44,
-        "MinecartTNT": 45,
-        "MinecartHopper": 46,
-        "MinecartSpawner": 47,
-        "Mob": 48,
-        "Monster": 49,
-        "Creeper": 50,
-        "Skeleton": 51,
-        "Spider": 52,
-        "Giant": 53,
-        "Zombie": 54,
-        "Slime": 55,
-        "Ghast": 56,
-        "PigZombie": 57,
-        "Enderman": 58,
-        "CaveSpider": 59,
-        "Silverfish": 60,
-        "Blaze": 61,
-        "LavaSlime": 62,
-        "EnderDragon": 63,
-        "WitherBoss": 64,
-        "Bat": 65,
-        "Witch": 66,
-        "Endermite": 67,
-        "Guardian": 68,
-        "Pig": 90,
-        "Sheep": 91,
-        "Cow": 92,
-        "Chicken": 93,
-        "Squid": 94,
-        "Wolf": 95,
-        "MushroomCow": 96,
-        "SnowMan": 97,
-        "Ozelot": 98,
-        "VillagerGolem": 99,
-        "EntityHorse": 100,
-        "Rabbit": 101,
-        "Villager": 120,
-        "EnderCrystal": 200}
+        return defsIds.get_id(prefix, entityId, default)
 
-    monsters = ["Creeper",
-                "Skeleton",
-                "Spider",
-                "CaveSpider",
-                "Giant",
-                "Zombie",
-                "Slime",
-                "PigZombie",
-                "Ghast",
-                "Pig",
-                "Sheep",
-                "Cow",
-                "Chicken",
-                "Squid",
-                "Wolf",
-                "Monster",
-                "Enderman",
-                "Silverfish",
-                "Blaze",
-                "Villager",
-                "LavaSlime",
-                "WitherBoss",
-                "Witch",
-                "Endermite",
-                "Guardian",
-                "Rabbit",
-                "Bat",
-                "MushroomCow",
-                "SnowMan",
-                "Ozelot",
-                "VillagerGolem",
-                "EntityHorse"
-                ]
+    @staticmethod
+    def _getStrId(defsIds, defToOldIds, prefix, entityId, default, fallbackOld):
+        if defsIds is None:
+            if fallbackOld:
+                # fallback to oldIds
+                return defToOldIds.get(entityId, default)
+            return default
+
+        item = defsIds.get_id(prefix, entityId, resolve=True)
+        if item is not None and "idStr" in item:
+            if "namespace" in item and item["namespace"]:
+                return "%s:%s" % (item["namespace"], item["idStr"])
+            return item["idStr"]
+
+        if fallbackOld:
+            # fallback to oldIds
+            return defToOldIds.get(entityId, default)
+        return default
+
+    @staticmethod
+    def _getName(defsIds, prefix, entityId, default):
+        if defsIds is None:
+            return default
+
+        item = defsIds.get_id(prefix, entityId, resolve=True)
+        if item is not None:
+            return item.get("name", default)
+        return default
+
+    def getDefId(self, entityId, default=None, fallbackOld=True):
+        return self._getDefId(self.defsIds, self._oldToDefIds, "tileentities", entityId, default, fallbackOld)
+
+    def getStrId(self, entityId, default=None, fallbackOld=True):
+        return self._getStrId(self.defsIds, self._defToOldIds, "tileentities", entityId, default, fallbackOld)
+
+    def getName(self, entityId, default=None):
+        return self._getName(self.defsIds, "tileentities", entityId, default)
+
+
+class EntityDefs(object):
+    _oldToDefIds = {
+        "AreaEffectCloud": "DEF_ENTITIES_AREA_EFFECT_CLOUD",
+        "ArmorStand": "DEF_ENTITIES_ARMOR_STAND",
+        "Arrow": "DEF_ENTITIES_ARROW",
+        "Bat": "DEF_ENTITIES_BAT",
+        "Blaze": "DEF_ENTITIES_BLAZE",
+        "Boat": "DEF_ENTITIES_BOAT",
+        "CaveSpider": "DEF_ENTITIES_CAVE_SPIDER",
+        "Chicken": "DEF_ENTITIES_CHICKEN",
+        "Cow": "DEF_ENTITIES_COW",
+        "Creeper": "DEF_ENTITIES_CREEPER",
+        "DragonFireball": "DEF_ENTITIES_DRAGON_FIREBALL",
+        "EnderCrystal": "DEF_ENTITIES_ENDER_CRYSTAL",
+        "EnderDragon": "DEF_ENTITIES_ENDER_DRAGON",
+        "Enderman": "DEF_ENTITIES_ENDERMAN",
+        "Endermite": "DEF_ENTITIES_ENDERMITE",
+        "EntityHorse": "DEF_ENTITIES_HORSE",
+        "EyeOfEnderSignal": "DEF_ENTITIES_EYE_OF_ENDER_SIGNAL",
+        "FallingSand": "DEF_ENTITIES_FALLING_BLOCK",
+        "Fireball": "DEF_ENTITIES_FIREBALL",
+        "FireworksRocketEntity": "DEF_ENTITIES_FIREWORKS_ROCKET",
+        "Ghast": "DEF_ENTITIES_GHAST",
+        "Giant": "DEF_ENTITIES_GIANT",
+        "Guardian": "DEF_ENTITIES_GUARDIAN",
+        "ItemFrame": "DEF_ENTITIES_ITEM_FRAME",
+        "Item": "DEF_ENTITIES_ITEM",
+        "LavaSlime": "DEF_ENTITIES_MAGMA_CUBE",
+        "LeashKnot": "DEF_ENTITIES_LEASH_KNOT",
+        "MinecartChest": "DEF_ENTITIES_CHEST_MINECART",
+        "MinecartCommandBlock": "DEF_ENTITIES_COMMANDBLOCK_MINECART",
+        "MinecartFurnace": "DEF_ENTITIES_FURNACE_MINECART",
+        "MinecartHopper": "DEF_ENTITIES_HOPPER_MINECART",
+        "MinecartRideable": "DEF_ENTITIES_MINECART",
+        "MinecartSpawner": "DEF_ENTITIES_SPAWNER_MINECART",
+        "MinecartTNT": "DEF_ENTITIES_TNT_MINECART",
+        "Mob": "DEF_ENTITIES_EMPTY",
+        "Monster": "DEF_ENTITIES_HUMAN",
+        "MushroomCow": "DEF_ENTITIES_MOOSHROOM",
+        "Ozelot": "DEF_ENTITIES_OCELOT",
+        "Painting": "DEF_ENTITIES_PAINTING",
+        "Pig": "DEF_ENTITIES_PIG",
+        "PigZombie": "DEF_ENTITIES_ZOMBIE_PIGMAN",
+        "PolarBear": "DEF_ENTITIES_POLAR_BEAR",
+        "PrimedTnt": "DEF_ENTITIES_TNT",
+        "Rabbit": "DEF_ENTITIES_RABBIT",
+        "Sheep": "DEF_ENTITIES_SHEEP",
+        "ShulkerBullet": "DEF_ENTITIES_SHULKER_BULLET",
+        "Shulker": "DEF_ENTITIES_SHULKER",
+        "Silverfish": "DEF_ENTITIES_SILVERFISH",
+        "Skeleton": "DEF_ENTITIES_SKELETON",
+        "Slime": "DEF_ENTITIES_SLIME",
+        "SmallFireball": "DEF_ENTITIES_SMALL_FIREBALL",
+        "Snowball": "DEF_ENTITIES_SNOWBALL",
+        "SnowMan": "DEF_ENTITIES_SNOWMAN",
+        "SpectralArrow": "DEF_ENTITIES_SPECTRAL_ARROW",
+        "Spider": "DEF_ENTITIES_SPIDER",
+        "Squid": "DEF_ENTITIES_SQUID",
+        "ThrownEgg": "DEF_ENTITIES_EGG",
+        "ThrownEnderpearl": "DEF_ENTITIES_ENDER_PEARL",
+        "ThrownExpBottle": "DEF_ENTITIES_XP_BOTTLE",
+        "ThrownPotion": "DEF_ENTITIES_POTION",
+        "VillagerGolem": "DEF_ENTITIES_VILLAGER_GOLEM",
+        "Villager": "DEF_ENTITIES_VILLAGER",
+        "Witch": "DEF_ENTITIES_WITCH",
+        "WitherBoss": "DEF_ENTITIES_WITHER",
+        "WitherSkull": "DEF_ENTITIES_WITHER_SKULL",
+        "Wolf": "DEF_ENTITIES_WOLF",
+        "XPOrb": "DEF_ENTITIES_XP_ORB",
+        "Zombie": "DEF_ENTITIES_ZOMBIE",
+    }
+
+    _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
+
     projectiles = ["Arrow",
                    "Snowball",
                    "Egg",
@@ -617,17 +588,47 @@ class Entity(object):
                 ]
     tiles = ["PrimedTnt", "FallingSand"]
 
-    maxItems = {
-        "MinecartChest": 27,
-        "MinecartHopper": 5,
-        "EntityHorse": 15
-    }
+    def __init__(self, defsIds):
+        self.defsIds = defsIds
 
-    @classmethod
-    def Create(cls, entityID, **kw):
+        self.entityList = {}
+        self.monsters = []
+        self.maxItems = {}
+
+        if defsIds is None:
+            return
+
+        for idStr, defId in defsIds.mcedit_ids["entities"].iteritems():
+            item = defsIds.mcedit_defs[defId]
+            self.entityList[idStr] = item["id"]
+            if "maxItems" in item and isinstance(item["maxItems"], int):
+                self.maxItems[idStr] = item["maxItems"]
+        spawnerMonsters = defsIds.get_def("spawner_monsters")
+        if spawnerMonsters is not None:
+            for mob in spawnerMonsters:
+                defId = defsIds.formatDefId("entities", mob)
+                idStr = self.getStrId(defId)
+                if idStr is None:
+                    logger.warn("Could not find spawner entity %s", defId)
+                    continue
+                self.monsters.append(idStr)
+        else:
+            self.monsters.extend(self.entityList.iterkeys())
+
+    def _getNewId(self, oldId):
+        if oldId not in self._oldToDefIds:
+            return oldId
+        item = self.defsIds.get_def(self._oldToDefIds[oldId])
+        if item is None:
+            return oldId
+        return item.get("idStr", oldId)
+
+    def Create(self, entityID, pos=(0, 0, 0), convertOld=True, **kw):
         entityTag = nbt.TAG_Compound()
+        if convertOld:
+            entityID = self._getNewId(entityID)
         entityTag["id"] = nbt.TAG_String(entityID)
-        Entity.setpos(entityTag, (0, 0, 0))
+        self.setpos(entityTag, pos)
         return entityTag
 
     @classmethod
@@ -650,8 +651,7 @@ class Entity(object):
     def setpos(cls, tag, pos):
         tag["Pos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
 
-    @classmethod
-    def copyWithOffset(cls, entity, copyOffset, regenerateUUID=False):
+    def copyWithOffset(self, entity, copyOffset, regenerateUUID=False):
         eTag = deepcopy(entity)
 
         # Need to check the content of the copy to regenerate the possible sub entities UUIDs.
@@ -675,13 +675,13 @@ class Entity(object):
             eTag["TileZ"].value += copyOffset[2]
 
         if "Riding" in eTag:
-            eTag["Riding"] = Entity.copyWithOffset(eTag["Riding"], copyOffset)
+            eTag["Riding"] = self.copyWithOffset(eTag["Riding"], copyOffset)
 
         # # Fix for 1.9+ minecarts
         if "Passengers" in eTag:
             passengers = nbt.TAG_List()
             for passenger in eTag["Passengers"]:
-                passengers.append(Entity.copyWithOffset(passenger, copyOffset, regenerateUUID))
+                passengers.append(self.copyWithOffset(passenger, copyOffset, regenerateUUID))
             eTag["Passengers"] = passengers
         # #
 
@@ -691,12 +691,26 @@ class Entity(object):
             eTag["UUIDLeast"] = nbt.TAG_Long(-((7 << 60) | random.getrandbits(60)))
         return eTag
 
-    @classmethod
-    def getId(cls, v):
-        return cls.entityList.get(v, 'No ID')
+    def getDefId(self, entityId, default=None, fallbackOld=True):
+        return TileEntityDefs._getDefId(self.defsIds, self._oldToDefIds, "entities", entityId, default, fallbackOld)
+
+    def getId(self, v, default="No ID"):
+        if self.defsIds is None:
+            return default
+        item = self.defsIds.get_id("entities", v, resolve=True)
+        if item is None:
+            return default
+        return item.get("id", default)
+
+    def getStrId(self, entityId, default=None, fallbackOld=True):
+        return TileEntityDefs._getStrId(self.defsIds, self._defToOldIds, "entities", entityId, default, fallbackOld)
+
+    def getName(self, entityId, default=None):
+        return TileEntityDefs._getName(self.defsIds, "entities", entityId, default)
 
 
-class PocketEntity(Entity):
+# pcm1k - something should be done with this
+class PocketEntityDefs(EntityDefs):
     unknown_entity_top = UNKNOWN_ENTITY_MASK + 0
     entityList = {"Chicken": 10,
                   "Cow": 11,
@@ -770,18 +784,74 @@ class PocketEntity(Entity):
                   "Minecart with Chest": 98,
                   "LingeringPotion": 101}
 
-    @classmethod
-    def getNumId(cls, v):
-        """Retruns the numeric ID of an entity, or a generated one if the entity is not known.
+    def getNumId(self, v):
+        """Returns the numeric ID of an entity, or a generated one if the entity is not known.
         The generated one is generated like this: 'UNKNOWN_ENTITY_MASK + X', where 'X' is a number.
         The first unknown entity will have the numerical ID 1001, the second one 1002, and so on.
         :v: the entity string ID to search for."""
-        id = cls.getId(v)
-        if type(id) != int and v not in cls.entityList.keys():
-            id = cls.unknown_entity_top + 1
-            cls.entityList[v] = cls.entityList['Entity %s'%id] = id
-            cls.unknown_entity_top += 1
+        id = self.getId(v)
+        if not isinstance(id, int) and v not in self.entityList:
+            id = self.unknown_entity_top + 1
+            self.entityList[v] = self.entityList['Entity %s'%id] = id
+            self.unknown_entity_top += 1
         return id
+
+
+class _Entity(object):
+    def __init__(self, entityDefs=None):
+        self._entityDefs = entityDefs
+
+    def __getattr__(self, name):
+        return getattr(self._entityDefs, name)
+
+# trying to keep backwards compatibility
+TileEntity = _Entity(TileEntityDefs(None))
+Entity = _Entity(EntityDefs(None))
+
+del _Entity
+
+_tileEntityDefsCache = {}
+_entityDefsCache = {}
+
+def _checkCache(cache, platform, version, defsIds):
+    if platform not in cache or version not in cache[platform]:
+        return None
+    entityDefs = cache[platform][version]
+    if entityDefs.defsIds is not defsIds:
+        # different/outdated defsIds
+        return None
+    return entityDefs
+
+def _getEntityDefs(defsIds, defsClass, globalDefs, cache, forceNew):
+    if defsIds is None:
+        return globalDefs._entityDefs
+
+    platform = defsIds.platform
+    version = defsIds.version
+    if forceNew:
+        entityDefs = defsClass(defsIds)
+    else:
+        entityDefs = _checkCache(cache, platform, version, defsIds)
+    if entityDefs is not None:
+        # update global
+        globalDefs._entityDefs = entityDefs
+        return entityDefs
+
+    entityDefs = defsClass(defsIds)
+
+    if platform not in cache:
+        cache[platform] = {}
+    cache[platform][version] = entityDefs
+    # update global
+    globalDefs._entityDefs = entityDefs
+
+    return entityDefs
+
+def getTileEntityDefs(defsIds, forceNew=False):
+    return _getEntityDefs(defsIds, TileEntityDefs, TileEntity, _tileEntityDefsCache, forceNew)
+
+def getEntityDefs(defsIds, forceNew=False):
+    return _getEntityDefs(defsIds, EntityDefs, Entity, _entityDefsCache, forceNew)
 
 
 class TileTick(object):

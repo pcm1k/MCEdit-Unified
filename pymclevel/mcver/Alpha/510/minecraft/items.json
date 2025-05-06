@@ -1,0 +1,1822 @@
+{
+    "items": [
+        {
+            "id": 256,
+            "idStr": "iron_shovel",
+            "maxdamage": 250,
+            "name": "Iron Shovel",
+            "stacksize": 1,
+            "texture": "iron_shovel.png"
+        },
+        {
+            "id": 257,
+            "idStr": "iron_pickaxe",
+            "maxdamage": 250,
+            "name": "Iron Pickaxe",
+            "stacksize": 1,
+            "texture": "iron_pickaxe.png"
+        },
+        {
+            "id": 258,
+            "idStr": "iron_axe",
+            "maxdamage": 250,
+            "name": "Iron Axe",
+            "stacksize": 1,
+            "texture": "iron_axe.png"
+        },
+        {
+            "id": 259,
+            "idStr": "flint_and_steel",
+            "maxdamage": 64,
+            "name": "Flint and Steel",
+            "stacksize": 1,
+            "texture": "flint_and_steel.png"
+        },
+        {
+            "id": 260,
+            "idStr": "apple",
+            "maxdamage": 0,
+            "name": "Apple",
+            "stacksize": 64,
+            "texture": "apple.png"
+        },
+        {
+            "id": 261,
+            "idStr": "bow",
+            "maxdamage": 384,
+            "name": "Bow",
+            "stacksize": 1,
+            "texture": "bow_standby.png"
+        },
+        {
+            "id": 262,
+            "idStr": "arrow",
+            "maxdamage": 0,
+            "name": "Arrow",
+            "stacksize": 64,
+            "texture": "arrow.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Coal",
+                    "texture": "coal.png"
+                },
+                "1": {
+                    "name": "Charcoal",
+                    "texture": "charcoal.png"
+                }
+            },
+            "id": 263,
+            "idStr": "coal",
+            "maxdamage": 1,
+            "name": "Coal",
+            "stacksize": 64,
+            "texture": "coal.png"
+        },
+        {
+            "id": 264,
+            "idStr": "diamond",
+            "maxdamage": 0,
+            "name": "Diamond",
+            "stacksize": 64,
+            "texture": "diamond.png"
+        },
+        {
+            "id": 265,
+            "idStr": "iron_ingot",
+            "maxdamage": 0,
+            "name": "Iron Ingot",
+            "stacksize": 64,
+            "texture": "iron_ingot.png"
+        },
+        {
+            "id": 266,
+            "idStr": "gold_ingot",
+            "maxdamage": 0,
+            "name": "Gold Ingot",
+            "stacksize": 64,
+            "texture": "gold_ingot.png"
+        },
+        {
+            "id": 267,
+            "idStr": "iron_sword",
+            "maxdamage": 250,
+            "name": "Iron Sword",
+            "stacksize": 1,
+            "texture": "iron_sword.png"
+        },
+        {
+            "id": 268,
+            "idStr": "wooden_sword",
+            "maxdamage": 59,
+            "name": "Wooden Sword",
+            "stacksize": 1,
+            "texture": "wood_sword.png"
+        },
+        {
+            "id": 269,
+            "idStr": "wooden_shovel",
+            "maxdamage": 59,
+            "name": "Wooden Shovel",
+            "stacksize": 1,
+            "texture": "wood_shovel.png"
+        },
+        {
+            "id": 270,
+            "idStr": "wooden_pickaxe",
+            "maxdamage": 59,
+            "name": "Wooden Pickaxe",
+            "stacksize": 1,
+            "texture": "wood_pickaxe.png"
+        },
+        {
+            "id": 271,
+            "idStr": "wooden_axe",
+            "maxdamage": 59,
+            "name": "Wooden Axe",
+            "stacksize": 1,
+            "texture": "wood_axe.png"
+        },
+        {
+            "id": 272,
+            "idStr": "stone_sword",
+            "maxdamage": 131,
+            "name": "Stone Sword",
+            "stacksize": 1,
+            "texture": "stone_sword.png"
+        },
+        {
+            "id": 273,
+            "idStr": "stone_shovel",
+            "maxdamage": 131,
+            "name": "Stone Shovel",
+            "stacksize": 1,
+            "texture": "stone_shovel.png"
+        },
+        {
+            "id": 274,
+            "idStr": "stone_pickaxe",
+            "maxdamage": 131,
+            "name": "Stone Pickaxe",
+            "stacksize": 1,
+            "texture": "stone_pickaxe.png"
+        },
+        {
+            "id": 275,
+            "idStr": "stone_axe",
+            "maxdamage": 131,
+            "name": "Stone Axe",
+            "stacksize": 1,
+            "texture": "stone_axe.png"
+        },
+        {
+            "id": 276,
+            "idStr": "diamond_sword",
+            "maxdamage": 1561,
+            "name": "Diamond Sword",
+            "stacksize": 1,
+            "texture": "diamond_sword.png"
+        },
+        {
+            "id": 277,
+            "idStr": "diamond_shovel",
+            "maxdamage": 1561,
+            "name": "Diamond Shovel",
+            "stacksize": 1,
+            "texture": "diamond_shovel.png"
+        },
+        {
+            "id": 278,
+            "idStr": "diamond_pickaxe",
+            "maxdamage": 1561,
+            "name": "Diamond Pickaxe",
+            "stacksize": 1,
+            "texture": "diamond_pickaxe.png"
+        },
+        {
+            "id": 279,
+            "idStr": "diamond_axe",
+            "maxdamage": 1561,
+            "name": "Diamond Axe",
+            "stacksize": 1,
+            "texture": "diamond_axe.png"
+        },
+        {
+            "id": 280,
+            "idStr": "stick",
+            "maxdamage": 0,
+            "name": "Stick",
+            "stacksize": 64,
+            "texture": "stick.png"
+        },
+        {
+            "id": 281,
+            "idStr": "bowl",
+            "maxdamage": 0,
+            "name": "Bowl",
+            "stacksize": 64,
+            "texture": "bowl.png"
+        },
+        {
+            "id": 282,
+            "idStr": "mushroom_stew",
+            "maxdamage": 0,
+            "name": "Mushroom Stew",
+            "stacksize": 1,
+            "texture": "mushroom_stew.png"
+        },
+        {
+            "id": 283,
+            "idStr": "golden_sword",
+            "maxdamage": 32,
+            "name": "Golden Sword",
+            "stacksize": 1,
+            "texture": "gold_sword.png"
+        },
+        {
+            "id": 284,
+            "idStr": "golden_shovel",
+            "maxdamage": 32,
+            "name": "Golden Shovel",
+            "stacksize": 1,
+            "texture": "gold_shovel.png"
+        },
+        {
+            "id": 285,
+            "idStr": "golden_pickaxe",
+            "maxdamage": 32,
+            "name": "Golden Pickaxe",
+            "stacksize": 1,
+            "texture": "gold_pickaxe.png"
+        },
+        {
+            "id": 286,
+            "idStr": "golden_axe",
+            "maxdamage": 32,
+            "name": "Golden Axe",
+            "stacksize": 1,
+            "texture": "gold_axe.png"
+        },
+        {
+            "id": 287,
+            "idStr": "string",
+            "maxdamage": 0,
+            "name": "String",
+            "stacksize": 64,
+            "texture": "string.png"
+        },
+        {
+            "id": 288,
+            "idStr": "feather",
+            "maxdamage": 0,
+            "name": "Feather",
+            "stacksize": 64,
+            "texture": "feather.png"
+        },
+        {
+            "id": 289,
+            "idStr": "gunpowder",
+            "maxdamage": 0,
+            "name": "Gunpowder",
+            "stacksize": 64,
+            "texture": "gunpowder.png"
+        },
+        {
+            "id": 290,
+            "idStr": "wooden_hoe",
+            "maxdamage": 59,
+            "name": "Wooden Hoe",
+            "stacksize": 1,
+            "texture": "wood_hoe.png"
+        },
+        {
+            "id": 291,
+            "idStr": "stone_hoe",
+            "maxdamage": 131,
+            "name": "Stone Hoe",
+            "stacksize": 1,
+            "texture": "stone_hoe.png"
+        },
+        {
+            "id": 292,
+            "idStr": "iron_hoe",
+            "maxdamage": 250,
+            "name": "Iron Hoe",
+            "stacksize": 1,
+            "texture": "iron_hoe.png"
+        },
+        {
+            "id": 293,
+            "idStr": "diamond_hoe",
+            "maxdamage": 1561,
+            "name": "Diamond Hoe",
+            "stacksize": 1,
+            "texture": "diamond_hoe.png"
+        },
+        {
+            "id": 294,
+            "idStr": "golden_hoe",
+            "maxdamage": 32,
+            "name": "Golden Hoe",
+            "stacksize": 1,
+            "texture": "gold_hoe.png"
+        },
+        {
+            "id": 295,
+            "idStr": "wheat_seeds",
+            "maxdamage": 0,
+            "name": "Seeds",
+            "stacksize": 64,
+            "texture": "seeds_wheat.png"
+        },
+        {
+            "id": 296,
+            "idStr": "wheat",
+            "maxdamage": 0,
+            "name": "Wheat",
+            "stacksize": 64,
+            "texture": "wheat.png"
+        },
+        {
+            "id": 297,
+            "idStr": "bread",
+            "maxdamage": 0,
+            "name": "Bread",
+            "stacksize": 64,
+            "texture": "bread.png"
+        },
+        {
+            "id": 298,
+            "idStr": "leather_helmet",
+            "maxdamage": 55,
+            "name": "Leather Cap",
+            "stacksize": 1,
+            "texture": "leather_helmet.png"
+        },
+        {
+            "id": 299,
+            "idStr": "leather_chestplate",
+            "maxdamage": 80,
+            "name": "Leather Tunic",
+            "stacksize": 1,
+            "texture": "leather_chestplate.png"
+        },
+        {
+            "id": 300,
+            "idStr": "leather_leggings",
+            "maxdamage": 75,
+            "name": "Leather Pants",
+            "stacksize": 1,
+            "texture": "leather_leggings.png"
+        },
+        {
+            "id": 301,
+            "idStr": "leather_boots",
+            "maxdamage": 65,
+            "name": "Leather Boots",
+            "stacksize": 1,
+            "texture": "leather_boots.png"
+        },
+        {
+            "id": 302,
+            "idStr": "chainmail_helmet",
+            "maxdamage": 165,
+            "name": "Chain Helmet",
+            "stacksize": 1,
+            "texture": "chainmail_helmet.png"
+        },
+        {
+            "id": 303,
+            "idStr": "chainmail_chestplate",
+            "maxdamage": 240,
+            "name": "Chain Chestplate",
+            "stacksize": 1,
+            "texture": "chainmail_chestplate.png"
+        },
+        {
+            "id": 304,
+            "idStr": "chainmail_leggings",
+            "maxdamage": 225,
+            "name": "Chain Leggings",
+            "stacksize": 1,
+            "texture": "chainmail_leggings.png"
+        },
+        {
+            "id": 305,
+            "idStr": "chainmail_boots",
+            "maxdamage": 195,
+            "name": "Chain Boots",
+            "stacksize": 1,
+            "texture": "chainmail_boots.png"
+        },
+        {
+            "id": 306,
+            "idStr": "iron_helmet",
+            "maxdamage": 165,
+            "name": "Iron Helmet",
+            "stacksize": 1,
+            "texture": "iron_helmet.png"
+        },
+        {
+            "id": 307,
+            "idStr": "iron_chestplate",
+            "maxdamage": 240,
+            "name": "Iron Chestplate",
+            "stacksize": 1,
+            "texture": "iron_chestplate.png"
+        },
+        {
+            "id": 308,
+            "idStr": "iron_leggings",
+            "maxdamage": 225,
+            "name": "Iron Leggings",
+            "stacksize": 1,
+            "texture": "iron_leggings.png"
+        },
+        {
+            "id": 309,
+            "idStr": "iron_boots",
+            "maxdamage": 195,
+            "name": "Iron Boots",
+            "stacksize": 1,
+            "texture": "iron_boots.png"
+        },
+        {
+            "id": 310,
+            "idStr": "diamond_helmet",
+            "maxdamage": 363,
+            "name": "Diamond Helmet",
+            "stacksize": 1,
+            "texture": "diamond_helmet.png"
+        },
+        {
+            "id": 311,
+            "idStr": "diamond_chestplate",
+            "maxdamage": 528,
+            "name": "Diamond Chestplate",
+            "stacksize": 1,
+            "texture": "diamond_chestplate.png"
+        },
+        {
+            "id": 312,
+            "idStr": "diamond_leggings",
+            "maxdamage": 495,
+            "name": "Diamond Leggings",
+            "stacksize": 1,
+            "texture": "diamond_leggings.png"
+        },
+        {
+            "id": 313,
+            "idStr": "diamond_boots",
+            "maxdamage": 429,
+            "name": "Diamond Boots",
+            "stacksize": 1,
+            "texture": "diamond_boots.png"
+        },
+        {
+            "id": 314,
+            "idStr": "golden_helmet",
+            "maxdamage": 77,
+            "name": "Golden Helmet",
+            "stacksize": 1,
+            "texture": "gold_helmet.png"
+        },
+        {
+            "id": 315,
+            "idStr": "golden_chestplate",
+            "maxdamage": 112,
+            "name": "Golden Chestplate",
+            "stacksize": 1,
+            "texture": "gold_chestplate.png"
+        },
+        {
+            "id": 316,
+            "idStr": "golden_leggings",
+            "maxdamage": 105,
+            "name": "Golden Leggings",
+            "stacksize": 1,
+            "texture": "gold_leggings.png"
+        },
+        {
+            "id": 317,
+            "idStr": "golden_boots",
+            "maxdamage": 91,
+            "name": "Golden Boots",
+            "stacksize": 1,
+            "texture": "gold_boots.png"
+        },
+        {
+            "id": 318,
+            "idStr": "flint",
+            "maxdamage": 0,
+            "name": "Flint",
+            "stacksize": 64,
+            "texture": "flint.png"
+        },
+        {
+            "id": 319,
+            "idStr": "porkchop",
+            "maxdamage": 0,
+            "name": "Raw Porkchop",
+            "stacksize": 64,
+            "texture": "porkchop_raw.png"
+        },
+        {
+            "id": 320,
+            "idStr": "cooked_porkchop",
+            "maxdamage": 0,
+            "name": "Cooked Porkchop",
+            "stacksize": 64,
+            "texture": "porkchop_cooked.png"
+        },
+        {
+            "id": 321,
+            "idStr": "painting",
+            "maxdamage": 0,
+            "name": "Painting",
+            "stacksize": 64,
+            "texture": "painting.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Golden Apple",
+                    "texture": "apple_golden.png"
+                },
+                "1": {
+                    "name": "Enchanted Golden Apple",
+                    "texture": "apple_golden_enchanted.png"
+                }
+            },
+            "id": 322,
+            "idStr": "golden_apple",
+            "maxdamage": 1,
+            "name": "Golden Apple",
+            "stacksize": 64,
+            "texture": "apple_golden.png"
+        },
+        {
+            "id": 323,
+            "idStr": "sign",
+            "maxdamage": 0,
+            "name": "Sign",
+            "stacksize": 16,
+            "texture": "sign.png"
+        },
+        {
+            "id": 324,
+            "idStr": "wooden_door",
+            "maxdamage": 0,
+            "name": "Oak Door",
+            "stacksize": 64,
+            "texture": "door_wood.png"
+        },
+        {
+            "id": 325,
+            "idStr": "bucket",
+            "maxdamage": 0,
+            "name": "Bucket",
+            "stacksize": 16,
+            "texture": "bucket_empty.png"
+        },
+        {
+            "id": 326,
+            "idStr": "water_bucket",
+            "maxdamage": 0,
+            "name": "Water Bucket",
+            "stacksize": 1,
+            "texture": "bucket_water.png"
+        },
+        {
+            "id": 327,
+            "idStr": "lava_bucket",
+            "maxdamage": 0,
+            "name": "Lava Bucket",
+            "stacksize": 1,
+            "texture": "bucket_lava.png"
+        },
+        {
+            "id": 328,
+            "idStr": "minecart",
+            "maxdamage": 0,
+            "name": "Minecart",
+            "stacksize": 1,
+            "texture": "minecart_normal.png"
+        },
+        {
+            "id": 329,
+            "idStr": "saddle",
+            "maxdamage": 0,
+            "name": "Saddle",
+            "stacksize": 1,
+            "texture": "saddle.png"
+        },
+        {
+            "id": 330,
+            "idStr": "iron_door",
+            "maxdamage": 0,
+            "name": "Iron Door",
+            "stacksize": 64,
+            "texture": "door_iron.png"
+        },
+        {
+            "id": 331,
+            "idStr": "redstone",
+            "maxdamage": 0,
+            "name": "Redstone",
+            "stacksize": 64,
+            "texture": "redstone_dust.png"
+        },
+        {
+            "id": 332,
+            "idStr": "snowball",
+            "maxdamage": 0,
+            "name": "Snowball",
+            "stacksize": 16,
+            "texture": "snowball.png"
+        },
+        {
+            "id": 333,
+            "idStr": "boat",
+            "maxdamage": 0,
+            "name": "Boat",
+            "stacksize": 1,
+            "texture": "boat.png"
+        },
+        {
+            "id": 334,
+            "idStr": "leather",
+            "maxdamage": 0,
+            "name": "Leather",
+            "stacksize": 64,
+            "texture": "leather.png"
+        },
+        {
+            "id": 335,
+            "idStr": "milk_bucket",
+            "maxdamage": 0,
+            "name": "Milk",
+            "stacksize": 1,
+            "texture": "bucket_milk.png"
+        },
+        {
+            "id": 336,
+            "idStr": "brick",
+            "maxdamage": 0,
+            "name": "Brick",
+            "stacksize": 64,
+            "texture": "brick.png"
+        },
+        {
+            "id": 337,
+            "idStr": "clay_ball",
+            "maxdamage": 0,
+            "name": "Clay",
+            "stacksize": 64,
+            "texture": "clay_ball.png"
+        },
+        {
+            "id": 338,
+            "idStr": "reeds",
+            "maxdamage": 0,
+            "name": "Sugar Canes",
+            "stacksize": 64,
+            "texture": "reeds.png"
+        },
+        {
+            "id": 339,
+            "idStr": "paper",
+            "maxdamage": 0,
+            "name": "Paper",
+            "stacksize": 64,
+            "texture": "paper.png"
+        },
+        {
+            "id": 340,
+            "idStr": "book",
+            "maxdamage": 0,
+            "name": "Book",
+            "stacksize": 64,
+            "texture": "book_normal.png"
+        },
+        {
+            "id": 341,
+            "idStr": "slime_ball",
+            "maxdamage": 0,
+            "name": "Slimeball",
+            "stacksize": 64,
+            "texture": "slimeball.png"
+        },
+        {
+            "id": 342,
+            "idStr": "chest_minecart",
+            "maxdamage": 0,
+            "name": "Minecart with Chest",
+            "stacksize": 1,
+            "texture": "minecart_chest.png"
+        },
+        {
+            "id": 343,
+            "idStr": "furnace_minecart",
+            "maxdamage": 0,
+            "name": "Minecart with Furnace",
+            "stacksize": 1,
+            "texture": "minecart_furnace.png"
+        },
+        {
+            "id": 344,
+            "idStr": "egg",
+            "maxdamage": 0,
+            "name": "Egg",
+            "stacksize": 16,
+            "texture": "egg.png"
+        },
+        {
+            "id": 345,
+            "idStr": "compass",
+            "maxdamage": 0,
+            "name": "Compass",
+            "stacksize": 64,
+            "texture": "compass.png"
+        },
+        {
+            "id": 346,
+            "idStr": "fishing_rod",
+            "maxdamage": 64,
+            "name": "Fishing Rod",
+            "stacksize": 1,
+            "texture": "fishing_rod_uncast.png"
+        },
+        {
+            "id": 347,
+            "idStr": "clock",
+            "maxdamage": 0,
+            "name": "Clock",
+            "stacksize": 64,
+            "texture": "clock.png"
+        },
+        {
+            "id": 348,
+            "idStr": "glowstone_dust",
+            "maxdamage": 0,
+            "name": "Glowstone Dust",
+            "stacksize": 64,
+            "texture": "glowstone_dust.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Raw Fish",
+                    "texture": "fish_cod_raw.png"
+                },
+                "1": {
+                    "name": "Raw Salmon",
+                    "texture": "fish_salmon_raw.png"
+                },
+                "2": {
+                    "name": "Clownfish",
+                    "texture": "fish_clownfish_raw.png"
+                },
+                "3": {
+                    "name": "Pufferfish",
+                    "texture": "fish_pufferfish_raw.png"
+                }
+            },
+            "id": 349,
+            "idStr": "fish",
+            "maxdamage": 3,
+            "name": "Raw Fish",
+            "stacksize": 64,
+            "texture": "fish_cod_raw.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Cooked Fish",
+                    "texture": "fish_cod_cooked.png"
+                },
+                "1": {
+                    "name": "Cooked Salmon",
+                    "texture": "fish_salmon_cooked.png"
+                }
+            },
+            "id": 350,
+            "idStr": "cooked_fish",
+            "maxdamage": 1,
+            "name": "Cooked Fish",
+            "stacksize": 64,
+            "texture": "fish_cod_cooked.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Ink Sac",
+                    "texture": "dye_powder_black.png"
+                },
+                "1": {
+                    "name": "Rose Red",
+                    "texture": "dye_powder_red.png"
+                },
+                "10": {
+                    "name": "Lime Dye",
+                    "texture": "dye_powder_lime.png"
+                },
+                "11": {
+                    "name": "Dandelion Yellow",
+                    "texture": "dye_powder_yellow.png"
+                },
+                "12": {
+                    "name": "Light Blue Dye",
+                    "texture": "dye_powder_light_blue.png"
+                },
+                "13": {
+                    "name": "Magenta Dye",
+                    "texture": "dye_powder_magenta.png"
+                },
+                "14": {
+                    "name": "Orange Dye",
+                    "texture": "dye_powder_orange.png"
+                },
+                "15": {
+                    "name": "Bone Meal",
+                    "texture": "dye_powder_white.png"
+                },
+                "2": {
+                    "name": "Cactus Green",
+                    "texture": "dye_powder_green.png"
+                },
+                "3": {
+                    "name": "Cocoa Beans",
+                    "texture": "dye_powder_brown.png"
+                },
+                "4": {
+                    "name": "Lapis Lazuli",
+                    "texture": "dye_powder_blue.png"
+                },
+                "5": {
+                    "name": "Purple Dye",
+                    "texture": "dye_powder_purple.png"
+                },
+                "6": {
+                    "name": "Cyan Dye",
+                    "texture": "dye_powder_cyan.png"
+                },
+                "7": {
+                    "name": "Light Gray Dye",
+                    "texture": "dye_powder_silver.png"
+                },
+                "8": {
+                    "name": "Gray Dye",
+                    "texture": "dye_powder_gray.png"
+                },
+                "9": {
+                    "name": "Pink Dye",
+                    "texture": "dye_powder_pink.png"
+                }
+            },
+            "id": 351,
+            "idStr": "dye",
+            "maxdamage": 15,
+            "name": "Ink Sac",
+            "stacksize": 64,
+            "texture": "dye_powder_black.png"
+        },
+        {
+            "id": 352,
+            "idStr": "bone",
+            "maxdamage": 0,
+            "name": "Bone",
+            "stacksize": 64,
+            "texture": "bone.png"
+        },
+        {
+            "id": 353,
+            "idStr": "sugar",
+            "maxdamage": 0,
+            "name": "Sugar",
+            "stacksize": 64,
+            "texture": "sugar.png"
+        },
+        {
+            "id": 354,
+            "idStr": "cake",
+            "maxdamage": 0,
+            "name": "Cake",
+            "stacksize": 1,
+            "texture": "cake.png"
+        },
+        {
+            "id": 355,
+            "idStr": "bed",
+            "maxdamage": 0,
+            "name": "Bed",
+            "stacksize": 1,
+            "texture": "bed.png"
+        },
+        {
+            "id": 356,
+            "idStr": "repeater",
+            "maxdamage": 0,
+            "name": "Redstone Repeater",
+            "stacksize": 64,
+            "texture": "repeater.png"
+        },
+        {
+            "id": 357,
+            "idStr": "cookie",
+            "maxdamage": 0,
+            "name": "Cookie",
+            "stacksize": 64,
+            "texture": "cookie.png"
+        },
+        {
+            "id": 358,
+            "idStr": "filled_map",
+            "maxdamage": 32767,
+            "name": "Map",
+            "stacksize": 1,
+            "texture": "map_filled.png"
+        },
+        {
+            "id": 359,
+            "idStr": "shears",
+            "maxdamage": 238,
+            "name": "Shears",
+            "stacksize": 1,
+            "texture": "shears.png"
+        },
+        {
+            "id": 360,
+            "idStr": "melon",
+            "maxdamage": 0,
+            "name": "Melon",
+            "stacksize": 64,
+            "texture": "melon.png"
+        },
+        {
+            "id": 361,
+            "idStr": "pumpkin_seeds",
+            "maxdamage": 0,
+            "name": "Pumpkin Seeds",
+            "stacksize": 64,
+            "texture": "seeds_pumpkin.png"
+        },
+        {
+            "id": 362,
+            "idStr": "melon_seeds",
+            "maxdamage": 0,
+            "name": "Melon Seeds",
+            "stacksize": 64,
+            "texture": "seeds_melon.png"
+        },
+        {
+            "id": 363,
+            "idStr": "beef",
+            "maxdamage": 0,
+            "name": "Raw Beef",
+            "stacksize": 64,
+            "texture": "beef_raw.png"
+        },
+        {
+            "id": 364,
+            "idStr": "cooked_beef",
+            "maxdamage": 0,
+            "name": "Steak",
+            "stacksize": 64,
+            "texture": "beef_cooked.png"
+        },
+        {
+            "id": 365,
+            "idStr": "chicken",
+            "maxdamage": 0,
+            "name": "Raw Chicken",
+            "stacksize": 64,
+            "texture": "chicken_raw.png"
+        },
+        {
+            "id": 366,
+            "idStr": "cooked_chicken",
+            "maxdamage": 0,
+            "name": "Cooked Chicken",
+            "stacksize": 64,
+            "texture": "chicken_cooked.png"
+        },
+        {
+            "id": 367,
+            "idStr": "rotten_flesh",
+            "maxdamage": 0,
+            "name": "Rotten Flesh",
+            "stacksize": 64,
+            "texture": "rotten_flesh.png"
+        },
+        {
+            "id": 368,
+            "idStr": "ender_pearl",
+            "maxdamage": 0,
+            "name": "Ender Pearl",
+            "stacksize": 16,
+            "texture": "ender_pearl.png"
+        },
+        {
+            "id": 369,
+            "idStr": "blaze_rod",
+            "maxdamage": 0,
+            "name": "Blaze Rod",
+            "stacksize": 64,
+            "texture": "blaze_rod.png"
+        },
+        {
+            "id": 370,
+            "idStr": "ghast_tear",
+            "maxdamage": 0,
+            "name": "Ghast Tear",
+            "stacksize": 64,
+            "texture": "ghast_tear.png"
+        },
+        {
+            "id": 371,
+            "idStr": "gold_nugget",
+            "maxdamage": 0,
+            "name": "Gold Nugget",
+            "stacksize": 64,
+            "texture": "gold_nugget.png"
+        },
+        {
+            "id": 372,
+            "idStr": "nether_wart",
+            "maxdamage": 0,
+            "name": "Nether Wart",
+            "stacksize": 64,
+            "texture": "nether_wart.png"
+        },
+        {
+            "id": 373,
+            "idStr": "potion",
+            "maxdamage": 32767,
+            "name": "Potion",
+            "stacksize": 1,
+            "texture": "potion_bottle_drinkable.png"
+        },
+        {
+            "id": 374,
+            "idStr": "glass_bottle",
+            "maxdamage": 0,
+            "name": "Glass Bottle",
+            "stacksize": 64,
+            "texture": "potion_bottle_empty.png"
+        },
+        {
+            "id": 375,
+            "idStr": "spider_eye",
+            "maxdamage": 0,
+            "name": "Spider Eye",
+            "stacksize": 64,
+            "texture": "spider_eye.png"
+        },
+        {
+            "id": 376,
+            "idStr": "fermented_spider_eye",
+            "maxdamage": 0,
+            "name": "Fermented Spider Eye",
+            "stacksize": 64,
+            "texture": "spider_eye_fermented.png"
+        },
+        {
+            "id": 377,
+            "idStr": "blaze_powder",
+            "maxdamage": 0,
+            "name": "Blaze Powder",
+            "stacksize": 64,
+            "texture": "blaze_powder.png"
+        },
+        {
+            "id": 378,
+            "idStr": "magma_cream",
+            "maxdamage": 0,
+            "name": "Magma Cream",
+            "stacksize": 64,
+            "texture": "magma_cream.png"
+        },
+        {
+            "id": 379,
+            "idStr": "brewing_stand",
+            "maxdamage": 0,
+            "name": "Brewing Stand",
+            "stacksize": 64,
+            "texture": "brewing_stand.png"
+        },
+        {
+            "id": 380,
+            "idStr": "cauldron",
+            "maxdamage": 0,
+            "name": "Cauldron",
+            "stacksize": 64,
+            "texture": "cauldron.png"
+        },
+        {
+            "id": 381,
+            "idStr": "ender_eye",
+            "maxdamage": 0,
+            "name": "Eye of Ender",
+            "stacksize": 64,
+            "texture": "ender_eye.png"
+        },
+        {
+            "id": 382,
+            "idStr": "speckled_melon",
+            "maxdamage": 0,
+            "name": "Glistering Melon",
+            "stacksize": 64,
+            "texture": "melon_speckled.png"
+        },
+        {
+            "id": 383,
+            "idStr": "spawn_egg",
+            "maxdamage": 120,
+            "name": "Spawn Egg",
+            "stacksize": 64,
+            "texture": "spawn_egg.png"
+        },
+        {
+            "id": 384,
+            "idStr": "experience_bottle",
+            "maxdamage": 0,
+            "name": "Bottle o' Enchanting",
+            "stacksize": 64,
+            "texture": "experience_bottle.png"
+        },
+        {
+            "id": 385,
+            "idStr": "fire_charge",
+            "maxdamage": 0,
+            "name": "Fire Charge",
+            "stacksize": 64,
+            "texture": "fireball.png"
+        },
+        {
+            "id": 386,
+            "idStr": "writable_book",
+            "maxdamage": 0,
+            "name": "Book and Quill",
+            "stacksize": 1,
+            "texture": "book_writable.png"
+        },
+        {
+            "id": 387,
+            "idStr": "written_book",
+            "maxdamage": 0,
+            "name": "Written Book",
+            "stacksize": 1,
+            "texture": "book_written.png"
+        },
+        {
+            "id": 388,
+            "idStr": "emerald",
+            "maxdamage": 0,
+            "name": "Emerald",
+            "stacksize": 64,
+            "texture": "emerald.png"
+        },
+        {
+            "id": 389,
+            "idStr": "item_frame",
+            "maxdamage": 0,
+            "name": "Item Frame",
+            "stacksize": 64,
+            "texture": "item_frame.png"
+        },
+        {
+            "id": 390,
+            "idStr": "flower_pot",
+            "maxdamage": 0,
+            "name": "Flower Pot",
+            "stacksize": 64,
+            "texture": "flower_pot.png"
+        },
+        {
+            "id": 391,
+            "idStr": "carrot",
+            "maxdamage": 0,
+            "name": "Carrot",
+            "stacksize": 64,
+            "texture": "carrot.png"
+        },
+        {
+            "id": 392,
+            "idStr": "potato",
+            "maxdamage": 0,
+            "name": "Potato",
+            "stacksize": 64,
+            "texture": "potato.png"
+        },
+        {
+            "id": 393,
+            "idStr": "baked_potato",
+            "maxdamage": 0,
+            "name": "Baked Potato",
+            "stacksize": 64,
+            "texture": "potato_baked.png"
+        },
+        {
+            "id": 394,
+            "idStr": "poisonous_potato",
+            "maxdamage": 0,
+            "name": "Poisonous Potato",
+            "stacksize": 64,
+            "texture": "potato_poisonous.png"
+        },
+        {
+            "id": 395,
+            "idStr": "map",
+            "maxdamage": 0,
+            "name": "Empty Map",
+            "stacksize": 64,
+            "texture": "map_empty.png"
+        },
+        {
+            "id": 396,
+            "idStr": "golden_carrot",
+            "maxdamage": 0,
+            "name": "Golden Carrot",
+            "stacksize": 64,
+            "texture": "carrot_golden.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Skeleton Skull"
+                },
+                "1": {
+                    "name": "Wither Skeleton Skull"
+                },
+                "2": {
+                    "name": "Zombie Head"
+                },
+                "3": {
+                    "name": "Head"
+                },
+                "4": {
+                    "name": "Creeper Head"
+                }
+            },
+            "id": 397,
+            "idStr": "skull",
+            "maxdamage": 4,
+            "name": "Skeleton Skull",
+            "stacksize": 64
+        },
+        {
+            "id": 398,
+            "idStr": "carrot_on_a_stick",
+            "maxdamage": 25,
+            "name": "Carrot on a Stick",
+            "stacksize": 1,
+            "texture": "carrot_on_a_stick.png"
+        },
+        {
+            "id": 399,
+            "idStr": "nether_star",
+            "maxdamage": 0,
+            "name": "Nether Star",
+            "stacksize": 64,
+            "texture": "nether_star.png"
+        },
+        {
+            "id": 400,
+            "idStr": "pumpkin_pie",
+            "maxdamage": 0,
+            "name": "Pumpkin Pie",
+            "stacksize": 64,
+            "texture": "pumpkin_pie.png"
+        },
+        {
+            "id": 401,
+            "idStr": "fireworks",
+            "maxdamage": 0,
+            "name": "Firework Rocket",
+            "stacksize": 64,
+            "texture": "fireworks.png"
+        },
+        {
+            "id": 402,
+            "idStr": "firework_charge",
+            "maxdamage": 0,
+            "name": "Firework Star",
+            "stacksize": 64,
+            "texture": "fireworks_charge.png"
+        },
+        {
+            "id": 403,
+            "idStr": "enchanted_book",
+            "maxdamage": 0,
+            "name": "Enchanted Book",
+            "stacksize": 1,
+            "texture": "book_enchanted.png"
+        },
+        {
+            "id": 404,
+            "idStr": "comparator",
+            "maxdamage": 0,
+            "name": "Redstone Comparator",
+            "stacksize": 64,
+            "texture": "comparator.png"
+        },
+        {
+            "id": 405,
+            "idStr": "netherbrick",
+            "maxdamage": 0,
+            "name": "Nether Brick",
+            "stacksize": 64,
+            "texture": "netherbrick.png"
+        },
+        {
+            "id": 406,
+            "idStr": "quartz",
+            "maxdamage": 0,
+            "name": "Nether Quartz",
+            "stacksize": 64,
+            "texture": "quartz.png"
+        },
+        {
+            "id": 407,
+            "idStr": "tnt_minecart",
+            "maxdamage": 0,
+            "name": "Minecart with TNT",
+            "stacksize": 1,
+            "texture": "minecart_tnt.png"
+        },
+        {
+            "id": 408,
+            "idStr": "hopper_minecart",
+            "maxdamage": 0,
+            "name": "Minecart with Hopper",
+            "stacksize": 1,
+            "texture": "minecart_hopper.png"
+        },
+        {
+            "id": 409,
+            "idStr": "prismarine_shard",
+            "maxdamage": 0,
+            "name": "Prismarine Shard",
+            "stacksize": 64,
+            "texture": "prismarine_shard.png"
+        },
+        {
+            "id": 410,
+            "idStr": "prismarine_crystals",
+            "maxdamage": 0,
+            "name": "Prismarine Crystals",
+            "stacksize": 64,
+            "texture": "prismarine_crystals.png"
+        },
+        {
+            "id": 411,
+            "idStr": "rabbit",
+            "maxdamage": 0,
+            "name": "Raw Rabbit",
+            "stacksize": 64,
+            "texture": "rabbit_raw.png"
+        },
+        {
+            "id": 412,
+            "idStr": "cooked_rabbit",
+            "maxdamage": 0,
+            "name": "Cooked Rabbit",
+            "stacksize": 64,
+            "texture": "rabbit_cooked.png"
+        },
+        {
+            "id": 413,
+            "idStr": "rabbit_stew",
+            "maxdamage": 0,
+            "name": "Rabbit Stew",
+            "stacksize": 1,
+            "texture": "rabbit_stew.png"
+        },
+        {
+            "id": 414,
+            "idStr": "rabbit_foot",
+            "maxdamage": 0,
+            "name": "Rabbit's Foot",
+            "stacksize": 64,
+            "texture": "rabbit_foot.png"
+        },
+        {
+            "id": 415,
+            "idStr": "rabbit_hide",
+            "maxdamage": 0,
+            "name": "Rabbit Hide",
+            "stacksize": 64,
+            "texture": "rabbit_hide.png"
+        },
+        {
+            "id": 416,
+            "idStr": "armor_stand",
+            "maxdamage": 0,
+            "name": "Armor Stand",
+            "stacksize": 16,
+            "texture": "wooden_armorstand.png"
+        },
+        {
+            "id": 417,
+            "idStr": "iron_horse_armor",
+            "maxdamage": 0,
+            "name": "Iron Horse Armor",
+            "stacksize": 1,
+            "texture": "iron_horse_armor.png"
+        },
+        {
+            "id": 418,
+            "idStr": "golden_horse_armor",
+            "maxdamage": 0,
+            "name": "Gold Horse Armor",
+            "stacksize": 1,
+            "texture": "gold_horse_armor.png"
+        },
+        {
+            "id": 419,
+            "idStr": "diamond_horse_armor",
+            "maxdamage": 0,
+            "name": "Diamond Horse Armor",
+            "stacksize": 1,
+            "texture": "diamond_horse_armor.png"
+        },
+        {
+            "id": 420,
+            "idStr": "lead",
+            "maxdamage": 0,
+            "name": "Lead",
+            "stacksize": 64,
+            "texture": "lead.png"
+        },
+        {
+            "id": 421,
+            "idStr": "name_tag",
+            "maxdamage": 0,
+            "name": "Name Tag",
+            "stacksize": 64,
+            "texture": "name_tag.png"
+        },
+        {
+            "id": 422,
+            "idStr": "command_block_minecart",
+            "maxdamage": 0,
+            "name": "Minecart with Command Block",
+            "stacksize": 1,
+            "texture": "minecart_command_block.png"
+        },
+        {
+            "id": 423,
+            "idStr": "mutton",
+            "maxdamage": 0,
+            "name": "Raw Mutton",
+            "stacksize": 64,
+            "texture": "mutton_raw.png"
+        },
+        {
+            "id": 424,
+            "idStr": "cooked_mutton",
+            "maxdamage": 0,
+            "name": "Cooked Mutton",
+            "stacksize": 64,
+            "texture": "mutton_cooked.png"
+        },
+        {
+            "data": {
+                "0": {
+                    "name": "Black Banner",
+                    "texture": "banner_black.png"
+                },
+                "1": {
+                    "name": "Red Banner",
+                    "texture": "banner_red.png"
+                },
+                "10": {
+                    "name": "Lime Banner",
+                    "texture": "banner_lime.png"
+                },
+                "11": {
+                    "name": "Yellow Banner",
+                    "texture": "banner_yellow.png"
+                },
+                "12": {
+                    "name": "Light Blue Banner",
+                    "texture": "banner_light_blue.png"
+                },
+                "13": {
+                    "name": "Magenta Banner",
+                    "texture": "banner_magenta.png"
+                },
+                "14": {
+                    "name": "Orange Banner",
+                    "texture": "banner_orange.png"
+                },
+                "15": {
+                    "name": "White Banner",
+                    "texture": "banner_white.png"
+                },
+                "2": {
+                    "name": "Green Banner",
+                    "texture": "banner_green.png"
+                },
+                "3": {
+                    "name": "Brown Banner",
+                    "texture": "banner_brown.png"
+                },
+                "4": {
+                    "name": "Blue Banner",
+                    "texture": "banner_blue.png"
+                },
+                "5": {
+                    "name": "Purple Banner",
+                    "texture": "banner_purple.png"
+                },
+                "6": {
+                    "name": "Cyan Banner",
+                    "texture": "banner_cyan.png"
+                },
+                "7": {
+                    "name": "Light Gray Banner",
+                    "texture": "banner_silver.png"
+                },
+                "8": {
+                    "name": "Gray Banner",
+                    "texture": "banner_gray.png"
+                },
+                "9": {
+                    "name": "Pink Banner",
+                    "texture": "banner_pink.png"
+                }
+            },
+            "id": 425,
+            "idStr": "banner",
+            "maxdamage": 15,
+            "name": "Black Banner",
+            "stacksize": 16,
+            "texture": "banner_black.png"
+        },
+        {
+            "id": 426,
+            "idStr": "end_crystal",
+            "maxdamage": 0,
+            "name": "End Crystal",
+            "stacksize": 64
+        },
+        {
+            "id": 427,
+            "idStr": "spruce_door",
+            "maxdamage": 0,
+            "name": "Spruce Door",
+            "stacksize": 64,
+            "texture": "door_spruce.png"
+        },
+        {
+            "id": 428,
+            "idStr": "birch_door",
+            "maxdamage": 0,
+            "name": "Birch Door",
+            "stacksize": 64,
+            "texture": "door_birch.png"
+        },
+        {
+            "id": 429,
+            "idStr": "jungle_door",
+            "maxdamage": 0,
+            "name": "Jungle Door",
+            "stacksize": 64,
+            "texture": "door_jungle.png"
+        },
+        {
+            "id": 430,
+            "idStr": "acacia_door",
+            "maxdamage": 0,
+            "name": "Acacia Door",
+            "stacksize": 64,
+            "texture": "door_acacia.png"
+        },
+        {
+            "id": 431,
+            "idStr": "dark_oak_door",
+            "maxdamage": 0,
+            "name": "Dark Oak Door",
+            "stacksize": 64,
+            "texture": "door_dark_oak.png"
+        },
+        {
+            "id": 432,
+            "idStr": "chorus_fruit",
+            "maxdamage": 0,
+            "name": "Chorus Fruit",
+            "stacksize": 64
+        },
+        {
+            "id": 433,
+            "idStr": "chorus_fruit_popped",
+            "maxdamage": 0,
+            "name": "Popped Chorus Fruit",
+            "stacksize": 64
+        },
+        {
+            "id": 434,
+            "idStr": "beetroot",
+            "maxdamage": 0,
+            "name": "Beetroot",
+            "stacksize": 64
+        },
+        {
+            "id": 435,
+            "idStr": "beetroot_seeds",
+            "maxdamage": 0,
+            "name": "Beetroot Seeds",
+            "stacksize": 64
+        },
+        {
+            "id": 436,
+            "idStr": "beetroot_soup",
+            "maxdamage": 0,
+            "name": "Beetroot Soup",
+            "stacksize": 1
+        },
+        {
+            "id": 437,
+            "idStr": "dragon_breath",
+            "maxdamage": 0,
+            "name": "Dragon's Breath",
+            "stacksize": 64
+        },
+        {
+            "id": 438,
+            "idStr": "splash_potion",
+            "maxdamage": 0,
+            "name": "Splash Potion",
+            "stacksize": 1
+        },
+        {
+            "id": 439,
+            "idStr": "spectral_arrow",
+            "maxdamage": 0,
+            "name": "Spectral Arrow",
+            "stacksize": 64
+        },
+        {
+            "id": 440,
+            "idStr": "tipped_arrow",
+            "maxdamage": 0,
+            "name": "Tipped Arrow",
+            "stacksize": 64
+        },
+        {
+            "id": 441,
+            "idStr": "lingering_potion",
+            "maxdamage": 0,
+            "name": "Lingering Potion",
+            "stacksize": 1
+        },
+        {
+            "id": 442,
+            "idStr": "shield",
+            "maxdamage": 336,
+            "name": "Shield",
+            "stacksize": 1
+        },
+        {
+            "id": 443,
+            "idStr": "elytra",
+            "maxdamage": 432,
+            "name": "Elytra",
+            "stacksize": 1
+        },
+        {
+            "id": 444,
+            "idStr": "spruce_boat",
+            "maxdamage": 0,
+            "name": "Spruce Boat",
+            "stacksize": 1
+        },
+        {
+            "id": 445,
+            "idStr": "birch_boat",
+            "maxdamage": 0,
+            "name": "Birch Boat",
+            "stacksize": 1
+        },
+        {
+            "id": 446,
+            "idStr": "jungle_boat",
+            "maxdamage": 0,
+            "name": "Jungle Boat",
+            "stacksize": 1
+        },
+        {
+            "id": 447,
+            "idStr": "acacia_boat",
+            "maxdamage": 0,
+            "name": "Acacia Boat",
+            "stacksize": 1
+        },
+        {
+            "id": 448,
+            "idStr": "dark_oak_boat",
+            "maxdamage": 0,
+            "name": "Dark Oak Boat",
+            "stacksize": 1
+        },
+        {
+            "id": 2256,
+            "idStr": "record_13",
+            "maxdamage": 0,
+            "name": "13 Disc",
+            "stacksize": 1,
+            "texture": "record_13.png"
+        },
+        {
+            "id": 2257,
+            "idStr": "record_cat",
+            "maxdamage": 0,
+            "name": "Cat Disc",
+            "stacksize": 1,
+            "texture": "record_cat.png"
+        },
+        {
+            "id": 2258,
+            "idStr": "record_blocks",
+            "maxdamage": 0,
+            "name": "Blocks Disc",
+            "stacksize": 1,
+            "texture": "record_blocks.png"
+        },
+        {
+            "id": 2259,
+            "idStr": "record_chirp",
+            "maxdamage": 0,
+            "name": "Chirp Disc",
+            "stacksize": 1,
+            "texture": "record_chirp.png"
+        },
+        {
+            "id": 2260,
+            "idStr": "record_far",
+            "maxdamage": 0,
+            "name": "Far Disc",
+            "stacksize": 1,
+            "texture": "record_far.png"
+        },
+        {
+            "id": 2261,
+            "idStr": "record_mall",
+            "maxdamage": 0,
+            "name": "Mall Disc",
+            "stacksize": 1,
+            "texture": "record_mall.png"
+        },
+        {
+            "id": 2262,
+            "idStr": "record_mellohi",
+            "maxdamage": 0,
+            "name": "Mellohi Disc",
+            "stacksize": 1,
+            "texture": "record_mellohi.png"
+        },
+        {
+            "id": 2263,
+            "idStr": "record_stal",
+            "maxdamage": 0,
+            "name": "Stal Disc",
+            "stacksize": 1,
+            "texture": "record_stal.png"
+        },
+        {
+            "id": 2264,
+            "idStr": "record_strad",
+            "maxdamage": 0,
+            "name": "Strad Disc",
+            "stacksize": 1,
+            "texture": "record_strad.png"
+        },
+        {
+            "id": 2265,
+            "idStr": "record_ward",
+            "maxdamage": 0,
+            "name": "Ward Disc",
+            "stacksize": 1,
+            "texture": "record_ward.png"
+        },
+        {
+            "id": 2266,
+            "idStr": "record_11",
+            "maxdamage": 0,
+            "name": "11 Disc",
+            "stacksize": 1,
+            "texture": "record_11.png"
+        },
+        {
+            "id": 2267,
+            "idStr": "record_wait",
+            "maxdamage": 0,
+            "name": "Wait Disc",
+            "stacksize": 1,
+            "texture": "record_wait.png"
+        }
+    ]
+}

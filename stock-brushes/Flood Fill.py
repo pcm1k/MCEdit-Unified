@@ -1,5 +1,6 @@
 from pymclevel.materials import Block
 from pymclevel.entity import TileEntity
+from pymclevel.level import GAME_PLATFORM_POCKET
 from editortools.brush import createBrushMask
 import numpy
 from editortools.operation import mkundotemp
@@ -37,10 +38,10 @@ def apply(self, op, point):
     # undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
     # Use the same world as the one loaded.
     create = True
-    if op.level.gamePlatform == 'PE':
+    if op.level.gamePlatform == GAME_PLATFORM_POCKET:
         create = op.level.world_version
     undoLevel = type(op.level)(mkundotemp(), create=create)
-    if op.level.gamePlatform == 'PE':
+    if op.level.gamePlatform == GAME_PLATFORM_POCKET:
         undoLevel.Height = op.level.Height
     dirtyChunks = set()
 
@@ -63,8 +64,8 @@ def apply(self, op, point):
         return
 
     tileEntity = None
-    if op.options['Block'].stringID in TileEntity.stringNames.keys():
-        tileEntity = TileEntity.stringNames[op.options['Block'].stringID]
+    if op.options['Block'].stringID in op.level.tileEntityDefs.stringNames:
+        tileEntity = op.level.tileEntityDefs.stringNames[op.options['Block'].stringID]
 
     x, y, z = point
     saveUndoChunk(x // 16, z // 16)
@@ -73,7 +74,7 @@ def apply(self, op, point):
     if tileEntity:
         if op.level.tileEntityAt(x, y, z):
             op.level.removeTileEntitiesInBox(BoundingBox((x, y, z), (1, 1, 1)))
-        tileEntityObject = TileEntity.Create(tileEntity, (x, y, z), defsIds=op.level.defsIds)
+        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (x, y, z), defsIds=op.level.defsIds)
         createTileEntities(tileEntityObject, op.level)
 
     def processCoords(coords):
@@ -100,7 +101,7 @@ def apply(self, op, point):
                     if tileEntity:
                         if op.level.tileEntityAt(nx, ny, nz):
                             op.level.removeTileEntitiesInBox(BoundingBox((nx, ny, nz), (1, 1, 1)))
-                        tileEntityObject = TileEntity.Create(tileEntity, (nx, ny, nz))
+                        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (nx, ny, nz))
                         createTileEntities(tileEntityObject, op.level)
                     newcoords.append(p)
 

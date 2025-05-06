@@ -6,16 +6,27 @@ Created on Jul 22, 2011
 
 from box import BoundingBox
 from collections import defaultdict
-from entity import Entity, TileEntity, TileTick
+from entity import Entity, TileEntity, TileTick, getEntityDefs, getTileEntityDefs
 import itertools
 from logging import getLogger
+
+GAME_PLATFORM_UNKNOWN = "Unknown"
+GAME_PLATFORM_JAVA = "Java"
+GAME_PLATFORM_CLASSIC = "javalevel"
+GAME_PLATFORM_INDEV = "indev"
+GAME_PLATFORM_POCKET = "PE"
+GAME_PLATFORM_OLD_POCKET = "old pocket"
+GAME_PLATFORM_SCHEMATIC = "Schematic"
+
 import materials
 from math import floor
 from mclevelbase import ChunkMalformed, ChunkNotPresent
 import nbt
 from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
-import id_definitions
+from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN
+from items import getItemDefs
+import re
 
 log = getLogger(__name__)
 
@@ -127,8 +138,10 @@ class MCLevel(object):
     # ## common to Creative, Survival and Indev. these routines assume
     ### self has Width, Height, Length, and Blocks
 
-    materials = materials.classicMaterials
+    materialsName = "Classic"
     isInfinite = False
+    _gamePlatform = GAME_PLATFORM_UNKNOWN
+    _defsPlatform = PLATFORM_UNKNOWN
 
     saving = False
 
@@ -143,66 +156,122 @@ class MCLevel(object):
     parentWorld = None
     world = None
 
-    entityClass = Entity
+    VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
 
     # Game version check. Stores the info found in the 'Version::Name' tag
 
     @property
-    def gamePlatform(self): # Should return the platform the world is from ("Java", "PE" or "Schematic")
-        """Returns the platform the world is from ("Java", "PE", "Schematic"...)"""
-        # I would use isinstance() here, but importing the separate level classes would cause a circular import, so this will have to do
-        if not hasattr(self, '_gamePlatform'):
-            type_map = {
-                'pymclevel.schematic.MCSchematic': 'Schematic',
-                'pymclevel.leveldbpocket.PocketLeveldbWorld': 'PE',
-                'pymclevel.infiniteworld.MCInfdevOldLevel': 'Java',
-            }
-            t = str(type(self))
-            self._gamePlatform = type_map.get(t[8:len(t) - 2], 'Unknown')
+    def gamePlatform(self):
+        """Returns the platform the world is from ("Java", "PE", "Schematic"...).
+        This value is considered deprecated. New code should compare the class directly using isinstance()"""
         return self._gamePlatform
 
     @property
-    def gameVersionNumber(self):  # Should return the version number that the world is from (eg "1.12.2"...)
-        """Returns the version number the world was last opened in or 'Unknown'"""
-        if self.root_tag and not hasattr(self, '_gameVersionNumber'):
-            self._gameVersionNumber = 'Unknown'
-            if self.gamePlatform == "PE":
-                if 'Data' in self.root_tag and isinstance(self.root_tag['Data'], nbt.TAG_Compound):
-                    if 'lastOpenedWithVersion' in self.root_tag['Data'] and isinstance(self.root_tag['Data']['lastOpenedWithVersion'], nbt.TAG_List):
-                        self._gameVersionNumber = '.'.join([str(num.value) for num in self.root_tag['Data']['lastOpenedWithVersion']])
-                    else:
-                        self._gameVersionNumber = self.root_tag['Data']['lastOpenedWithVersion']
-            elif self.gamePlatform == "Java":
-                if 'Data' in self.root_tag and isinstance(self.root_tag['Data'], nbt.TAG_Compound):
-                    # We're opening a world.
-                    if 'Version' in self.root_tag['Data']:
-                        if 'Name' in self.root_tag['Data']['Version']:
-                            self._gameVersionNumber = self.root_tag['Data']['Version']['Name'].value
-                elif self.root_tag.name:
-                    self._gameVersion = self.root_tag.name
-        return self._gameVersionNumber
+    def defsPlatform(self):
+        """Returns the platform the world is from ("Alpha", "Pocket", "Classic"...).
+        This value is meant to be somewhat compatible with the names used for materials and should be used for loading version data"""
+        return self._defsPlatform
+
+    def _findGameVersionNumber(self):
+        return self.defsPlatform
 
     @property
-    def gameVersion(self): #depreciated. The output of this function is inconsistent. Use either gamePlatform or gameVersionNumber
-        """Depreciated property. Use gamePlatform or gameVersionNumber. This returns gameVersionNumber for Java worlds and gamePlatform for all others"""
-        log.warning('gameVersion is depreciated. Use gamePlatform or gameVersionNumber instead')
-        if self.root_tag and not hasattr(self, '_gameVersion'):
-            self._gameVersion = 'Unknown'
-            if self.gamePlatform == "Java":
-                self._gameVersion = self.gameVersionNumber
-            else:
-                self._gameVersion = self.gamePlatform
-        return self._gameVersion
+    def gameVersionNumber(self):
+        """Returns the name of the version the world was last opened in (eg "1.12.2"...), or VERSION_UNKNOWN if unavailable.
+        Note that this value should only be used to display and is NOT suitable for comparison.
+        Use gameVersionId for comparison instead.
+        Subclasses should implement _findGameVersionNumber"""
+        if hasattr(self, "_gameVersionNumber"):
+            return self._gameVersionNumber
+        version = self._findGameVersionNumber()
+        if version:
+            self._gameVersionNumber = self.VERSION_STR_FILTER.sub("", version)
+        else:
+            # unavailable
+            self._gameVersionNumber = VERSION_UNKNOWN
+        return self._gameVersionNumber
+
+    def _findGameVersionId(self):
+        return None
+
+    @property
+    def gameVersionId(self):
+        """Returns the id of the version the world was last opened in as a list of ints, or None if unavailable.
+        This value should be used for comparison.
+        Subclasses should implement _findGameVersionId"""
+        if hasattr(self, "_gameVersionId"):
+            return self._gameVersionId
+        self._gameVersionId = self._findGameVersionId()
+        return self._gameVersionId
+
+    @property
+    def defsVersion(self):
+        """Returns the version id the world was last opened in as a string, or gameVersionNumber if unavailable.
+        This value should be used for loading version data"""
+        if hasattr(self, "_defsVersion"):
+            return self._defsVersion
+        if self.gameVersionId:
+            self._defsVersion = ".".join([str(num) for num in self.gameVersionId])
+        else:
+            self._defsVersion = self.gameVersionNumber
+        return self._defsVersion
+
+    def loadVersionData(self):
+        self._defsIds = get_defs_ids(self.defsPlatform, self.defsVersion, checkTimes=False)
+        self._entityDefs = getEntityDefs(self.defsIds)
+        self._tileEntityDefs = getTileEntityDefs(self.defsIds)
+
+    def _loadMaterials(self):
+        if self.defsPlatform == PLATFORM_UNKNOWN:
+            return materials.getMaterials(self.defsIds, forceNew=True, name="Classic", defaultName="Not present in Classic")
+        return materials.getMaterials(self.defsIds, forceNew=True, name=self.materialsName)
 
     @property
     def defsIds(self):
-        if self.root_tag and not hasattr(self, '__defs_ids'):
-            self.__defs_ids = id_definitions.get_defs_ids(self.gamePlatform, self.gameVersionNumber)
-        return self.__defs_ids
+        if hasattr(self, "_defsIds"):
+            return self._defsIds
+        if hasattr(self, "_materials") and self._materials.defsIds is not None:
+            # this is relevant for at least MCSchematic
+            self._defsIds = self._materials.defsIds
+            return self._defsIds
+        self._defsIds = get_defs_ids(self.defsPlatform, self.defsVersion, checkTimes=False)
+        return self._defsIds
 
-    def loadDefIds(self):
-        if self.root_tag and not hasattr(self, '__defs_ids'):
-            self.__defs_ids = id_definitions.get_defs_ids(self.gamePlatform, self.gameVersionNumber)
+    @defsIds.setter
+    def defsIds(self, value):
+        self._defsIds = value
+
+    @property
+    def materials(self):
+        if hasattr(self, "_materials"):
+            return self._materials
+        self._materials = self._loadMaterials()
+        return self._materials
+
+    @materials.setter
+    def materials(self, value):
+        self._materials = value
+
+    @property
+    def entityDefs(self):
+        if hasattr(self, "_entityDefs"):
+            return self._entityDefs
+        self._entityDefs = getEntityDefs(self.defsIds)
+        return self._entityDefs
+
+    @property
+    def tileEntityDefs(self):
+        if hasattr(self, "_tileEntityDefs"):
+            return self._tileEntityDefs
+        self._tileEntityDefs = getTileEntityDefs(self.defsIds)
+        return self._tileEntityDefs
+
+    @property
+    def itemDefs(self):
+        if hasattr(self, "_itemDefs"):
+            return self._itemDefs
+        self._itemDefs = getItemDefs(self.defsIds)
+        return self._itemDefs
 
     @classmethod
     def isLevel(cls, filename):

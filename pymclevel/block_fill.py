@@ -12,7 +12,7 @@ from entity import TileEntity
 
 
 def blockReplaceTable(blocksToReplace):
-    blocktable = numpy.zeros((materials.id_limit, 16), dtype='bool')
+    blocktable = numpy.zeros((materials.id_limit, materials.data_limit), dtype='bool')
     for b in blocksToReplace:
             blocktable[b.ID, b.blockData] = True
     return blocktable
@@ -50,25 +50,17 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
                 changesLighting = True
 
     tileEntity = None
-    if blockInfo.stringID in TileEntity.stringNames.keys():
-        if level.gamePlatform == "Java":
-            split_ver = level.gameVersionNumber.split('.')
-        else:
-            split_ver = level.gamePlatform.split('.')
-        if 'Unknown' not in split_ver and "PE" not in split_ver and int(split_ver[0]) >= 1 and int(split_ver[1]) >= 11:
-            tileEntity = "minecraft:{}".format(blockInfo.stringID)
-        else:
-            tileEntity = TileEntity.stringNames[blockInfo.stringID]
+    if blockInfo.stringID in level.tileEntityDefs.stringNames:
+        tileEntity = level.tileEntityDefs.stringNames[blockInfo.stringID]
 
     blocksIdToReplace = [block.ID for block in blocksToReplace]
 
     blocksList = []
     append = blocksList.append
-    defsIds = level.defsIds
     if tileEntity and box is not None:
         for (boxX, boxY, boxZ) in box.positions:
             if blocktable is None or level.blockAt(boxX, boxY, boxZ) in blocksIdToReplace:
-                tileEntityObject = TileEntity.Create(tileEntity, defsIds=defsIds)
+                tileEntityObject = level.tileEntityDefs.Create(tileEntity)
                 TileEntity.setpos(tileEntityObject, (boxX, boxY, boxZ))
                 append(tileEntityObject)
 

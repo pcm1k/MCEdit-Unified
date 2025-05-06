@@ -1237,8 +1237,10 @@ class SelectionTool(EditorTool):
         sorting = config.commands.sorting.get()
         edit = fileEdit(filename, os.path.getmtime(filename), self.editor.selectionBox(), self.editor,
                         self.editor.level)
-        platform = self.editor.level.gamePlatform
-        repeatID, chainID = {'PE':(188,189),'Java':(210,211)}.get(platform, (210,211))
+        repeatID = self.editor.level.materials.get("minecraft:repeating_command_block")
+        chainID = self.editor.level.materials.get("minecraft:chain_command_block")
+        repeatID = repeatID.ID if repeatID is not None else 210
+        chainID = chainID.ID if chainID is not None else 211
 
         order = []
         if sorting == "chain":

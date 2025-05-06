@@ -1092,7 +1092,7 @@ class PlayerSpawnPositionTool(PlayerPositionTool):
         GL.glDisable(GL.GL_DEPTH_TEST)
 
     def drawCage(self, x, y, z):
-        cageTexVerts = numpy.array(pymclevel.MCInfdevOldLevel.materials.blockTextures[52, 0])
+        cageTexVerts = numpy.array(pymclevel.alphaMaterials.blockTextures[52, 0])
 
         pixelScale = 0.5 if self.editor.level.materials.name in ("Pocket", "Alpha") else 1.0
         texSize = 16 * pixelScale

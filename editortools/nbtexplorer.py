@@ -44,14 +44,17 @@ from config import config, DEF_ENC
 from albow.resource import resource_path
 
 # &# Protoype for blocks/items names
-from pymclevel.materials import alphaMaterials
-
 map_block = {}
+map_block_mats = None
 
-def build_map_block():
-    from pymclevel.materials import block_map
-    global map_block
-    for k, v in block_map.items():
+def build_map_block(materials):
+    global map_block_mats
+    if materials is map_block_mats:
+        return
+    map_block_mats = materials
+    if not hasattr(materials, "blockstate_api"):
+        return
+    for k, v in materials.blockstate_api.block_map.items():
         map_block[v] = k
 
 from pymclevel.items import items as mcitems
@@ -710,7 +713,7 @@ class NBTExplorerToolPanel(Panel):
         if load_text:
             btns.append(Button(load_text, action=self.editor.nbtTool.loadFile))
         btns += [
-            Button({True: "Save", False: "OK"}[fileName != None], action=kwargs.get('ok_action', self.save_NBT),
+            Button("Save" if fileName != None else "OK", action=kwargs.get('ok_action', self.save_NBT),
                    tooltipText="Save your change in the NBT data."),
             Button("Reset", action=kwargs.get('reset_action', self.reset),
                    tooltipText="Reset ALL your changes in the NBT data."),
@@ -956,7 +959,7 @@ class NBTExplorerToolPanel(Panel):
 
     def build_inventory(self, items):
         if not map_block:
-            build_map_block()
+            build_map_block(self.editor.level.materials)
         parent = self.tree.get_item_parent(self.displayed_item)
         if parent:
             parent = parent[9]
@@ -974,6 +977,12 @@ class NBTExplorerToolPanel(Panel):
         slots_set = []
         for item, i in zip(items, xrange(len(items))):
             # &# Prototype for blocks/items names
+            # pcm1k - this should use whatever function in items itself
+#            try:
+#                item = mcitems.findItem(item["id"].value, item["Damage"].value)
+#                item_name = item.name
+#            except KeyError:
+#                item_name = item["id"].value
             item_dict = mcitems.items.get(item['id'].value, None)
             if item_dict is None:
                 item_name = item['id'].value
@@ -981,7 +990,7 @@ class NBTExplorerToolPanel(Panel):
                 if isinstance(item_dict['name'], list):
                     if int(item['Damage'].value) >= len(item_dict['name']):
                         block_id = map_block.get(item['id'].value, None)
-                        item_name = alphaMaterials.get((int(block_id), int(item['Damage'].value))).name.rsplit('(', 1)[
+                        item_name = self.editor.level.materials.get((int(block_id), int(item['Damage'].value))).name.rsplit('(', 1)[
                             0].strip()
                     else:
                         item_name = item_dict['name'][int(item['Damage'].value)]

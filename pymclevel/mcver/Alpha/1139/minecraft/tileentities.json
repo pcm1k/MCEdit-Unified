@@ -1,0 +1,16 @@
+{
+    "load": "819",
+    "tileentities": [
+        {
+            "baseStructure": {
+                "color": {
+                    "type": "Int",
+                    "value": 14
+                }
+            },
+            "id": "bed",
+            "idStr": "bed",
+            "name": "Bed"
+        }
+    ]
+}

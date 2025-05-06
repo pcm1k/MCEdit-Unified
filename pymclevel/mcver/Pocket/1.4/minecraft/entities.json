@@ -1,0 +1,64 @@
+{
+    "entities": [
+        {
+            "actorType": [
+                "Projectile",
+                "AbstractArrow"
+            ],
+            "id": 73,
+            "idStr": "thrown_trident",
+            "name": "Trident",
+            "type": "Immobile and projectiles"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 108,
+            "idStr": "pufferfish",
+            "name": "Pufferfish",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 109,
+            "idStr": "salmon",
+            "name": "Salmon",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "ZombieMonster",
+            "id": 110,
+            "idStr": "drowned",
+            "name": "Drowned",
+            "type": "Hostile mobs"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 111,
+            "idStr": "tropicalfish",
+            "name": "Tropical Fish",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 112,
+            "idStr": "cod",
+            "name": "Cod",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "WaterAnimal",
+            "id": 31,
+            "idStr": "dolphin",
+            "name": "Dolphin",
+            "type": "Water mobs"
+        },
+        {
+            "actorType": "Projectile",
+            "id": 106,
+            "idStr": "ice_bomb",
+            "name": "Ice Bomb",
+            "type": "Education Edition"
+        }
+    ],
+    "load": "1.2"
+}

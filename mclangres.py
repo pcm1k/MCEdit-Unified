@@ -127,6 +127,7 @@ def buildResources(version=None, lang=None):
                 enRes[line.split('=', 1)[-1].strip()] = line.split('=', 1)[0].strip()
                 serNe[line.split('=', 1)[0].strip()] = line.split('=', 1)[-1].strip()
         #lines = codecs.open(os.path.join(getDataDir(), 'Items', 'en_GB'), encoding='utf_8')
+        # pcm1k - whatever the hell all this is needs to be fixed before officially removing the "Items" directory
         lines = codecs.open(getDataFile('Items', 'en_GB'), encoding='utf_8')
         for line in lines:
             if line.split('.')[0] in ['book', 'enchantment', 'entity', 'gameMode', 'generator', 'item', 'tile'] and line.split('=')[0].strip() not in excludedEntries:

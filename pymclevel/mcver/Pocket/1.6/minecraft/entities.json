@@ -1,0 +1,12 @@
+{
+    "entities": [
+        {
+            "actorType": "UndeadMob",
+            "id": 58,
+            "idStr": "phantom",
+            "name": "Phantom",
+            "type": "Hostile mobs"
+        }
+    ],
+    "load": "1.5"
+}

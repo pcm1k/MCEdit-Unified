@@ -48,8 +48,7 @@ elif sys.platform in ['linux2', 'darwin']:
     except ImportError:
         hasXlibDisplay = None
 
-#os.environ["YAML_ROOT"] = join(directories.getDataDir(), "pymclevel").encode(enc)
-os.environ['YAML_ROOT'] = directories.getDataFile('pymclevel').encode(enc)
+os.environ["YAML_ROOT"] = os.environ["PYMCLEVEL_YAML_ROOT"] = directories.getDataFile("pymclevel").encode(enc)
 
 from pygame import display
 

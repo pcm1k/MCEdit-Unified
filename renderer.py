@@ -223,14 +223,9 @@ import logging
 import numpy
 from OpenGL import GL
 import pymclevel
-from pymclevel.materials import alphaMaterials, pocketMaterials
 import sys
 from config import config
 # import time
-
-def get_materials():
-    alphaMaterials = pymclevel.materials.alphaMaterials
-    pocketMaterials = pymclevel.materials.pocketMaterials
 
 def chunkMarkers(chunkSet):
     """ Returns a mapping { size: [position, ...] } for different powers of 2
@@ -628,8 +623,7 @@ class ChunkCalculator(object):
     precomputedVertices = createPrecomputedVertices()
 
     def __init__(self, level):
-        if not hasattr(alphaMaterials, 'Stone'):
-            get_materials()
+        alphaMaterials = pymclevel.materials.alphaMaterials
         self.stoneid = stoneid = alphaMaterials.Stone.ID
         self.hiddenOreMaterials[alphaMaterials.Dirt.ID] = stoneid
         self.hiddenOreMaterials[alphaMaterials.Grass.ID] = stoneid
@@ -794,7 +788,7 @@ class ChunkCalculator(object):
 
 
     # don't show boundaries between dirt,grass,sand,gravel,or stone.
-    # This hiddenOreMaterial definition shall be delayed after the level is loaded, in order to get the exact ones from the game versionned data.
+    # This hiddenOreMaterial definition shall be delayed after the level is loaded, in order to get the exact ones from the game versioned data.
     hiddenOreMaterials = numpy.arange(pymclevel.materials.id_limit, dtype='uint16')
 
     roughMaterials = numpy.ones((pymclevel.materials.id_limit,), dtype='uint8')
@@ -1051,7 +1045,7 @@ class ChunkCalculator(object):
         areaBlockLights = self.getAreaBlockLights(chunk, neighboringChunks)
         yield
 
-        allSlabs = set([b.ID for b in alphaMaterials.allBlocks if "Slab" in b.name])
+        allSlabs = set([b.ID for b in level.materials.AllSlabs])
         for slab in allSlabs:
             slabs = areaBlocks == slab
             if slabs.any():
@@ -1079,6 +1073,7 @@ class ChunkCalculator(object):
 
     def computeGeometry(self, chunk, areaBlockMats, facingBlockIndices, areaBlockLights, chunkRenderer, blockRenderers):
         blocks, blockData = chunk.Blocks, chunk.Data
+        # pcm1k - data limit
         blockData &= 0xf
         blockMaterials = areaBlockMats[1:-1, 1:-1, 1:-1]
         if self.roughGraphics:
@@ -1327,7 +1322,7 @@ class MonsterRenderer(BaseEntityRenderer):
     def makeChunkVertices(self, chunk):
         monsterPositions = []
         append = monsterPositions.append
-        notMonsters = self.chunkCalculator.level.defsIds.mcedit_defs.get('notMonsters', self.notMonsters)
+        notMonsters = self.chunkCalculator.level.defsIds.get_def("notMonsters", self.notMonsters)
         for i, ent in enumerate(chunk.Entities):
             if i % 10 == 0:
                 yield
@@ -1368,20 +1363,18 @@ class ItemRenderer(BaseEntityRenderer):
         pos_append = entityPositions.append
         color_append = entityColors.append
         defsIds = self.chunkCalculator.level.defsIds
-        mcedit_defs = defsIds.mcedit_defs
-        mcedit_ids = defsIds.mcedit_ids
         for i, ent in enumerate(chunk.Entities):
             if i % 10 == 0:
                 yield
-            # Let get the color from the versionned data, and use the 'old' way as fallback
-            color = mcedit_defs.get(mcedit_ids.get(ent["id"].value), {}).get("mapcolor")
+            # Let get the color from the versioned data, and use the 'old' way as fallback
+            color = defsIds.get_id("entities", ent["id"].value, {}).get("mapcolor")
             if color is None:
                 color = colorMap.get(ent["id"].value)
 
             if color is None:
                 continue
             pos = pymclevel.Entity.pos(ent)
-            noRenderDelta = mcedit_defs.get('noRenderDelta', ("Painting", "ItemFrame"))
+            noRenderDelta = defsIds.get_def("noRenderDelta", ("Painting", "ItemFrame"))
             if ent["id"].value not in noRenderDelta:
                 pos[1] += 0.5
             pos_append(pos)
@@ -1575,6 +1568,7 @@ class LowDetailBlockRenderer(BlockRenderer):
         if nonAirBlocks.any():
             blockTypes = blocks[blockIndices]
 
+            # pcm1k - data limit
             flatcolors = level.materials.flatColors[blockTypes, ch.Data[blockIndices] & 0xf][:, numpy.newaxis, :]
             x, z, y = blockIndices.nonzero()
 
@@ -1662,7 +1656,7 @@ class GenericBlockRenderer(BlockRenderer):
             vertexArray.view('uint8')[_RGB] *= facingBlockLight[blockIndices][..., numpy.newaxis, numpy.newaxis]
             if self.materials.name in ("Alpha", "Pocket"):
                 if direction == pymclevel.faces.FaceYIncreasing:
-                    grass = theseBlocks == alphaMaterials.Grass.ID
+                    grass = theseBlocks == pymclevel.materials.alphaMaterials.Grass.ID
                     vertexArray.view('uint8')[_RGB][grass] = vertexArray.view('uint8')[_RGB][grass].astype(float) * self.grassColor
             yield
 
@@ -1693,6 +1687,8 @@ class LeafBlockRenderer(BlockRenderer):
         append = arrays.append
         materialIndices = self.getMaterialIndices(blockMaterials)
         yield
+
+        alphaMaterials = pymclevel.materials.alphaMaterials
 
         if self.materials.name in ("Alpha", "Pocket"):
             if not self.chunkCalculator.fastLeaves:

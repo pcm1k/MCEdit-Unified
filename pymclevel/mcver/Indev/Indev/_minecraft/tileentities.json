@@ -1,0 +1,39 @@
+{
+    "tileentities": [
+        {
+            "_name": "chest",
+            "baseStructure": {
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "Chest",
+            "idStr": "Chest",
+            "maxItems": 27,
+            "name": "Chest"
+        },
+        {
+            "_name": "furnace",
+            "baseStructure": {
+                "BurnTime": {
+                    "type": "Short"
+                },
+                "CookTime": {
+                    "type": "Short"
+                },
+                "Items": {
+                    "type": "List"
+                }
+            },
+            "id": "Furnace",
+            "idStr": "Furnace",
+            "maxItems": 3,
+            "name": "Furnace",
+            "slotNames": {
+                "0": "Raw",
+                "1": "Fuel",
+                "2": "Product"
+            }
+        }
+    ]
+}

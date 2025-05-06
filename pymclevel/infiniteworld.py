@@ -22,15 +22,15 @@ import sys
 from box import BoundingBox
 from entity import Entity, TileEntity, TileTick
 from faces import FaceXDecreasing, FaceXIncreasing, FaceZDecreasing, FaceZIncreasing
-from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase
-from materials import alphaMaterials
+from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase, GAME_PLATFORM_JAVA
+import materials
 from mclevelbase import ChunkMalformed, ChunkNotPresent, ChunkAccessDenied,ChunkConcurrentException,exhaust, PlayerNotFound
 import nbt
 from numpy import array, clip, maximum, zeros, asarray, unpackbits, arange
 from regionfile import MCRegionFile
 import logging
 from uuid import UUID
-import id_definitions
+from id_definitions import PLATFORM_ALPHA
 
 log = getLogger(__name__)
 
@@ -196,7 +196,8 @@ class AnvilChunkData(object):
         """ does not recalculate any data or light """
 
         log.debug(u"Saving chunk: {0}".format(self))
-        sanitizeBlocks(self)
+        # pcm1k - this should either be removed or be optional
+#        sanitizeBlocks(self)
 
         sections = nbt.TAG_List()
         append = sections.append
@@ -1184,6 +1185,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                     try:
                         UUID(player, version=4)
                     except ValueError:
+                        # pcm1k - Why does this need to be 3 times? Also "UnicodeEncode" is not a thing apparently
                         try:
                             print "{0} does not seem to be in a valid UUID format".format(player)
                         except UnicodeEncode:
@@ -1266,11 +1268,6 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         else:
             try:
                 self.root_tag = nbt.load(self.filename)
-                # Load the resource for the game version
-                if self.gamePlatform != 'Unknown':
-                    # Force the definitions to be loaded by calling the attribute.
-                    self.loadDefIds()
-                #
             except Exception as e:
                 filename_old = self.worldFolder.getFilePath("%s.dat_old"%dat_name)
                 log.info("Error loading {1}.dat, trying {1}.dat_old ({0})".format(e, dat_name))
@@ -1284,7 +1281,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                     log.info("Error loading %s.dat_old. Initializing with defaults."%dat_name)
                     self._create(self.filename, random_seed, last_played)
 
-        if self.root_tag.get('Data', nbt.TAG_Compound()).get('Version', nbt.TAG_Compound()).get('Id', nbt.TAG_Int(-1)).value > 1451:
+        if self.gameVersionId and self.gameVersionId[0] > 1451:
             raise NotImplementedError("Java 1.13 format worlds are not supported at this time")
 
     def saveInPlaceGen(self):
@@ -1374,12 +1371,14 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
     # --- Instance variables  ---
 
-    materials = alphaMaterials
+    materialsName = "Alpha"
     isInfinite = True
     parentWorld = None
     dimNo = 0
     Height = 256
     _bounds = None
+    _gamePlatform = GAME_PLATFORM_JAVA
+    _defsPlatform = PLATFORM_ALPHA
 
     # --- NBT Tag variables ---
 
@@ -1531,6 +1530,31 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             return True
 
         return False
+
+    def _findGameVersionNumber(self):
+        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+            return None
+        data = self.root_tag["Data"]
+        if "Version" not in data or not isinstance(data["Version"], nbt.TAG_Compound):
+            return None
+        version = data["Version"]
+        if "Name" not in version or not isinstance(version["Name"], nbt.TAG_String):
+            return None
+        return version["Name"].value
+
+    def _findGameVersionId(self):
+        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+            return None
+        data = self.root_tag["Data"]
+        if "Version" not in data or not isinstance(data["Version"], nbt.TAG_Compound):
+            return None
+        version = data["Version"]
+        if "Id" not in version or not isinstance(version["Id"], nbt.TAG_Int):
+            return None
+        return [version["Id"].value]
+
+    def _loadMaterials(self):
+        return materials.getMaterials(self.defsIds, forceNew=True, name="Alpha", defaultName="Future Block!")
 
     # --- Dimensions ---
 

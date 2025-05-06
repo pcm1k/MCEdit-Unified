@@ -1,8 +1,3 @@
-# Versioned data relative objects
-MCEDIT_DEFS = {}
-MCEDIT_IDS = {} # Maps the numeric and name ids to entries in MCEDIT_DEFS
-
-
 from box import BoundingBox, FloatBox
 from entity import Entity, TileEntity
 from faces import faceDirections, FaceXDecreasing, FaceXIncreasing, FaceYDecreasing, FaceYIncreasing, FaceZDecreasing, \
@@ -15,6 +10,7 @@ from level import ChunkBase, computeChunkHeightMap, EntityLevel, FakeChunk, Ligh
 from materials import alphaMaterials, classicMaterials, indevMaterials, MCMaterials, namedMaterials, pocketMaterials
 from mclevelbase import ChunkNotPresent, PlayerNotFound
 from leveldbpocket import PocketLeveldbWorld
+# pcm1k - this is outside the pymclevel directory
 from directories import minecraftSaveFileDir, getMinecraftProfileDirectory, getSelectedProfile
 from mclevel import fromFile, loadWorld, loadWorldNumber
 from nbt import load, gunzip, TAG_Byte, TAG_Byte_Array, TAG_Compound, TAG_Double, TAG_Float, TAG_Int, TAG_Int_Array, \

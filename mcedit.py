@@ -229,6 +229,7 @@ if __name__ == "__main__":
 from mcplatform import platform_open
 import numpy
 from pymclevel.minecraft_server import ServerJarStorage
+from pymclevel.level import GAME_PLATFORM_JAVA
 
 import os.path
 import pygame
@@ -370,7 +371,7 @@ class MCEdit(GLViewport):
         if v:
             #&# Prototype for blocks/items names
             if self.editor.level:
-                if self.editor.level.gamePlatform == "Java": # added this so the original functionality of this function does not change
+                if self.editor.level.gamePlatform == GAME_PLATFORM_JAVA: # added this so the original functionality of this function does not change
                     mclangres.buildResources(self.editor.level.gameVersionNumber, albow.translate.getLang())
                 else:
                     mclangres.buildResources(self.editor.level.gamePlatform, albow.translate.getLang())
@@ -474,14 +475,15 @@ class MCEdit(GLViewport):
         def refresh():
             PlayerCache().force_refresh()
 
-        def update_mcver():
-            num = mcver_updater.run()
-            if num is None:
-                albow.alert("Error Updating")
-            elif num:
-                albow.alert("Version Definitions have been updated!\n\nPlease restart MCEdit-Unified to apply the changes")
-            else:
-                albow.alert("Version Definitions are already up-to-date!")
+        # pcm1k - this should probably be removed
+#        def update_mcver():
+#            num = mcver_updater.run()
+#            if num is None:
+#                albow.alert("Error Updating")
+#            elif num:
+#                albow.alert("Version Definitions have been updated!\n\nPlease restart MCEdit-Unified to apply the changes")
+#            else:
+#                albow.alert("Version Definitions are already up-to-date!")
 
         hotkeys = ([("",
                      "Controls",
@@ -508,9 +510,9 @@ class MCEdit(GLViewport):
                     ("",
                      "Refresh Player Names",
                      refresh),
-                    ("",
-                     "Update Version Definitions",
-                     update_mcver)
+#                    ("",
+#                     "Update Version Definitions",
+#                     update_mcver)
                     ])
 
         c = albow.HotkeyColumn(hotkeys)
@@ -743,6 +745,7 @@ class MCEdit(GLViewport):
             except Exception as e:
                 logging.error(u'Failed to load file {0}: {1!r}'.format(
                     filename, e))
+                print traceback.format_exc()
                 return None
 
             self.remove(self.fileOpener)
