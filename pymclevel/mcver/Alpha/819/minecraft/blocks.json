@@ -273,6 +273,10 @@
             "id": 219,
             "idStr": "white_shulker_box",
             "name": "White Shulker Box",
+            "tex": [
+                13,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -317,6 +321,10 @@
             "id": 220,
             "idStr": "orange_shulker_box",
             "name": "Orange Shulker Box",
+            "tex": [
+                15,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -361,6 +369,10 @@
             "id": 221,
             "idStr": "magenta_shulker_box",
             "name": "Magenta Shulker Box",
+            "tex": [
+                23,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -405,6 +417,10 @@
             "id": 222,
             "idStr": "light_blue_shulker_box",
             "name": "Light Blue Shulker Box",
+            "tex": [
+                20,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -449,6 +465,10 @@
             "id": 223,
             "idStr": "yellow_shulker_box",
             "name": "Yellow Shulker Box",
+            "tex": [
+                16,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -493,6 +513,10 @@
             "id": 224,
             "idStr": "lime_shulker_box",
             "name": "Lime Shulker Box",
+            "tex": [
+                17,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -537,6 +561,10 @@
             "id": 225,
             "idStr": "pink_shulker_box",
             "name": "Pink Shulker Box",
+            "tex": [
+                24,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -581,6 +609,10 @@
             "id": 226,
             "idStr": "gray_shulker_box",
             "name": "Gray Shulker Box",
+            "tex": [
+                11,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -625,6 +657,10 @@
             "id": 227,
             "idStr": "silver_shulker_box",
             "name": "Light Gray Shulker Box",
+            "tex": [
+                12,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -669,6 +705,10 @@
             "id": 228,
             "idStr": "cyan_shulker_box",
             "name": "Cyan Shulker Box",
+            "tex": [
+                19,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -713,6 +753,10 @@
             "id": 229,
             "idStr": "purple_shulker_box",
             "name": "Purple Shulker Box",
+            "tex": [
+                22,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -757,6 +801,10 @@
             "id": 230,
             "idStr": "blue_shulker_box",
             "name": "Blue Shulker Box",
+            "tex": [
+                21,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -801,6 +849,10 @@
             "id": 231,
             "idStr": "brown_shulker_box",
             "name": "Brown Shulker Box",
+            "tex": [
+                25,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -845,6 +897,10 @@
             "id": 232,
             "idStr": "green_shulker_box",
             "name": "Green Shulker Box",
+            "tex": [
+                18,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -889,6 +945,10 @@
             "id": 233,
             "idStr": "red_shulker_box",
             "name": "Red Shulker Box",
+            "tex": [
+                14,
+                27
+            ],
             "tileentity": "shulker_box"
         },
         {
@@ -933,6 +993,10 @@
             "id": 234,
             "idStr": "black_shulker_box",
             "name": "Black Shulker Box",
+            "tex": [
+                10,
+                27
+            ],
             "tileentity": "shulker_box"
         }
     ],
