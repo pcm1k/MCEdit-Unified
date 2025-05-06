@@ -242,7 +242,7 @@ import threading
 from utilities.gl_display_context import GLDisplayContext
 
 import mclangres
-from utilities import mcver_updater, mcworld_support
+from utilities import mcworld_support
 
 getPlatInfo(OpenGL=OpenGL, numpy=numpy, pygame=pygame)
 
@@ -475,16 +475,6 @@ class MCEdit(GLViewport):
         def refresh():
             PlayerCache().force_refresh()
 
-        # pcm1k - this should probably be removed
-#        def update_mcver():
-#            num = mcver_updater.run()
-#            if num is None:
-#                albow.alert("Error Updating")
-#            elif num:
-#                albow.alert("Version Definitions have been updated!\n\nPlease restart MCEdit-Unified to apply the changes")
-#            else:
-#                albow.alert("Version Definitions are already up-to-date!")
-
         hotkeys = ([("",
                      "Controls",
                      self.showKeyConfig),
@@ -509,10 +499,7 @@ class MCEdit(GLViewport):
                      directories.getDataFile('LICENSE.txt')),
                     ("",
                      "Refresh Player Names",
-                     refresh),
-#                    ("",
-#                     "Update Version Definitions",
-#                     update_mcver)
+                     refresh)
                     ])
 
         c = albow.HotkeyColumn(hotkeys)
