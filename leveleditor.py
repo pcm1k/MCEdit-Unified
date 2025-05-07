@@ -963,24 +963,22 @@ class LevelEditor(GLViewport):
             directories.schematicsDir, self.level.displayName, ({"Minecraft Schematics": ["schematic"], "Minecraft Structure NBT": ["nbt"]},[]))
 
         def save_as_nbt(schem, filename):
-            structure = StructureNBT.fromSchematic(schem)
-            if self.level.gameVersionId:
-                structure._version = self.level.gameVersionId[0]
+            structure = StructureNBT.fromSchematic(schem, version=self.level.gameVersionId[0] if self.level.gameVersionId else None)
             structure.save(filename)
 
         if filename:
             if filename.endswith(".schematic"):
                 schematic.saveToFile(filename)
             elif filename.endswith(".nbt"):
-                # pcm1k - I believe tuples compare lexicographically...
-                if (schematic.Height, schematic.Length, schematic.Width) >= (50, 50, 50):
+                if schematic.Height >= 50 or schematic.Length >= 50 or schematic.Width >= 50:
                     result = ask("You're trying to export a large selection as a Structure NBT file, this is not recommended " +
                                  "and may cause MCEdit to hang and/or crash. We recommend you export this selection as a Schematic instead.",
                                  responses=['Export as Structure anyway', 'Export as Schematic', 'Cancel Export'], wrap_width=80)
                     if result == 'Export as Structure anyway':
                         save_as_nbt(schematic, filename)
                     elif result == 'Export as Schematic':
-                        schematic.saveToFile(filename.replace('.nbt', '.schematic'))
+                        # filename ends in ".nbt"
+                        schematic.saveToFile(filename[:-4] + ".schematic")
                     elif result == 'Cancel Export':
                         return
                 save_as_nbt(schematic, filename)
