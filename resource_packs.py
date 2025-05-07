@@ -40,7 +40,7 @@ log.setLevel(level)
 def step(slot):
     '''
     Utility method for multiplying the slot by 16
-    
+
     :param slot: Texture slot
     :type slot: int
     '''
@@ -535,13 +535,13 @@ textureSlots = {
     "door_jungle_upper": (step(7),step(20)),
     "door_acacia_upper": (step(8),step(20)),
     "door_dark_oak_upper": (step(9),step(20)),
-    # 
-    # 
-    # 
-    # 
-    # 
-    # 
-    # 
+    #
+    #
+    #
+    #
+    #
+    #
+    #
     #
     "chorus_plant": (step(13),step(20)),
     "chorus_flower_dead": (step(14),step(20)),
@@ -579,15 +579,15 @@ class MultipartTexture(object):
                 self.runAnyways.append(instance)
             else:
                 self.texture_dict[instance.target] = instance
-            
-        
+
+
 class LeverTexture(MultipartTexture):
     target = "lever"
     runAnyway = False
-    
+
     def __init__(self, texture_objects):
         self.texture_objects = texture_objects
-    
+
     def parse_texture(self):
         if "lever" not in self.texture_objects or "cobblestone" not in self.texture_objects:
             return None
@@ -595,28 +595,28 @@ class LeverTexture(MultipartTexture):
         cobblestone = self.texture_objects["cobblestone"].copy()
         base_1 = cobblestone.crop((5, 4, 11, 12))
         lever.paste(base_1, (10, 0, 16, 8))
-    
+
         base_2 = cobblestone.crop((5, 0, 11, 3))
         lever.paste(base_2, (10, 8, 16, 11))
 
         base_3 = cobblestone.crop((4, 0, 12, 3))
         lever.paste(base_3, (2, 0, 10, 3))
         return lever
-    
+
 class StandingSignTexture(MultipartTexture):
     target = ""
     runAnyway = True
     position = (step(20), step(5))
-    
+
     def __init__(self, texture_objects):
         self.texture_objects = texture_objects
-        
+
     def parse_texture(self):
         if "planks_oak" not in self.texture_objects or "log_oak" not in self.texture_objects:
             return None
         planks = self.texture_objects["planks_oak"].copy()
         log_tex = self.texture_objects["log_oak"].copy()
-        
+
         sign = planks.crop((0, 7, 16, 16))
         log_tex.paste(sign, (0, 7, 16, 16))
         if log_tex.mode != "RGBA":
@@ -989,7 +989,7 @@ class ResourcePackHandler:
     A single point to manage which Resource Pack is being used and to provide the paths to each parsed PNG
     '''
     Instance = None
-    
+
     def setup_reource_packs(self):
         '''
         Handles parsing of Resource Packs and removing ones that are either have to0 high of a resolution, or don't replace any textures
@@ -1058,7 +1058,7 @@ class ResourcePackHandler:
         Reparses all Resource Packs
         '''
         self.setup_resource_packs()
-        
+
     def reparse_resource_pack(self, packName):
         if packName in self._resource_packs:
             pack = self._resource_packs[packName]
@@ -1076,7 +1076,7 @@ class ResourcePackHandler:
     def set_selected_resource_pack_name(self, name):
         '''
         Sets the currently selected Resource Pack
-        
+
         :param name: Name of the Resource Pack
         '''
         config.settings.resourcePack.set(name)

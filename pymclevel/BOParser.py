@@ -170,7 +170,7 @@ class BO3:
 
 class BO2:
     _parser = ConfigParser.RawConfigParser()
-    
+
     def __init__(self, filename=''):
         self.__meta = {}
         self.__blocks = {}
@@ -183,38 +183,38 @@ class BO2:
             self.__version = self._parser.get('META', 'version')
             for item in self._parser.items("META"):
                 self.__meta[item[0]] = item[1]
-                
+
             for block in self._parser.items("DATA"):
-                
+
                 if int(block[0].split(",")[2]) < self._vertical_tracker[0]:
                     self._vertical_tracker[0] = int(block[0].split(",")[2])
                 if int(block[0].split(",")[2]) > self._vertical_tracker[1]:
                     self._vertical_tracker[1] = int(block[0].split(",")[2])
-                    
-                    
+
+
                 if int(block[0].split(",")[0]) < self._horizontal_tracker_1[0]:
                     self._horizontal_tracker_1[0] = int(block[0].split(",")[0])
                 if int(block[0].split(",")[0]) > self._horizontal_tracker_1[1]:
                     self._horizontal_tracker_1[1] = int(block[0].split(",")[0])
-                    
-                    
+
+
                 if int(block[0].split(",")[1]) < self._horizontal_tracker_2[0]:
                     self._horizontal_tracker_2[0] = int(block[0].split(",")[1])
                 if int(block[0].split(",")[1]) > self._horizontal_tracker_2[1]:
                     self._horizontal_tracker_2[1] = int(block[0].split(",")[1])
-                    
+
             if self._vertical_tracker[0] < 0:
                 self._vertical_tracker[2] = abs(self._vertical_tracker[0])
                 self._vertical_tracker[1] += abs(self._vertical_tracker[0])
-                
+
             if self._horizontal_tracker_1[0] < 0:
                 self._horizontal_tracker_1[2] = abs(self._horizontal_tracker_1[0])
                 self._horizontal_tracker_1[1] += abs(self._horizontal_tracker_1[0])
-                
+
             if self._horizontal_tracker_2[0] < 0:
                 self._horizontal_tracker_2[2] = abs(self._horizontal_tracker_2[0])
                 self._horizontal_tracker_2[1] += abs(self._horizontal_tracker_2[0])
-                
+
             self.__schem = schematic.MCSchematic(shape=(self._horizontal_tracker_2[1]+1, self._vertical_tracker[1]+1, self._horizontal_tracker_1[1]+1))
             for block in self._parser.items("DATA"):
                 coords = block[0].split(",")
@@ -227,14 +227,14 @@ class BO2:
                     b, s = block[1], 0
                 self.__schem.Blocks[x,y,z] = b
                 self.__schem.Data[x, y, z] = s
-            
+
     def getSchematic(self):
         return self.__schem
-    
+
     @property
     def meta(self):
         return self.__meta
-    
+
     @property
     def blocks(self):
         return self.__blocks

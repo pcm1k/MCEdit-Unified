@@ -10,10 +10,10 @@ disableStyleButton = True
 
 
 def createInputs(self):
-    self.inputs= (         
+    self.inputs= (
     )
     pass
-        
+
 
 def createDirtyBox(self, point, tool):
     newpoint = []

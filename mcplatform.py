@@ -122,7 +122,7 @@ if sys.platform == "win32":
         from win32com.shell import shell, shellcon  # @UnresolvedImport
     except:
         pass
-    
+
     try:
         import pywintypes
     except:
@@ -250,7 +250,7 @@ def askOpenFile(title='Select a Minecraft level....', schematics=False, suffixes
             _suffixes.append("zip")
 
             _suffixes.append("inv")
-            
+
             _suffixes.append("nbt")
 
             # BO support
@@ -327,7 +327,7 @@ def askOpenFileGtk(title, suffixes, initialDir):
                                         None, gtk.FILE_CHOOSER_ACTION_SAVE,
                                         (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                         gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-    
+
         chooser.set_default_response(gtk.RESPONSE_OK)
         chooser.set_current_folder(initialDir)
         chooser.set_current_name("world")  # For some reason the Windows isn't closing if this line ins missing or the parameter is ""
@@ -361,7 +361,7 @@ def askOpenFileGtk(title, suffixes, initialDir):
 
 def askSaveSchematic(initialDir, displayName, fileFormats):
     fileFormat = buildFileTypes(fileFormats)
-    
+
     dt = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     return askSaveFile(initialDir,
                        title=_('Save this schematic...'),
@@ -667,7 +667,7 @@ def get_desktop_environment():
                     return "razor-qt"
                 elif desktop_session.startswith("wmaker"):  # e.g. wmaker-common
                     return "windowmaker"
-                
+
             if os.environ.get('KDE_FULL_SESSION', None) == 'true':
                 return "kde"
             elif os.environ.get('GNOME_DESKTOP_SESSION_ID', None):
@@ -1142,7 +1142,7 @@ class WWindowHandler(BaseWindowHandler):
                 print "Settin size to", size
                 print "actual size", self.get_size()
                 print "actual position", self.get_position()
-                
+
                 print 'cursor pos', cx, cy
             flags, showCmd, ptMin, ptMax, rect = win32gui.GetWindowPlacement(self.base_handler_id)
             if DEBUG_WM:

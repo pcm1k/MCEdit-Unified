@@ -426,7 +426,7 @@ class ChunkedLevelMixin(MCLevel):
     def blockLightAt(self, x, y, z):
         '''
         Gets the light value of the block at the specified X, Y, Z coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param y: The Y block coordinate
@@ -450,7 +450,7 @@ class ChunkedLevelMixin(MCLevel):
     def setBlockLightAt(self, x, y, z, newLight):
         '''
         Sets the light value of the block at the specified X, Y, Z coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param y: The Y block coordinate
@@ -477,7 +477,7 @@ class ChunkedLevelMixin(MCLevel):
     def blockDataAt(self, x, y, z):
         '''
         Gets the data value of the block at the specified X, Y, Z coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param y: The Y block coordinate
@@ -505,7 +505,7 @@ class ChunkedLevelMixin(MCLevel):
     def setBlockDataAt(self, x, y, z, newdata):
         '''
         Sets the data value of the block at the specified X, Y, Z coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param y: The Y block coordinate
@@ -1093,8 +1093,8 @@ class AnvilWorldFolder(object):
 
 class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     '''
-    A class that handles the data that is stored in a Minecraft Java level. 
-    
+    A class that handles the data that is stored in a Minecraft Java level.
+
     This class is the type of the 'level' parameter that is passed to a filter's :func:`perform` function
     '''
     playersFolder = None
@@ -1196,7 +1196,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                         self.players.remove(player)
                 if "Player" in self.root_tag["Data"]:
                     self.players.append("Player")
-    
+
                 self.preloadDimensions()
 
     # --- Load, save, create ---
@@ -1413,7 +1413,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def init_scoreboard(self):
         '''
         Creates a scoreboard for the world
-        
+
         :return: A scoreboard
         :rtype: pymclevel.nbt.TAG_Compound()
         '''
@@ -1443,7 +1443,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def save_scoreboard(self, score):
         '''
         Saves the provided scoreboard
-        
+
         :param score: The scoreboard
         :type score: pymclevel.nbt.TAG_Compound()
         '''
@@ -1747,7 +1747,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getChunk(self, cx, cz):
         '''
         Read the chunk from disk, load it, and then return it
-        
+
         :param cx: The X coordinate of the Chunk
         :type cx: int
         :param cz: The Z coordinate of the Chunk
@@ -1795,9 +1795,9 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     # --- Biome manipulation ---
     def biomeAt(self, x, z):
         '''
-        Gets the biome of the block at the specified coordinates. Since biomes are for the entire column at the coordinate, the Y coordinate wouldn't 
+        Gets the biome of the block at the specified coordinates. Since biomes are for the entire column at the coordinate, the Y coordinate wouldn't
         change the result
-        
+
         :param x: The X block coordinate
         :type x: int
         :param z: The Z block coordinate
@@ -1812,12 +1812,12 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def setBiomeAt(self, x, z, biomeID):
         '''
         Sets the biome data for the Y column at the specified X and Z coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param z: The Z block coordinate
         :type z: int
-        :param biomeID: The wanted biome ID 
+        :param biomeID: The wanted biome ID
         :type biomeID: int
         '''
         biomes = self.getChunk(int(x/16), int(z/16)).root_tag["Level"]["Biomes"].value
@@ -1830,7 +1830,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def addEntity(self, entityTag):
         '''
         Adds an Entity to the level and sets its position to the values of the 'Pos' tag
-        
+
         :param entityTag: The NBT data of the Entity
         :type entityTag: pymclevel.nbt.TAG_Compound
         '''
@@ -1848,7 +1848,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def tileEntityAt(self, x, y, z):
         '''
         Gets the TileEntity at the specified X, Y, and Z block coordinates
-        
+
         :param x: The X block coordinate
         :type x: int
         :param y: The Y block coordinate
@@ -1863,7 +1863,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def addTileEntity(self, tileEntityTag):
         '''
         Adds an TileEntity to the level and sets its position to the values of the X, Y, and Z tags
-        
+
         :param tileEntityTag: The NBT data of the TileEntity
         :type tileEntityTag: pymclevel.nbt.TAG_Compound
         '''
@@ -1883,7 +1883,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def addTileTick(self, tickTag):
         '''
         Adds an TileTick to the level and sets its position to the values of the X, Y, and Z tags
-        
+
         :param tickTag: The NBT data of the TileTick
         :type tickTag: pymclevel.nbt.TAG_Compound
         '''
@@ -1902,7 +1902,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getEntitiesInBox(self, box):
         '''
         Get all of the Entities in the specified box
-        
+
         :param box: The box to search for Entities in
         :type box: pymclevel.box.BoundingBox
         :return: A list of all the Entity tags in the box
@@ -1917,7 +1917,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getTileEntitiesInBox(self, box):
         '''
         Get all of the TileEntities in the specified box
-        
+
         :param box: The box to search for TileEntities in
         :type box: pymclevel.box.BoundingBox
         :return: A list of all the TileEntity tags in the box
@@ -1932,7 +1932,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getTileTicksInBox(self, box):
         '''
         Get all of the TileTicks in the specified box
-        
+
         :param box: The box to search for TileTicks in
         :type box: pymclevel.box.BoundingBox
         :return: A list of all the TileTick tags in the box
@@ -1947,7 +1947,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def removeEntitiesInBox(self, box):
         '''
         Removes all of the Entities in the specified box
-        
+
         :param box: The box to remove all Entities from
         :type box: pymclevel.box.BoundingBox
         :return: The number of Entities removed
@@ -1963,7 +1963,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def removeTileEntitiesInBox(self, box):
         '''
         Removes all of the TileEntities in the specified box
-        
+
         :param box: The box to remove all TileEntities from
         :type box: pymclevel.box.BoundingBox
         :return: The number of TileEntities removed
@@ -1979,7 +1979,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def removeTileTicksInBox(self, box):
         '''
         Removes all of the TileTicks in the specified box
-        
+
         :param box: The box to remove all TileTicks from
         :type box: pymclevel.box.BoundingBox
         :return: The number of TileTicks removed
@@ -1997,7 +1997,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def containsChunk(self, cx, cz):
         '''
         Checks if the specified chunk exists/has been generated
-        
+
         :param cx: The X coordinate of the chunk
         :type cx: int
         :param cz: The Z coordinate of the chunk
@@ -2015,7 +2015,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def containsPoint(self, x, y, z):
         '''
         Checks if the specified X, Y, Z coordinate has been generated
-        
+
         :param x: The X coordinate
         :type x: int
         :param y: The Y coordinate
@@ -2032,7 +2032,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def createChunk(self, cx, cz):
         '''
         Creates a chunk at the specified chunk coordinates if it doesn't exist already
-        
+
         :param cx: The X coordinate of the chunk
         :type cx: int
         :param cz: The Z coordinate of the chunk
@@ -2050,7 +2050,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def createChunks(self, chunks):
         '''
         Creates multiple chunks specified by a list of chunk X and Z coordinate tuples
-        
+
         :param chunks: A list of chunk X and Z coordinates in tuple form [(cx, cz), (cx, cz)...]
         :type chunks: list
         :return: A list of the chunk coordinates that were created, doesn't include coordinates of ones already present
@@ -2075,7 +2075,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def createChunksInBox(self, box):
         '''
         Creates all chunks that would be present in the box
-        
+
         :param box: The box to generate chunks in
         :type box: pymclevel.box.BoundingBox
         :return: A list of the chunk coordinates that were created, doesn't include coordinates of ones already present
@@ -2088,9 +2088,9 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def deleteChunk(self, cx, cz):
         '''
         Deletes the chunk at the specified chunk coordinates
-        
+
         :param cx: The X coordinate of the chunk
-        :type cx: int 
+        :type cx: int
         :param cz: The Z coordinate of the chunk
         :type cz: int
         '''
@@ -2103,7 +2103,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def deleteChunksInBox(self, box):
         '''
         Deletes all of the chunks in the specified box
-        
+
         :param box: The box of chunks to remove
         :type box: pymclevel.box.BoundingBox
         :return: A list of the chunk coordinates  of the chunks that were deleted
@@ -2154,7 +2154,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerPath(self, player, dim=0):
         '''
         Gets the file path to the player file
-        
+
         :param player: The UUID of the player
         :type player: str
         :param dim: The dimension that the player resides in
@@ -2171,7 +2171,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerTag(self, player="Player"):
         '''
         Gets the NBT data for the specified player
-        
+
         :param player: The UUID of the player
         :type player: str
         :return: The NBT data for the player
@@ -2196,7 +2196,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerDimension(self, player="Player"):
         '''
         Gets the dimension that the specified player is currently in
-        
+
         :param player: The UUID of the player
         :type player: str
         :return: The dimension the player is currently in
@@ -2210,7 +2210,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def setPlayerDimension(self, d, player="Player"):
         '''
         Sets the player's current dimension
-        
+
         :param d: The desired dimension (0 for Overworld, -1 for Nether, 1 for The End)
         :type d: int
         :param player: The UUID of the player
@@ -2224,7 +2224,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def setPlayerPosition(self, (x, y, z), player="Player"):
         '''
         Sets the specified player's position
-        
+
         :param x: The desired X coordinate
         :type x: float
         :param y: The desired Y coordinate
@@ -2242,7 +2242,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerPosition(self, player="Player"):
         '''
         Gets the position for the specified player
-        
+
         :param player: The UUID of the player
         :type player: str
         :return: The X, Y, Z coordinates of the player
@@ -2257,7 +2257,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def setPlayerOrientation(self, yp, player="Player"):
         '''
         Sets the specified player's orientation
-        
+
         :param yp: The desired Yaw and Pitch
         :type yp: tuple or list
         :param player: The UUID of the player
@@ -2268,7 +2268,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerOrientation(self, player="Player"):
         '''
         Gets the orientation of the specified player
-        
+
         :param player: The UUID of the player
         :type player: str
         :return: The orientation of the player in the format: (yaw, pitch)
@@ -2307,7 +2307,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def setPlayerGameType(self, gametype, player="Player"):
         '''
         Sets the specified player's gametype/gamemode
-        
+
         :param gametype: The desired Gametype/Gamemode number
         :type gametype: int
         :param player: The UUID of the player
@@ -2325,7 +2325,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     def getPlayerGameType(self, player="Player"):
         '''
         Gets the Gamemode of the specified player
-        
+
         :param player: The UUID of the player
         :type player: str
         :return: The Gamemode number
@@ -2341,7 +2341,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         '''
         ~Deprecated~
         Creates a player with default values
-        
+
         :param playerName: The name of the player
         :type playerName: str
         '''

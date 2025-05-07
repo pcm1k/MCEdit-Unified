@@ -138,7 +138,7 @@ class PlayerAddOperation(Operation):
                 initial = self.player
             else:
                 break
-            
+
 #         print 1
         data = self.playercache.getPlayerInfo(self.player)
         if "<Unknown UUID>" not in data and "Server not ready" not in data:
@@ -168,14 +168,14 @@ class PlayerAddOperation(Operation):
 
         if self.level.oldPlayerFolderFormat:
             self.level.playerTagCache[self.level.getPlayerPath(self.player)] = self.playerTag
-            
+
             self.level.players.append(self.player)
             #if self.tool.panel:
                 #self.tool.panel.player_UUID[self.player] = self.player
 
         else:
             self.level.playerTagCache[self.level.getPlayerPath(self.uuid)] = self.playerTag
-            
+
             self.level.players.append(self.uuid)
             if self.tool.panel:
                 self.tool.panel.player_UUID["UUID"].append(self.uuid)
@@ -423,7 +423,7 @@ class PlayerPositionPanel(Panel):
         # Add this instance to PlayerCache 'targets'. PlayerCache generated processes will call
         # this instance 'update_player' method when they have finished their execution.
         self.playercache.add_target(self.update_player)
-        
+
         if hasattr(self.level, 'players'):
             players = self.level.players or ["[No players]"]
             if not self.level.oldPlayerFolderFormat:
@@ -451,7 +451,7 @@ class PlayerPositionPanel(Panel):
         else:
             players = ["Player (Single Player)"]
         self.players = players
-        
+
         if 'Player' in self.player_UUID['UUID'] and 'Player (Single Player)' in self.player_UUID['Name']:
             self.player_UUID['UUID'].insert(0, self.player_UUID['UUID'].pop(self.player_UUID['UUID'].index('Player')))
             self.player_UUID['Name'].insert(0, self.player_UUID['Name'].pop(self.player_UUID['Name'].index('Player (Single Player)')))
@@ -757,52 +757,52 @@ class PlayerPositionTool(EditorTool):
                 16, 8,
 
             ), dtype='f4')
-        
+
         textureVerticesHat = numpy.array(
             (
                 56, 16,
                 56, 8,
                 64, 8,
                 64, 16,
-                
+
                 48, 16,
                 48, 8,
                 40, 8,
                 40, 16,
-                
+
                 56, 0,
                 48, 0,
                 48, 8,
                 56, 8,
-                
+
                 48, 0,
                 40, 0,
                 40, 8,
                 48, 8,
-                
+
                 40, 8,
                 32, 8,
                 32, 16,
                 40, 16,
-                
+
                 48, 16,
                 56, 16,
                 56, 8,
                 48, 8,
-                
+
             ), dtype='f4')
-        
+
 
         textureVerticesHead.shape = (24, 2)
         textureVerticesHat.shape = (24, 2)
 
         textureVerticesHead *= 4
         textureVerticesHead[:, 1] *= 2
-        
+
         textureVerticesHat *= 4
         textureVerticesHat[:, 1] *= 2
 
-        self.texVerts = (textureVerticesHead, textureVerticesHat) 
+        self.texVerts = (textureVerticesHead, textureVerticesHat)
 
         self.playerPos = {0:{}, -1:{}, 1:{}}
         self.playerTexture = {}
@@ -871,11 +871,11 @@ class PlayerPositionTool(EditorTool):
                 pos = self.editor.level.getPlayerPosition(player)
                 yaw, pitch = self.editor.level.getPlayerOrientation(player)
                 dim = self.editor.level.getPlayerDimension(player)
-                
+
                 self.inOtherDimension[dim].append(player)
                 self.playerPos[dim][pos] = player
                 self.revPlayerPos[dim][player] = pos
-                
+
                 if player != "Player" and config.settings.downloadPlayerSkins.get():
 #                     print 7
                     r = self.playercache.getPlayerSkin(player, force_download=False)
@@ -884,7 +884,7 @@ class PlayerPositionTool(EditorTool):
                     self.playerTexture[player] = loadPNGTexture(r)
                 else:
                     self.playerTexture[player] = self.charTex
-                    
+
                 if dim != self.editor.level.dimNo:
                     continue
 
@@ -917,7 +917,7 @@ class PlayerPositionTool(EditorTool):
         origin = (x - 0.25, y - 0.25, z - 0.25)
         size = (0.5, 0.5, 0.5)
         box = FloatBox(origin, size)
-        
+
         hat_origin = (x - 0.275, y - 0.275, z - 0.275)
         hat_size = (0.55, 0.55, 0.55)
         hat_box = FloatBox(hat_origin, hat_size)
@@ -1072,10 +1072,10 @@ class PlayerSpawnPositionTool(PlayerPositionTool):
 
     def _drawToolMarkers(self):
         x, y, z = self.editor.level.playerSpawnPosition()
-        
+
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
         GL.glEnable(GL.GL_BLEND)
-        
+
         color = config.selectionColors.black.get() + (0.35,)
         GL.glColor(*color)
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
@@ -1084,7 +1084,7 @@ class PlayerSpawnPositionTool(PlayerPositionTool):
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
         drawCube(FloatBox((x, y, z), (1, 1, 1)))
         GL.glDisable(GL.GL_BLEND)
-        
+
         GL.glEnable(GL.GL_DEPTH_TEST)
         GL.glColor(1.0, 1.0, 1.0, 1.0)
         self.drawCage(x, y, z)

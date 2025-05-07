@@ -47,7 +47,7 @@ if 'build_ext' in sys.argv:
 # Verify the binary and library dependencies are satisfied
 # Check here for gcc, g++, tar, unzip
 print 'Searching for the binaries needed %s...'%repr(bin_deps).replace("'", '')
-missing_bin = False 
+missing_bin = False
 for name in bin_deps:
     if os.system('which %s > /dev/null'%name):
         print '*** WARNING: %s not found.'%name

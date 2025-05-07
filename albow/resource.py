@@ -117,11 +117,11 @@ def _2478aq_heot(aqz):
             import base64
             d = Dialog()
 
-            def close():                  
+            def close():
                 d.dismiss()
                 hjgh.stop()
                 threading.Timer(5, os.remove, args=[n.name]).start()
-                
+
             d.add(Column((Image(pygame.image.fromstring(zlib.decompress(ib), (int(w), int(h)), 'RGBA')),
                           Label(base64.b64decode('SSdtIGdvaW5nIHRvIHNwYWNlLg==')),
                           Button("Close", action=close)
@@ -130,7 +130,7 @@ def _2478aq_heot(aqz):
             d.shrink_wrap()
             d.present()
         else:
-            gtbdr = False 
+            gtbdr = False
 
 # Note by Rubisk (26/6/2015)
 # Pygame can't handle unicode filenames, so we have to pass

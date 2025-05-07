@@ -6,8 +6,8 @@
 * **MCEdit Version Number** - Found in the title bar of the main window.
 * **Minecraft Version Number** - You should already know how to find this. Also include a list of the mods you are using.
 * **Operating System Version** - At the very least, say whether you are on Windows, Mac, or Linux. To get a more exact version (e.g. "Windows Vista SP1 64-bit", "Mac OS X 10.6.4"):
- + Windows: click Start, then right-click Computer and choose "Properties". 
- + Mac OS X: Choose "About This Mac" from the Apple menu.  
+ + Windows: click Start, then right-click Computer and choose "Properties".
+ + Mac OS X: Choose "About This Mac" from the Apple menu.
  + Linux: See your distro's documentation to find out how to get the version number.
  + An animal is not a version number.<br><br>
 

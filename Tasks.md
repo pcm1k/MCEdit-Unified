@@ -1,4 +1,4 @@
-This file is to note down what needs to be fixed, and anything that badly needs an upgrade. Although this document was written to just keep things straightened out, any help is appreciated. 
+This file is to note down what needs to be fixed, and anything that badly needs an upgrade. Although this document was written to just keep things straightened out, any help is appreciated.
 
 - [ ] Reimplement automatic updating
 	- Because I build using pyinstaller instead of py2exe, mcedit will need to be changed from esky to updater4pyi.

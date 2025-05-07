@@ -325,7 +325,7 @@ class SelectionTool(EditorTool):
                 del t["Items"]
 
             text += str(t)
-            
+
         return text
 
     @property
@@ -1223,7 +1223,7 @@ class SelectionTool(EditorTool):
     @alertException
     def exportSelection(self):
         schematic = self._copySelection()
-        
+
         if schematic:
             self.editor.exportSchematic(schematic)
 

@@ -214,7 +214,7 @@ item_types_map = {TAG_Byte: ("Byte", IntField, 0),
 map_types_item = setup_map_types_item(item_types_map)
 
 TAG_List_Type.choices = map_types_item.keys()
-    
+
 
 # -----------------------------------------------------------------------------
 def create_base_item(self, i_type, i_name, i_value):
@@ -1233,7 +1233,7 @@ def loadFile(fName):
         fp.close()
 
         _magic = struct.Struct('<i').unpack(data[:4])[0]
-            
+
         if 2 < _magic < 6:
             # We have a PE world.
             magic = _magic
@@ -1297,7 +1297,7 @@ def saveFile(fName, data, savePolicy, magic):
                 data.save(fName)
             elif savePolicy == 1:
                 with littleEndianNBT():
-                    # Here we have a PE data file. Just strip out the 
+                    # Here we have a PE data file. Just strip out the
                     toSave = data.save(compressed=False)
                     toSave = struct.Struct('<i').pack(magic) + struct.Struct('<i').pack(len(toSave)) + toSave
                     with open(fName, 'wb') as f:

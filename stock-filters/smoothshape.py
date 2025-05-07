@@ -13,7 +13,7 @@ displayName = "Smooth - 3D"
 
 def perform(level, box, options):
     smoothing = options["Smoothing"]
-    
+
     width = box.maxx - box.minx
     height = box.maxy - box.miny
     depth = box.maxz - box.minz
@@ -46,11 +46,11 @@ def perform(level, box, options):
                 level.setBlockDataAt(x, y, z, dmgs[dx, dy, dz])
 
     level.markDirtyBox(box)
-    
+
 
 def getSmoothed(level, x, y, z, smoothing, cache):
     counts = {}
-    
+
     for dx in xrange(-smoothing, smoothing):
         for dy in xrange(-smoothing, smoothing):
             for dz in xrange(-smoothing, smoothing):
@@ -78,7 +78,7 @@ def getSmoothed(level, x, y, z, smoothing, cache):
 
     maxcount = 0
     maxbl = (0, 0)
-    
+
     for (bl, count) in counts.iteritems():
         if count > maxcount:
             maxcount = count

@@ -25,7 +25,7 @@ class FTPClient:
     """
     Wrapper client to download and upload worlds to a FTP Server
     """
-    
+
     def download(self):
         """
         Downloads all files in the current FTP directory with their corresponding paths
@@ -37,11 +37,11 @@ class FTPClient:
                 pass
             for f in files:
                 self._host.download(self._host.path.join(root, f), os.path.join('ftp', self._worldname, root, f))
-                
+
     def upload_new_world(self, world):
         """
         Uploads a new world to the current FTP server connection
-        
+
         :param world: The InfiniteWorld object for the world to upload
         :type world: InfiniteWorld
         """
@@ -68,7 +68,7 @@ class FTPClient:
                         pass
                     else:
                         print "Error: {0}".format(e.message)
-                
+
     def upload(self):
         """
         Uploads an edited world to the current FTP server connection
@@ -86,7 +86,7 @@ class FTPClient:
                     target = self._host.path.join(root, f).replace("ftp"+os.path.sep+self._worldname, "").replace("\\", "", 1)
                 else :
                     target = self._host.path.join(root, f).replace("ftp"+os.path.sep+self._worldname, "")
-                    
+
                 if "\\" in target:
                     target = target.replace("\\", "/")
                 try:
@@ -94,7 +94,7 @@ class FTPClient:
                 except Exception as e:
                     if "226" in e.message:
                         pass
-        
+
     def cleanup(self):
         """
         Closes the FTP connection and removes all leftover files from the 'ftp' directory
@@ -102,7 +102,7 @@ class FTPClient:
         if hasattr(self, '_host'):
             self._host.close()
         shutil.rmtree('ftp')
-        
+
     def safe_download(self):
         """
         Changes the FTP client's working directory, downloads the world, then switches back to the original working directory
@@ -111,17 +111,17 @@ class FTPClient:
         self._host.chdir(self._worldname)
         self.download()
         self._host.chdir(old_dir)
-            
+
     def get_level_path(self):
         """
         Gets the local path to the downloaded FTP world
         """
         return os.path.join('ftp', self._worldname)
-                
+
     def __init__(self, ip, username='anonymous', password=''):
         """
         Initializes an FTP client to handle uploading and downloading of a Minecraft world via FTP
-        
+
         :param ip: The IP of the FTP Server
         :type ip: str
         :param username: The Username to use to log into the server
@@ -137,7 +137,7 @@ class FTPClient:
             self._host = ftputil.FTPHost(ip, username, password)
         except PermanentError:
             raise InvalidCreditdentialsException("Incorrect username or password")
-            
+
         self._worldname = None
         if 'server.properties' in self._host.listdir(self._host.curdir):
             self._host.download('server.properties', os.path.join('ftp', 'server.properties'))

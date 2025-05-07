@@ -46,11 +46,11 @@ class GraphicsPanel(Dialog):
         enableMouseLagRow = albow.CheckBoxLabel("Enable Mouse Lag",
                                                 ref=config.settings.enableMouseLag,
                                                 tooltipText="Enable choppy mouse movement for faster loading.")
-        
+
         playerSkins = albow.CheckBoxLabel("Show Player Skins",
                                              ref=config.settings.downloadPlayerSkins,
                                              tooltipText="Show player skins while editing the world")
-        
+
         self.maxView = albow.IntInputRow("Max View Distance",
                                        ref=config.settings.maxViewDistance,
                                        tooltipText="Sets the maximum view distance for the renderer. Values over 32 can possibly be unstable, so use it at your own risk"
@@ -98,7 +98,7 @@ class GraphicsPanel(Dialog):
         ResourcePackHandler.Instance().set_selected_resource_pack_name(self.resourcePackButton.selectedChoice)
         self.mcedit.displayContext.loadTextures()
     texturePack = config.settings.skin.property(_reloadTextures)
-    
+
     def checkMaxView(self):
         if (config.settings.maxViewDistance.get() % 2) != 0:
             config.settings.maxViewDistance.set(config.settings.maxViewDistance.get()-1)

@@ -126,11 +126,11 @@ class BoundingBox(object):
         """
         Return a box containing the area self and box have in common. Box will have zero volume
          if there is no common area.
-         
+
         :param box: The intersecting box
         :type box: pymclevel.box.BoundingBox
         :return: A box of the resulting intersection of the two boxes
-        :rtype: pymclevel.box.BoundingBox 
+        :rtype: pymclevel.box.BoundingBox
         """
         if (self.minx > box.maxx or self.maxx < box.minx or
                     self.miny > box.maxy or self.maxy < box.miny or
@@ -155,7 +155,7 @@ class BoundingBox(object):
     def union(self, box):
         '''
         Return a box large enough to contain both self and box.
-        
+
         :param box: The box to add to the current box (self)
         :type box: pymclevel.box.BoundingBox
         :return: A box that contains all of the positions of original box along with the supplied box
@@ -176,7 +176,7 @@ class BoundingBox(object):
     def expand(self, dx, dy=None, dz=None):
         '''
         Return a new box with boundaries expanded by dx, dy, dz. If only dx is passed, expands by dx in all dimensions
-        
+
         :param dx: The direction to expand on the X axis
         :type dx: int
         :param dy: The direction to expand on the Y axis

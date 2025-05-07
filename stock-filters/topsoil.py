@@ -47,7 +47,7 @@ def perform(level, box, options):
     blocktype = options["Pick a block:"]
     replace = options["Replace Only:"]
     replaceType = options[""]
-    
+
 
     #compute a truth table that we can index to find out whether a block
     # is naturally occuring and should be considered in a heightmap

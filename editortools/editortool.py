@@ -48,7 +48,7 @@ class EditorTool(object):
 
     def toolSelected(self):
         pass
-    
+
     def toolDeselected(self):
         pass
 

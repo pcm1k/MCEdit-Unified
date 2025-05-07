@@ -244,7 +244,7 @@ def IntInputRow(title, *args, **kw):
 def TextInputRow(title, *args, **kw):
     return Row((Label(title, tooltipText=kw.get('tooltipText')), TextFieldWrapped(*args, **kw)))
 
-  
+
 def BasicTextInputRow(title, *args, **kw):
     return Row((Label(title, tooltipText=kw.get('tooltipText')), TextField(*args, **kw)))
 

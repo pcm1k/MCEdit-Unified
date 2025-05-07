@@ -53,7 +53,7 @@ class GLDisplayContext(object):
         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
         GL.glAlphaFunc(GL.GL_NOTEQUAL, 0)
         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
- 
+
         # textures are 256x256, so with this we can specify pixel coordinates
 #        GL.glMatrixMode(GL.GL_TEXTURE)
 #        GL.glScale(1 / 256., 1 / 256., 1 / 256.)
@@ -148,7 +148,7 @@ class GLDisplayContext(object):
 #         GL.glEnableClientState(GL.GL_VERTEX_ARRAY)
 #         GL.glAlphaFunc(GL.GL_NOTEQUAL, 0)
 #         GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
- 
+
         # textures are 256x256, so with this we can specify pixel coordinates
         GL.glMatrixMode(GL.GL_TEXTURE)
         GL.glScale(1 / 256., 1 / 256., 1 / 256.)

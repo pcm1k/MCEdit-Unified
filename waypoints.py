@@ -28,8 +28,8 @@ class WaypointManager:
         for point in self.nbt_waypoints["Waypoints"]:
             self.waypoint_names.add(point["Name"].value)
             self.waypoints["{0} ({1},{2},{3})".format(point["Name"].value, int(point["Coordinates"][0].value), int(point["Coordinates"][1].value), int(point["Coordinates"][2].value))] = [
-                                                                                                                                                                        point["Coordinates"][0].value, 
-                                                                                                                                                                        point["Coordinates"][1].value, 
+                                                                                                                                                                        point["Coordinates"][0].value,
+                                                                                                                                                                        point["Coordinates"][1].value,
                                                                                                                                                                         point["Coordinates"][2].value,
                                                                                                                                                                         point["Rotation"][0].value,
                                                                                                                                                                         point["Rotation"][1].value,
@@ -83,11 +83,11 @@ class WaypointManager:
             way["Rotation"] = rot
             self.nbt_waypoints["Waypoints"].append(way)
         self.nbt_waypoints.save(os.path.join(self.worldDirectory, u"mcedit_waypoints.dat"))
-        
+
     def add_waypoint(self, name, coordinates, rotation, dimension):
         '''
         Adds a waypoint to the current dictionary of waypoints
-        
+
         :param name: Name of the Waypoint
         :type name: str
         :param coordinates: The coordinates of the Waypoint (in X,Y,Z order)
@@ -105,7 +105,7 @@ class WaypointManager:
     def delete(self, choice):
         '''
         Deletes the specified waypoint name from the dictionary of waypoints
-        
+
         :param choice: Name of the waypoint to delete
         :type choice: str
         '''
@@ -125,7 +125,7 @@ class WaypointManager:
     def saveLastPosition(self, mainViewport, dimension):
         '''
         Saves the final position of the camera viewport when the world is closed or MCEdit is exited
-        
+
         :param mainViewport: The reference to viewport object
         :param dimension: The dimension the camera viewport is currently in
         :type dimension: int

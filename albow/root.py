@@ -604,7 +604,7 @@ class RootWidget(Widget):
 
     def gl_clear(self):
         #from OpenGL import GL
-        
+
         bg = self.bg_color
         if bg:
             r = bg[0] / 255.0

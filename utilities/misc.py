@@ -38,17 +38,17 @@ class Singleton:
 
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)
-    
-    
+
+
 def deprecated(func):
     '''
     Function decorator to denote that a function shouldn't be used
-    
+
     :param func: The function that is deprecated
     '''
     def new_func(*args, **kwargs):
         #logger.warn("Function \""+str(func.__name__)+"\" is deprecated and should not be used")
-        return func(*args, **kwargs)   
+        return func(*args, **kwargs)
     new_func.__name__ = func.__name__
     if func.__doc__ is not None:
         new_func.__doc__ = '''*Deprecated*\n%s'''%func.__doc__

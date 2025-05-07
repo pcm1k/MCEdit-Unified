@@ -1923,12 +1923,12 @@ class CameraViewport(GLViewport):
             self._compass = None
 
     _compass = None
-    
+
 class BlockInfoParser(object):
     last_level = None
     nbt_ending = "\n\nPress ALT for NBT"
     edit_ending = ", Double-Click to Edit"
-    
+
     @classmethod
     def get_parsers(cls, editor):
         cls.last_level = editor.level
@@ -1945,22 +1945,22 @@ class BlockInfoParser(object):
                 for block in blocks:
                     parser_map[block] = instance.parse_info
         return parser_map
-    
+
     def getBlocks(self):
         raise NotImplementedError()
-    
+
     def parse_info(self, pos):
         raise NotImplementedError()
 
 
 class SpawnerInfoParser(BlockInfoParser):
-    
+
     def __init__(self, level):
         self.level = level
-        
+
     def getBlocks(self):
         return self.level.materials["minecraft:mob_spawner"].ID
-    
+
     def parse_info(self, pos):
         tile_entity = self.level.tileEntityAt(*pos)
         if tile_entity:
@@ -1975,7 +1975,7 @@ class SpawnerInfoParser(BlockInfoParser):
                     value = id.value
                 return "{} Spawner{}{}".format(value, self.nbt_ending, self.edit_ending)
         return "[Empty]{}{}".format(self.nbt_ending, self.edit_ending)
-    
+
 class JukeboxInfoParser(BlockInfoParser):
     id_records = {
                2256: "13",
@@ -1991,7 +1991,7 @@ class JukeboxInfoParser(BlockInfoParser):
                2266: "11",
                2267: "Wait"
     }
-    
+
     name_records = {
                 "minecraft:record_13": "13",
                 "minecraft:record_cat": "Cat",
@@ -2006,13 +2006,13 @@ class JukeboxInfoParser(BlockInfoParser):
                 "minecraft:record_11": "11",
                 "minecraft:record_wait": "Wait"
     }
-    
+
     def __init__(self, level):
         self.level = level
-        
+
     def getBlocks(self):
         return self.level.materials["minecraft:jukebox"].ID
-    
+
     def parse_info(self, pos):
         tile_entity = self.level.tileEntityAt(*pos)
         if tile_entity:
@@ -2025,19 +2025,19 @@ class JukeboxInfoParser(BlockInfoParser):
                 if value in self.name_records:
                     return "{} Record{}{}".format(self.name_records[value], self.nbt_ending, self.edit_ending)
         return "[No Record]{}{}".format(self.nbt_ending, self.edit_ending)
-    
+
 class CommandBlockInfoParser(BlockInfoParser):
-    
+
     def __init__(self, level):
         self.level = level
-        
+
     def getBlocks(self):
         return [
                 self.level.materials["minecraft:command_block"].ID,
                 self.level.materials["minecraft:repeating_command_block"].ID,
                 self.level.materials["minecraft:chain_command_block"].ID
                 ]
-    
+
     def parse_info(self, pos):
         tile_entity = self.level.tileEntityAt(*pos)
         if tile_entity:
@@ -2050,12 +2050,12 @@ class CommandBlockInfoParser(BlockInfoParser):
                 except:
                     return u"[Command Block Parsing Failed]"
         return u"[Empty Command Block]{}{}".format(self.nbt_ending, self.edit_ending)
-    
+
 class ContainerInfoParser(BlockInfoParser):
-    
+
     def __init__(self, level):
         self.level = level
-        
+
     def getBlocks(self):
         return [
                 self.level.materials["minecraft:dispenser"].ID,
@@ -2067,7 +2067,7 @@ class ContainerInfoParser(BlockInfoParser):
                 self.level.materials["minecraft:dropper"].ID,
                 self.level.materials["minecraft:brewing_stand"].ID
                 ]
-        
+
     def parse_info(self, pos):
         tile_entity = self.level.tileEntityAt(*pos)
         if tile_entity:

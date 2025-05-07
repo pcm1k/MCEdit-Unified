@@ -65,13 +65,13 @@ def win32_utf8_argv():
                     xrange(0, argc.value)]
     except Exception:
         pass
-    
+
 def getNewDataDir(path=""):
     """
     Returns the directory where the executable is located (This function is only ran on Windows OS's)
-    
+
     :param path: Additional directories/files to join to the data directory path
-    
+
     :return unicode
     """
     dataDir = os.path.dirname(os.path.abspath(__file__))
@@ -111,9 +111,9 @@ def getDataFileSaveable(*args):
 def getDataDir(path=""):
     """
     Returns the folder where the executable is located. (This function is ran on non-Windows OS's)
-    
+
     :param path: Additional directories/files to join to the data directory path
-    
+
     :return unicode
     """
     # if sys.platform == "win32":
@@ -264,7 +264,7 @@ if sys.platform != "darwin":
     fixedFiltersDir = os.path.join(docsFolder, u"Filters")
     if not os.path.exists(docsFolder):
         os.makedirs(docsFolder)
-        
+
 def hasPreviousPortableInstallation():
     portableDirectoriesFound = (os.path.exists(portableConfigFilePath) or os.path.exists(portableCacheFilePath) or
             os.path.exists(portableGenericSupportPath) or os.path.exists(portableSchematicsDir) or
@@ -283,7 +283,7 @@ def goPortable(useExisting):
     if sys.platform == "darwin":
         return False
     global configFilePath, schematicsDir, filtersDir, portable, brushesDir
-    
+
     if not useExisting:
         if os.path.exists(fixedSchematicsDir):
             move_displace(fixedSchematicsDir, portableSchematicsDir)
@@ -334,7 +334,7 @@ def goFixed(useExisting):
     if sys.platform == "darwin":
         return False
     global configFilePath, schematicsDir, filtersDir, portable, cacheDir, brushesDir
-    
+
     if not useExisting:
         if os.path.exists(portableSchematicsDir):
             move_displace(portableSchematicsDir, fixedSchematicsDir)

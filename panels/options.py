@@ -142,7 +142,7 @@ class OptionsPanel(Dialog):
         flyModeRow = albow.CheckBoxLabel("Fly Mode",
                                             ref=config.settings.flyMode,
                                             tooltipText="Moving forward and Backward will not change your altitude in Fly Mode.")
-        
+
         showCommandsRow = albow.CheckBoxLabel("Show Block Info when hovering",
                                               ref=config.settings.showQuickBlockInfo,
                                               tooltipText="Shows summarized info of some Blocks when hovering over it.")

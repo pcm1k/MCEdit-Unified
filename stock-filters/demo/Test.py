@@ -74,7 +74,7 @@ def perform(level, box, options):
                 x = e["Pos"][0].value
                 y = e["Pos"][1].value
                 z = e["Pos"][2].value
-                
+
                 if (x,y,z) in box:
                     keyname = "{0} - {1},{2},{3}".format(e["id"].value,int(x),int(y),int(z))
                     entities[keyname] = e

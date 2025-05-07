@@ -44,13 +44,13 @@ import logging
 log = logging.getLogger(__name__)
 
 class FilterUtils(object):
-    
+
     def __init__(self, **kwargs):
         self._given_data = []
         for arg in kwargs:
             self._given_data.append(arg)
             self.__dict__[arg] = kwargs[arg]
-            
+
     def Available_Attributes(self):
         return self._given_data
 
@@ -124,11 +124,11 @@ class JsonDictProperty(dict):
         finally:
             if fp:
                 fp.close()
-        
+
 class SingleFileChooser(Widget):
     OPEN_FILE = 0
     SAVE_FILE = 1
-    
+
     def _open_file(self):
         file_types = []
         for f_type in self.file_types:
@@ -142,7 +142,7 @@ class SingleFileChooser(Widget):
             self.file_path = None
         self._button.shrink_wrap()
         self.shrink_wrap()
-    
+
     def _save_file(self):
         file_types = 'Custom File\0{}\0'.format(';'.join(self.file_types))
         if not self.file_types[0].startswith("*"):
@@ -158,7 +158,7 @@ class SingleFileChooser(Widget):
             self.file_path = None
         self._button.shrink_wrap()
         self.shrink_wrap()
-    
+
     def __init__(self, file_types=None, operation=0, **kwds):
         Widget.__init__(self, **kwds)
         if file_types is None:
@@ -167,14 +167,14 @@ class SingleFileChooser(Widget):
             self.file_types = file_types
         self.file_path = None
         self._button = None
-            
+
         if operation == self.OPEN_FILE:
             self._button = Button("Choose a file", action=self._open_file)
         elif operation == self.SAVE_FILE:
             self._button = Button("Save a file", action=self._save_file)
-            
+
         self.add(self._button)
-        
+
         self.shrink_wrap()
 
 
@@ -283,7 +283,7 @@ class FilterModuleOptions(Widget):
 
         for eachPage in pages.pages:
             self.optionDict = dict(self.optionDict.items() + eachPage.optionDict.items())
-            
+
 
     def rebuildTabPage(self, inputs, **kwargs):
         title, page, rect = self.makeTabPage(self.tool, inputs, self.trn, **kwargs)
@@ -381,30 +381,30 @@ class FilterModuleOptions(Widget):
 #                                blockButton.blockInfo = pymclevel.alphaMaterials[optionType[1]]
 #                            else:
 #                                raise
-                
+
                         row = Column((Label(oName, doNotTranslate=True), blockButton))
                         page.optionDict[optionName] = AttrRef(blockButton, 'blockInfo')
-                
+
                         rows.append(row)
                     elif optionType[0] == "file-save":
                         if len(optionType) == 2:
                             file_chooser = SingleFileChooser(file_types=optionType[1], operation=SingleFileChooser.SAVE_FILE)
                         else:
                             file_chooser = SingleFileChooser(operation=SingleFileChooser.SAVE_FILE)
-                        
+
                         row = Row((Label(oName, doNotTranslate=True), file_chooser))
                         page.optionDict[optionName] = AttrRef(file_chooser, 'file_path')
-                        
+
                         rows.append(row)
                     elif optionType[0] == "file-open":
                         if len(optionType) == 2:
                             file_chooser = SingleFileChooser(file_types=optionType[1], operation=SingleFileChooser.OPEN_FILE)
                         else:
                             file_chooser = SingleFileChooser(operation=SingleFileChooser.OPEN_FILE)
-                        
+
                         row = Row((Label(oName, doNotTranslate=True), file_chooser))
                         page.optionDict[optionName] = AttrRef(file_chooser, 'file_path')
-                        
+
                         rows.append(row)
                     else:
                         isChoiceButton = True
@@ -419,7 +419,7 @@ class FilterModuleOptions(Widget):
                         page.optionDict[optionName] = AttrRef(choiceButton, 'selectedChoice')
 
                         rows.append(Row((Label(oName, doNotTranslate=True), choiceButton)))
-                        
+
 
             elif isinstance(optionType, bool):
                 cbox = CheckBox(value=optionType)
@@ -430,7 +430,7 @@ class FilterModuleOptions(Widget):
 
             elif isinstance(optionType, (int, float)):
                 rows.append(addNumField(self, optionName, oName, optionType))
-                
+
             elif optionType == "blocktype" or isinstance(optionType, pymclevel.materials.Block):
                 blockButton = BlockButton(tool.editor.level.materials)
                 if isinstance(optionType, pymclevel.materials.Block):
@@ -456,18 +456,18 @@ class FilterModuleOptions(Widget):
                 rows.append(row)
             elif optionType == "title":
                 title = oName
-                
+
             elif optionType == "file-save":
                 file_chooser = SingleFileChooser(operation=SingleFileChooser.SAVE_FILE)
                 row = Row((Label(oName, doNotTranslate=True), file_chooser))
                 page.optionDict[optionName] = AttrRef(file_chooser, 'file_path')
-                        
+
                 rows.append(row)
             elif optionType == "file-open":
                 file_chooser = SingleFileChooser(operation=SingleFileChooser.OPEN_FILE)
                 row = Row((Label(oName, doNotTranslate=True), file_chooser))
                 page.optionDict[optionName] = AttrRef(file_chooser, 'file_path')
-                        
+
                 rows.append(row)
             elif isinstance(optionType, list) and optionType[0].lower() == "nbttree":
                 kw = {'close_text': None, 'load_text': None}
@@ -588,10 +588,10 @@ class FilterToolPanel(Panel):
         self._save_macro = False
         self.tool = tool
         self.selectedName = self.filter_json.get("Last Filter Opened", "")
-        
-        
+
+
         utils = FilterUtils(
-                            editor=tool.editor, 
+                            editor=tool.editor,
                             materials=self.tool.editor.level.materials,
                             custom_widget=tool.editor.addExternalWidget,
                             resize_selection_box=tool.editor._resize_selection_box
@@ -948,17 +948,17 @@ class MacroOperation(Operation):
 
 
 class FilterToolOptions(ToolOptions):
-    
+
     def __init__(self, tool):
         ToolOptions.__init__(self, name='Panel.FilterToolOptions')
         self.tool = tool
-        
+
         self.notifications_disabled = False
-        
+
         disable_error_popup = CheckBoxLabel("Disable Error Notification",
                                             ref=AttrRef(self, 'notifications_disabled'))
         ok_button = Button("Ok", action=self.dismiss)
-        
+
         col = Column((disable_error_popup, ok_button,), spacing=2)
         self.add(col)
         self.shrink_wrap()
@@ -972,9 +972,9 @@ class FilterTool(EditorTool):
 
         self.filterModules = {}
         self.savedOptions = {}
-        
+
         self.filters_not_imported = []
-        
+
         self.optionsPanel = FilterToolOptions(self)
 
     @property
@@ -990,7 +990,7 @@ class FilterTool(EditorTool):
     @alertException
     def showPanel(self):
         self.panel = FilterToolPanel(self)
-        
+
         self.not_imported_filters = []
         self.reloadFilters()
 

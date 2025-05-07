@@ -26,11 +26,11 @@ def nbttree_mouse_down(e):
             editor.mainViewport.cameraPosition = (s[0] + 0.5, s[1] + 2, s[2] - 1)
             editor.mainViewport.yaw = 0.0
             editor.mainViewport.pitch = 45.0
-            
+
             newBox = BoundingBox(s, (1, 1, 1))
             editor.selectionTool.setSelection(newBox)
     tree.treeRow.__class__.mouse_down(tree.treeRow, e)
-    
+
 def nbt_ok_action():
     if chunks:
         for chunk in chunks:
@@ -82,7 +82,7 @@ def perform(level, box, options):
         treeData["TileEntities"][u"%s"%((data["TileEntities"][i]["x"].value, data["TileEntities"][i]["y"].value, data["TileEntities"][i]["z"].value),)] = {"value": data["TileEntities"][i], "tooltipText": "Double-click to go to this item."}
     for i in range(len(data["TileTicks"])):
         treeData["TileTicks"][u"%s"%((data["TileTicks"][i]["x"].value, data["TileTicks"][i]["y"].value, data["TileTicks"][i]["z"].value),)] = {"value": data["TileTicks"][i], "tooltipText": "Double-click to go to this item."}
-        
-    
+
+
     inputs[1][1][1][1] = {'Data': treeData}
     options[""](inputs[1])

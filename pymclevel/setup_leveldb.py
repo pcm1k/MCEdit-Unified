@@ -41,7 +41,7 @@ silent = False
 
 def check_bins(bins):
     print 'Searching for the needed binaries %s...' % repr(bins).replace("'", '')
-    missing_bin = False 
+    missing_bin = False
     for name in bins:
         names = []
         if '|' in name:
@@ -81,7 +81,7 @@ def check_bins(bins):
 
 # Picked from another project to find the lib and adapted to the need
 ARCH = {'32bit': '32', '64bit': '64'}[platform.architecture()[0]]
-default_paths = ['/lib', '/lib32', '/lib64', '/usr/lib', '/usr/lib32','/usr/lib64', 
+default_paths = ['/lib', '/lib32', '/lib64', '/usr/lib', '/usr/lib32','/usr/lib64',
                  '/usr/local/lib', os.path.expanduser('~/.local/lib'), '.']
 
 
@@ -392,7 +392,7 @@ def main():
             data = data.replace("LIBS += $(PLATFORM_LIBS) -lz", "LIBS += -L{d} -lz -Wl,-R{d} $(PLATFORM_LIBS)".format(d=cur_dir))
             f.seek(0)
             f.write(data)
-            
+
         zlib = None
 
     os.chdir("leveldb")

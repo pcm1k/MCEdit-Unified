@@ -89,7 +89,7 @@ class FillToolPanel(Panel):
         replaceLabel.tooltipText = _("Shortcut: {0}").format(_(rollkey))
         replaceLabel.align = "c"
         self.noDataCheckBox = CheckBoxLabel("Keep Data Intact", ref=AttrRef(self.tool, "noData"))
-        
+
         col = (self.fillWithLabel,
                self.blockButton,
                # swapRow,
@@ -176,7 +176,7 @@ class FillTool(EditorTool):
         self.optionsPanel = FillToolOptions(self)
         self.pickBlockKey = 0
         self.root = get_root()
-        
+
     noData = False
 
 

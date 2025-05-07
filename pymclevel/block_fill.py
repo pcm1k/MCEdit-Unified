@@ -115,7 +115,7 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
         for tileEntityObject in tileEntitiesToEdit:
             chunk.addTileEntity(tileEntityObject)
             blocksList.remove(tileEntityObject)
-        
+
         chunk.chunkChanged(needsLighting)
 
     if len(blocksToReplace):

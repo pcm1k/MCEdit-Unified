@@ -2,7 +2,7 @@
 # please give credit to SethBling.
 # http://youtube.com/SethBling
 #
-''' Fixed for MC 1.8 by Rezzing, September 6, 2014 
+''' Fixed for MC 1.8 by Rezzing, September 6, 2014
 PLEASE READ: The unusable trade won't prevent new trades anymore but I
 solved it by adding a very high career level. So only use it if you like
 the fancy stop sign. '''
@@ -173,13 +173,13 @@ def createShop(level, x, y, z, emptyTrade, invincible, profession, unlimited, xp
         villager["Silent"] = TAG_Byte(1)
     else:
         villager["Silent"] = TAG_Byte(0)
-        
+
     if nameVisible:
         villager["CustomName"] = TAG_String(name)
         villager["CustomNameVisible"] = TAG_Byte(1)
     else:
         villager["CustomNameVisible"] = TAG_Byte(0)
-        
+
 
     for i in range(9):
         if (i in priceList or i in priceListB) and i in saleList:

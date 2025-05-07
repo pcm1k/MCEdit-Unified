@@ -380,7 +380,7 @@ class SignPost(__Rotation):
     SouthEastEast = 13
     SouthEast = 14
     SouthSouthEast = 15
-    
+
     #rotate by increasing clockwise
     rotateLeft = arange(16, dtype='uint8')
     rotateLeft -= 4
@@ -481,7 +481,7 @@ Door.rotateLeft[Door.SouthOpen] = Door.WestOpen
 Door.rotateLeft[Door.WestOpen] = Door.NorthOpen
 Door.rotateLeft[Door.NorthOpen] = Door.EastOpen
 Door.rotateLeft[Door.EastOpen] = Door.SouthOpen
-    
+
 # applyBit4(Door.rotateLeft)
 
 Door.flipEastWest = arange(16, dtype='uint8')
@@ -519,7 +519,7 @@ class Log(__Rotation):
     Type1EastWest = 8
     Type2EastWest = 9
     Type3EastWest = 10
-    Type4EastWest = 11  
+    Type4EastWest = 11
 
 
 Log.rotateLeft = arange(16, dtype='uint8')
@@ -808,10 +808,10 @@ Hopper.roll[Hopper.North] = Hopper.Down
 @genericFlipRotation
 class DropperCommandblock(__Rotation):
     blocktypes = [
-        'alphaMaterials.Dropper.ID', 
-        'alphaMaterials.Dispenser.ID', 
+        'alphaMaterials.Dropper.ID',
+        'alphaMaterials.Dispenser.ID',
         'alphaMaterials.CommandBlock.ID',
-        'alphaMaterials.CommandBlockRepeating.ID', 
+        'alphaMaterials.CommandBlockRepeating.ID',
         'alphaMaterials.CommandBlockChain.ID'
     ]
     Down = 0
@@ -825,7 +825,7 @@ class DropperCommandblock(__Rotation):
 applyBit8(DropperCommandblock)
 
 
-@genericFlipRotation 
+@genericFlipRotation
 class RedstoneComparator(__Rotation):
     blocktypes = ['alphaMaterials.RedstoneComparatorInactive.ID', 'alphaMaterials.RedstoneComparatorActive.ID']
 

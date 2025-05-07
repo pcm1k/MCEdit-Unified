@@ -298,15 +298,15 @@ class Image(Widget):
         r = image.get_rect()
         r.center = frame.center
         surf.blit(image, r)
-        
+
 class RotatableImage(Image):
-    
+
     def __init__(self, angle=0.0, min_angle=0, max_angle=360, **kwds):
         super(RotatableImage, self).__init__(**kwds)
         self._angle = -angle
         self._min_angle = min_angle
         self._max_angle = max_angle
-    
+
     def draw(self, surf):
         frame = surf.get_rect()
         if self.highlighted:
@@ -316,14 +316,14 @@ class RotatableImage(Image):
         r = image.get_rect()
         r.center = frame.center
         surf.blit(image, r)
-        
+
     def get_angle(self):
         return self._angle
 
     def set_angle(self, angle):
         angle = max(min(angle, self._max_angle), self._min_angle)
         self._angle = angle
-        
+
     def add_angle(self, angle):
         self.set_angle(self.get_angle() + (angle * -1))
 

@@ -139,9 +139,9 @@ Invoke it like this:
 Without argument, it will fail. (And let you know...)
 
 
-Use the `all` argument to build all the libraries the script can handle.  
-The `nbt` one will build only the NBT support.  
-The `png` one will build only the PNG support.  
+Use the `all` argument to build all the libraries the script can handle.
+The `nbt` one will build only the NBT support.
+The `png` one will build only the PNG support.
 The `help` one can, ehhh, help...
 
 After the NBT support is built, you can run a very simple test:

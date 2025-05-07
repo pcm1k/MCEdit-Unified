@@ -642,7 +642,7 @@ class MCServerChunkGenerator(object):
         )
         cls.processes.append(proc)
         return proc
-    
+
     @classmethod
     def terminateProcesses(cls):
         for process in cls.processes:

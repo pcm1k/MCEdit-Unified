@@ -45,7 +45,7 @@ def applyToChunkSlices(self, op, chunk, slices, brushBox, brushBoxThisChunk):
 
     if depth < 0:
         blocktypeMask &= (blocks != blocktype.ID)
-    
+
     if len(blocktypeMask) == 0:
         return
     heightmap = extractHeights(blocktypeMask)

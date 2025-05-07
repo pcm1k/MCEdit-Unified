@@ -50,7 +50,7 @@ def findResourceFile(name, basedir):
         if name in files:
             return os.path.join(basedir, root, name)
 
-def buildResources(version=None, lang=None): 
+def buildResources(version=None, lang=None):
     """Loads the resource files and builds the resource dictionnaries.
     Four dictionnaries are built. Two for the refering language (English), and two for the language to be used.
     They are 'reversed' dictionnaries; the {foo: bar} pairs of one are the {bar: foo} of the other one."""

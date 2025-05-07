@@ -528,7 +528,7 @@ def makeVerticesFromModel(templates, dataMask=0):
 
                 vertexArray[..., indicies] = blockIndices[dimension][:, numpy.newaxis,
                                              numpy.newaxis]  # xxx swap z with y using ^
-                
+
             vertexArray[..., 0:5] += templates[i, data][..., 0:5]
             vertexArray[_ST] += texMap(blocks[blockIndices], blockData[blockIndices] & 15)[..., numpy.newaxis, :]
 
@@ -1123,9 +1123,9 @@ class ChunkCalculator(object):
     def computeCubeGeometry(self, y, blockRenderers, blocks, blockData, materials, blockMaterials, facingBlockIndices,
                             areaBlockLights, chunkRenderer):
         materialCounts = numpy.bincount(blockMaterials.ravel())
-        
+
         append = blockRenderers.append
-        
+
         def texMap(blocks, blockData=0, direction=slice(None)):
             return materials.blockTextures[blocks, blockData, direction]  # xxx slow
 
@@ -1239,7 +1239,7 @@ class BlockRenderer(object):
         if not len(buf):
             return
         stride = elementByteLength
-        
+
         GL.glVertexPointer(3, GL.GL_FLOAT, stride, (buf.ravel()))
         GL.glTexCoordPointer(2, GL.GL_FLOAT, stride, (buf.ravel()[3:]))
         GL.glColorPointer(4, GL.GL_UNSIGNED_BYTE, stride, (buf.view(dtype=numpy.uint8).ravel()[20:]))
@@ -1396,7 +1396,7 @@ class TileTicksRenderer(EntityRendererGeneric):
                                                            (0xff, 0xff, 0xff, 0x44),
                                                            chunkPosition=chunk.chunkPosition))
         yield
-        
+
 
 class TerrainPopulatedRenderer(EntityRendererGeneric):
     layer = Layer.TerrainPopulated
@@ -1436,17 +1436,17 @@ class TerrainPopulatedRenderer(EntityRendererGeneric):
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
         GL.glDepthMask(True)
 
-    def makeChunkVertices(self, chunk):   
+    def makeChunkVertices(self, chunk):
         neighbors = self.chunkCalculator.getNeighboringChunks(chunk)
-        
+
         def getpop(ch):
             return getattr(ch, "TerrainPopulated", True)
-        
+
         pop = getpop(chunk)
         yield
         if pop:
             return
-        
+
         visibleFaces = [
             getpop(neighbors[pymclevel.faces.FaceXIncreasing]),
             getpop(neighbors[pymclevel.faces.FaceXDecreasing]),
@@ -1470,7 +1470,7 @@ class ChunkBorderRenderer(EntityRendererGeneric):
     vertexTemplate[_XYZ] = faceVertexTemplates[_XYZ]
     vertexTemplate[_XYZ] *= (16, 256, 16)
     vertexTemplate.view('uint8')[_RGBA] = color + (150,)
-   
+
     def makeChunkVertices(self, chunk):
         visibleFaces = [
             True,
@@ -1490,13 +1490,13 @@ class ChunkBorderRenderer(EntityRendererGeneric):
         if not len(buf):
             return
         stride = elementByteLength
-  
+
         GL.glVertexPointer(3, GL.GL_FLOAT, stride, (buf.ravel()))
         GL.glTexCoordPointer(2, GL.GL_FLOAT, stride, (buf.ravel()[3:]))
         GL.glColorPointer(4, GL.GL_UNSIGNED_BYTE, stride, (buf.view(dtype=numpy.uint8).ravel()[20:]))
-  
+
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-  
+
         GL.glLineWidth(1)
         with gl.glEnable(GL.GL_DEPTH_TEST):
             GL.glDrawArrays(GL.GL_QUADS, 0, len(buf) * 4)
@@ -1504,7 +1504,7 @@ class ChunkBorderRenderer(EntityRendererGeneric):
         with gl.glEnable(GL.GL_DEPTH_TEST):
             GL.glDrawArrays(GL.GL_QUADS, 0, len(buf) * 4)
         GL.glLineWidth(1.0)
-  
+
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
 
@@ -1670,7 +1670,7 @@ class GenericBlockRenderer(BlockRenderer):
 
 
 class LeafBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [block.ID for block in mats.blocksByType["LEAVES"]]
@@ -1818,11 +1818,11 @@ class PlantBlockRenderer(BlockRenderer):
 
 
 class TorchBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [block.ID for block in mats.blocksByType["TORCH"]]
-    
+
     renderstate = ChunkCalculator.renderstateAlphaTest
     torchOffsetsStraight = [
         [  # FaceXIncreasing
@@ -1978,11 +1978,11 @@ class TorchBlockRenderer(BlockRenderer):
 
 
 class LeverBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:lever"].ID]
-    
+
     leverBaseTemplate = makeVertexTemplatesFromJsonModel((5, 0, 4), (11, 3, 12), {
         "down": (10, 0, 16, 8),
         "up": (10, 0, 16, 8),
@@ -1991,7 +1991,7 @@ class LeverBlockRenderer(BlockRenderer):
         "west": (2, 0, 10, 3),
         "east": (2, 0, 10, 3)
     })
-    
+
     leverBaseTemplates = numpy.array([
         rotateTemplate(leverBaseTemplate, x=180, y=90),
         rotateTemplate(leverBaseTemplate, x=90, y=90),
@@ -2010,7 +2010,7 @@ class LeverBlockRenderer(BlockRenderer):
         rotateTemplate(leverBaseTemplate, y=90),
         numpy.zeros((6, 4, 6)), numpy.zeros((6, 4, 6))
     ])
-    
+
     leverTemplate = makeVertexTemplatesFromJsonModel((7, 1, 7), (9, 11, 9), {
         "down": (7, 6, 9, 8),
         "up": (7, 6, 9, 8),
@@ -2019,11 +2019,11 @@ class LeverBlockRenderer(BlockRenderer):
         "west": (7, 6, 9, 16),
         "east": (7, 6, 9, 16)
     })
-    
+
     leverTemplates = numpy.array([
         rotateTemplate(leverTemplate, x=180),
         rotateTemplate(leverTemplate, x=90, y=90),
-        rotateTemplate(leverTemplate, x=90, y=270), 
+        rotateTemplate(leverTemplate, x=90, y=270),
         rotateTemplate(leverTemplate, x=90, y=180),
         rotateTemplate(leverTemplate, x=270, y=180),
         leverTemplate,
@@ -2038,9 +2038,9 @@ class LeverBlockRenderer(BlockRenderer):
         leverTemplate,
         numpy.zeros((6, 4, 6)), numpy.zeros((6, 4, 6))
     ])
-    
+
     makeVertices = makeVerticesFromModel([leverBaseTemplates, leverTemplates], 15)
-    
+
 
 class RailBlockRenderer(BlockRenderer):
     renderstate = ChunkCalculator.renderstateAlphaTest
@@ -2130,7 +2130,7 @@ class RailBlockRenderer(BlockRenderer):
 
 
 class LadderBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:ladder"].ID]
@@ -2178,11 +2178,11 @@ class LadderBlockRenderer(BlockRenderer):
 
 
 class WallSignBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:wall_sign"].ID]
-    
+
     wallSignTemplate = makeVertexTemplatesFromJsonModel((0, 4.5, 0), (16, 13.5, 2), {
         "down": (0, 11, 18, 13),
         "up": (0, 6, 16, 8),
@@ -2191,7 +2191,7 @@ class WallSignBlockRenderer(BlockRenderer):
         "west": (0, 4, 2, 13),
         "east": (10, 4, 12, 13)
     })
-    
+
     # I don't know how this sytem works and how it should be structured, but this seem to do the job
     wallSignTemplates = numpy.array([
         wallSignTemplate,
@@ -2202,15 +2202,15 @@ class WallSignBlockRenderer(BlockRenderer):
         rotateTemplate(wallSignTemplate, y=270),
         numpy.zeros((6, 4, 6)), numpy.zeros((6, 4, 6))
     ])
-    
+
     makeVertices = makeVerticesFromModel(wallSignTemplates, 7)
-    
+
 class StandingSignRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:standing_sign"].ID]
-    
+
     signTemplate = makeVertexTemplatesFromJsonModel((0, 7, 7), (16, 16, 9), {
         "down": (0, 14, 16, 16),
         "up": (0, 12, 16, 14),
@@ -2219,12 +2219,12 @@ class StandingSignRenderer(BlockRenderer):
         "west": (0, 7, 2, 16),
         "east": (14, 7, 16, 16)
     })
-    
+
     signTemplates = numpy.array([
         signTemplate,
         numpy.zeros((6, 4, 6)), numpy.zeros((6, 4, 6))
     ])
-    
+
     postTemplate = makeVertexTemplatesFromJsonModel((7, 0, 7), (9, 7, 9), {
         "down": (7, 0, 9, 6),
         "up": (7, 0, 9, 6),
@@ -2233,17 +2233,17 @@ class StandingSignRenderer(BlockRenderer):
         "west": (7, 0, 9, 6),
         "east": (7, 0, 9, 6),
     })
-    
+
     postTemplates = numpy.array([
         postTemplate,
         numpy.zeros((6, 4, 6)), numpy.zeros((6, 4, 6))
     ])
-    
+
     makeVertices = makeVerticesFromModel([signTemplates, postTemplates])
 
 
 class SnowBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:snow_layer"].ID]
@@ -2286,7 +2286,7 @@ class SnowBlockRenderer(BlockRenderer):
 
 
 class CarpetBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:carpet"].ID, mats["minecraft:waterlily"].ID] #Separate before implementing layers
@@ -2329,7 +2329,7 @@ class CarpetBlockRenderer(BlockRenderer):
 
 
 class CactusBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:cactus"].ID]
@@ -2369,7 +2369,7 @@ class CactusBlockRenderer(BlockRenderer):
 
 
 class PaneBlockRenderer(BlockRenderer):  #Basic no thickness panes, add more faces to widen.
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [block.ID for block in mats.blocksByType["SOLID_PANE"]]
@@ -2408,7 +2408,7 @@ class PaneBlockRenderer(BlockRenderer):  #Basic no thickness panes, add more fac
 
 
 class PlateBlockRenderer(BlockRenderer):  #suggestions to make this the proper shape is appreciated.
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [block.ID for block in mats.blocksByType["PRESSURE_PLATE"]]
@@ -2444,7 +2444,7 @@ class PlateBlockRenderer(BlockRenderer):  #suggestions to make this the proper s
 
 class EnchantingBlockRenderer(
     BlockRenderer):  #Note: Enderportal frame side sprite has been lowered 1 pixel to use this renderer, will need separate renderer for eye.
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:enchanting_table"].ID, mats["minecraft:end_portal_frame"].ID]
@@ -2479,7 +2479,7 @@ class EnchantingBlockRenderer(
 
 
 class DaylightBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:daylight_detector"].ID, mats.DaylightSensorOn.ID]
@@ -2517,7 +2517,7 @@ class DaylightBlockRenderer(BlockRenderer):
 
 
 class BedBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:bed"].ID]
@@ -2552,7 +2552,7 @@ class BedBlockRenderer(BlockRenderer):
 
 
 class CakeBlockRenderer(BlockRenderer):  #Only shows whole cakes
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:cake"].ID]
@@ -2594,7 +2594,7 @@ class CakeBlockRenderer(BlockRenderer):  #Only shows whole cakes
 
 
 class RepeaterBlockRenderer(BlockRenderer):  #Sticks would be nice
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [block.ID for block in mats.blocksByType["THINSLICE"]]
@@ -2630,7 +2630,7 @@ class RepeaterBlockRenderer(BlockRenderer):  #Sticks would be nice
 
 
 class RedstoneBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [mats["minecraft:redstone_wire"].ID]
@@ -2737,7 +2737,7 @@ class DoorRenderer(BlockRenderer):
     makeVertices = makeVerticesFromModel(doorTemplates, 31)
 
 class ButtonRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [a.ID for a in mats.blocksByType["BUTTON"]]
@@ -2780,7 +2780,7 @@ class ButtonRenderer(BlockRenderer):
     makeVertices = makeVerticesFromModel(buttonTemplates, 15)
 
 class TrapDoorRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [a.ID for a in mats.blocksByType["TRAPDOOR"]]
@@ -2854,7 +2854,7 @@ class FenceBlockRenderer(BlockRenderer):
 
 
 class FenceGateBlockRenderer(BlockRenderer):
-    
+
     closedFenceTemplates = numpy.array([
         makeVertexTemplates(0, 0, 3 / 8., 1, .8, 5 / 8.),
         makeVertexTemplates(3 / 8., 0, 0, 5 / 8., .8, 1)])
@@ -2868,7 +2868,7 @@ class FenceGateBlockRenderer(BlockRenderer):
          makeVertexTemplates(7 / 8., 0, 0, 1, .8, 5 / 8.)],
         [makeVertexTemplates(3 / 8., 0, 0, 1, .8, 1 / 8.),
          makeVertexTemplates(3 / 8., 0, 7 / 8., 1, .8, 1)]])
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [a.ID for a in mats.AllStairs]
@@ -2909,7 +2909,7 @@ class FenceGateBlockRenderer(BlockRenderer):
         vertexArray.shape = (vertexArray.shape[0] * 6, 4, 6)
         yield
         self.vertexArrays = [vertexArray]
-        
+
         append = self.vertexArrays.append
         # open gate
         for i in xrange(2):
@@ -2937,7 +2937,7 @@ class FenceGateBlockRenderer(BlockRenderer):
 
 
 class StairBlockRenderer(BlockRenderer):
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         return [a.ID for a in mats.AllStairs]
@@ -3164,7 +3164,7 @@ class WaterBlockRenderer(BlockRenderer):
 
 class IceBlockRenderer(BlockRenderer):
     renderstate = ChunkCalculator.renderstateIce
-    
+
     @classmethod
     def getBlocktypes(cls, mats):
         cls.iceID = mats["minecraft:ice"].ID
@@ -3233,18 +3233,18 @@ class MCRenderer(object):
 
         for ore in config.settings.hiddableOres.get():
             config.settings["showOre{}".format(ore)].addObserver(self, callback=lambda x, id=ore: self.showOre(id, x))
-            
-        self.level = level 
-            
+
+        self.level = level
+
         if self.level.__class__.__name__ in ("FakeLevel", "MCSchematic"):
             self.toggleLayer(False, 'ChunkBorder')
-            
+
 
     chunkClass = ChunkRenderer
     calculatorClass = ChunkCalculator
 
     minViewDistance = 2
-    
+
     _viewDistance = 8
 
     needsRedraw = True
@@ -3279,7 +3279,7 @@ class MCRenderer(object):
     drawItems = layerProperty(Layer.Items)
     drawTerrainPopulated = layerProperty(Layer.TerrainPopulated)
     drawChunkBorder = layerProperty(Layer.ChunkBorder)
-    
+
     def inSpace(self):
         if self.level is None:
             return True
@@ -3376,7 +3376,7 @@ class MCRenderer(object):
             self.chunkCalculator = self.calculatorClass(self.level)
 
             self.oldPosition = None
-            
+
         self.loadNearbyChunks()
 
     position = (0, 0, 0)
@@ -3776,7 +3776,7 @@ class MCRenderer(object):
                     print e
 
             GL.glDisable(GL.GL_POLYGON_OFFSET_FILL)
-                
+
             GL.glDisable(GL.GL_CULL_FACE)
             GL.glDisable(GL.GL_DEPTH_TEST)
 

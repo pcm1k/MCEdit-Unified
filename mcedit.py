@@ -78,7 +78,7 @@ if __name__ == "__main__":
 # This file is a plain text file with one feature to enable a line.
 # The file is parsed and each feature is added to the builtins using the pattern 'mcenf_<feature>'.
 # The value for these builtins is 'True'.
-# Then, in the code, just check if the builtins has the key 'mcenf_<feature>' to use the new version of the code: 
+# Then, in the code, just check if the builtins has the key 'mcenf_<feature>' to use the new version of the code:
 #
 # ```
 # def foo_old():
@@ -187,8 +187,8 @@ if __name__ == "__main__" and "-tt" in sys.argv:
 ### My parrot has 2 legs.
 ### My dog has 4 legs.
 ###
-### You also may have unwanted partial strings, especially the ones 
-### used in hotkeys. Delete them too. 
+### You also may have unwanted partial strings, especially the ones
+### used in hotkeys. Delete them too.
 ### And, remove this paragraph, or it will be displayed in the program...
 """
     albow.translate.buildTemplate = True

@@ -217,7 +217,7 @@ class ChunkTool(EditorTool):
         self.panel.left = 10
 
         self.editor.add(self.panel)
-        
+
     def toolDeselected(self):
         self.editor.chunksToSelection()
 
