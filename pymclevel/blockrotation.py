@@ -857,16 +857,18 @@ def _get_attribute(obj, attr):
         raise AttributeError("Object {0} does not have attribute '{1}".format(obj, attr))
 
 
+# pcm1k - ok I think all this can perhaps use something with block properties and be WAY simpler
 def masterRotationTable(attrname):
-    # compute a materials.id_limitx16 table mapping each possible blocktype/data combination to
+    # compute a materials.id_limit x materials.data_limit table mapping each possible blocktype/data combination to
     # the resulting data when the block is rotated
     table = zeros((materials.id_limit, materials.data_limit), dtype='uint8')
-    table[:] = arange(16, dtype='uint8')
+    table[:] = arange(materials.data_limit, dtype='uint8')
     for cls in rotationClasses:
         if hasattr(cls, attrname):
             blocktable = getattr(cls, attrname)
             for blocktype in cls.blocktypes:
                 # Very bad stuff here...
+                # pcm1k - very bad stuff in this entire file
                 try:
                     table[eval(blocktype)] = blocktable
                 except (NameError, ValueError) as e:
