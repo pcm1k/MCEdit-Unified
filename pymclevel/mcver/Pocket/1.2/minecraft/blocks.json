@@ -3157,9 +3157,9 @@
                 },
                 "4": {
                     "mapcolor": [
-                        104,
-                        139,
-                        212
+                        194,
+                        181,
+                        28
                     ],
                     "name": "Yellow Wool",
                     "properties": {
@@ -13039,9 +13039,9 @@
                 },
                 "4": {
                     "mapcolor": [
-                        104,
-                        139,
-                        212
+                        194,
+                        181,
+                        28
                     ],
                     "name": "Yellow Stained Clay",
                     "properties": {
@@ -13358,9 +13358,9 @@
                 },
                 "4": {
                     "mapcolor": [
-                        104,
-                        139,
-                        212
+                        194,
+                        181,
+                        28
                     ],
                     "name": "Yellow Stained Glass Pane",
                     "tex": [
@@ -14347,9 +14347,9 @@
                 },
                 "4": {
                     "mapcolor": [
-                        104,
-                        139,
-                        212
+                        194,
+                        181,
+                        28
                     ],
                     "name": "Yellow Carpet",
                     "properties": {
@@ -18969,9 +18969,9 @@
                 },
                 "4": {
                     "mapcolor": [
-                        104,
-                        139,
-                        212
+                        194,
+                        181,
+                        28
                     ],
                     "name": "Yellow Stained Glass",
                     "tex": [
