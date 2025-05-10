@@ -1,0 +1,314 @@
+{
+    "biomes": [
+        {
+            "id": 0,
+            "idStr": "ocean",
+            "name": "Ocean"
+        },
+        {
+            "id": 1,
+            "idStr": "plains",
+            "name": "Plains"
+        },
+        {
+            "id": 2,
+            "idStr": "desert",
+            "name": "Desert"
+        },
+        {
+            "id": 3,
+            "idStr": "extreme_hills",
+            "name": "Extreme Hills"
+        },
+        {
+            "id": 4,
+            "idStr": "forest",
+            "name": "Forest"
+        },
+        {
+            "id": 5,
+            "idStr": "taiga",
+            "name": "Taiga"
+        },
+        {
+            "id": 6,
+            "idStr": "swampland",
+            "name": "Swampland"
+        },
+        {
+            "id": 7,
+            "idStr": "river",
+            "name": "River"
+        },
+        {
+            "id": 8,
+            "idStr": "hell",
+            "name": "Hell"
+        },
+        {
+            "id": 9,
+            "idStr": "sky",
+            "name": "The End"
+        },
+        {
+            "id": 10,
+            "idStr": "frozen_ocean",
+            "name": "FrozenOcean"
+        },
+        {
+            "id": 11,
+            "idStr": "frozen_river",
+            "name": "FrozenRiver"
+        },
+        {
+            "id": 12,
+            "idStr": "ice_flats",
+            "name": "Ice Plains"
+        },
+        {
+            "id": 13,
+            "idStr": "ice_mountains",
+            "name": "Ice Mountains"
+        },
+        {
+            "id": 14,
+            "idStr": "mushroom_island",
+            "name": "MushroomIsland"
+        },
+        {
+            "id": 15,
+            "idStr": "mushroom_island_shore",
+            "name": "MushroomIslandShore"
+        },
+        {
+            "id": 16,
+            "idStr": "beaches",
+            "name": "Beach"
+        },
+        {
+            "id": 17,
+            "idStr": "desert_hills",
+            "name": "DesertHills"
+        },
+        {
+            "id": 18,
+            "idStr": "forest_hills",
+            "name": "ForestHills"
+        },
+        {
+            "id": 19,
+            "idStr": "taiga_hills",
+            "name": "TaigaHills"
+        },
+        {
+            "id": 20,
+            "idStr": "smaller_extreme_hills",
+            "name": "Extreme Hills Edge"
+        },
+        {
+            "id": 21,
+            "idStr": "jungle",
+            "name": "Jungle"
+        },
+        {
+            "id": 22,
+            "idStr": "jungle_hills",
+            "name": "JungleHills"
+        },
+        {
+            "id": 23,
+            "idStr": "jungle_edge",
+            "name": "JungleEdge"
+        },
+        {
+            "id": 24,
+            "idStr": "deep_ocean",
+            "name": "Deep Ocean"
+        },
+        {
+            "id": 25,
+            "idStr": "stone_beach",
+            "name": "Stone Beach"
+        },
+        {
+            "id": 26,
+            "idStr": "cold_beach",
+            "name": "Cold Beach"
+        },
+        {
+            "id": 27,
+            "idStr": "birch_forest",
+            "name": "Birch Forest"
+        },
+        {
+            "id": 28,
+            "idStr": "birch_forest_hills",
+            "name": "Birch Forest Hills"
+        },
+        {
+            "id": 29,
+            "idStr": "roofed_forest",
+            "name": "Roofed Forest"
+        },
+        {
+            "id": 30,
+            "idStr": "taiga_cold",
+            "name": "Cold Taiga"
+        },
+        {
+            "id": 31,
+            "idStr": "taiga_cold_hills",
+            "name": "Cold Taiga Hills"
+        },
+        {
+            "id": 32,
+            "idStr": "redwood_taiga",
+            "name": "Mega Taiga"
+        },
+        {
+            "id": 33,
+            "idStr": "redwood_taiga_hills",
+            "name": "Mega Taiga Hills"
+        },
+        {
+            "id": 34,
+            "idStr": "extreme_hills_with_trees",
+            "name": "Extreme Hills+"
+        },
+        {
+            "id": 35,
+            "idStr": "savanna",
+            "name": "Savanna"
+        },
+        {
+            "id": 36,
+            "idStr": "savanna_rock",
+            "name": "Savanna Plateau"
+        },
+        {
+            "id": 37,
+            "idStr": "mesa",
+            "name": "Mesa"
+        },
+        {
+            "id": 38,
+            "idStr": "mesa_rock",
+            "name": "Mesa Plateau F"
+        },
+        {
+            "id": 39,
+            "idStr": "mesa_clear_rock",
+            "name": "Mesa Plateau"
+        },
+        {
+            "id": 127,
+            "idStr": "void",
+            "name": "The Void"
+        },
+        {
+            "id": 129,
+            "idStr": "mutated_plains",
+            "name": "Sunflower Plains"
+        },
+        {
+            "id": 130,
+            "idStr": "mutated_desert",
+            "name": "Desert M"
+        },
+        {
+            "id": 131,
+            "idStr": "mutated_extreme_hills",
+            "name": "Extreme Hills M"
+        },
+        {
+            "id": 132,
+            "idStr": "mutated_forest",
+            "name": "Flower Forest"
+        },
+        {
+            "id": 133,
+            "idStr": "mutated_taiga",
+            "name": "Taiga M"
+        },
+        {
+            "id": 134,
+            "idStr": "mutated_swampland",
+            "name": "Swampland M"
+        },
+        {
+            "id": 140,
+            "idStr": "mutated_ice_flats",
+            "name": "Ice Plains Spikes"
+        },
+        {
+            "id": 149,
+            "idStr": "mutated_jungle",
+            "name": "Jungle M"
+        },
+        {
+            "id": 151,
+            "idStr": "mutated_jungle_edge",
+            "name": "JungleEdge M"
+        },
+        {
+            "id": 155,
+            "idStr": "mutated_birch_forest",
+            "name": "Birch Forest M"
+        },
+        {
+            "id": 156,
+            "idStr": "mutated_birch_forest_hills",
+            "name": "Birch Forest Hills M"
+        },
+        {
+            "id": 157,
+            "idStr": "mutated_roofed_forest",
+            "name": "Roofed Forest M"
+        },
+        {
+            "id": 158,
+            "idStr": "mutated_taiga_cold",
+            "name": "Cold Taiga M"
+        },
+        {
+            "id": 160,
+            "idStr": "mutated_redwood_taiga",
+            "name": "Mega Spruce Taiga"
+        },
+        {
+            "id": 161,
+            "idStr": "mutated_redwood_taiga_hills",
+            "name": "Redwood Taiga Hills M"
+        },
+        {
+            "id": 162,
+            "idStr": "mutated_extreme_hills_with_trees",
+            "name": "Extreme Hills+ M"
+        },
+        {
+            "id": 163,
+            "idStr": "mutated_savanna",
+            "name": "Savanna M"
+        },
+        {
+            "id": 164,
+            "idStr": "mutated_savanna_rock",
+            "name": "Savanna Plateau M"
+        },
+        {
+            "id": 165,
+            "idStr": "mutated_mesa",
+            "name": "Mesa (Bryce)"
+        },
+        {
+            "id": 166,
+            "idStr": "mutated_mesa_rock",
+            "name": "Mesa Plateau F M"
+        },
+        {
+            "id": 167,
+            "idStr": "mutated_mesa_clear_rock",
+            "name": "Mesa Plateau M"
+        }
+    ]
+}
