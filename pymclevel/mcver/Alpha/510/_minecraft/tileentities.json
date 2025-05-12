@@ -2,13 +2,11 @@
     "tileentities": [
         {
             "_name": "banner",
-            "id": "Banner",
             "idStr": "Banner",
             "name": "Banner"
         },
         {
             "_name": "beacon",
-            "id": "Beacon",
             "idStr": "Beacon",
             "name": "Beacon"
         },
@@ -22,7 +20,6 @@
                     "type": "List"
                 }
             },
-            "id": "Cauldron",
             "idStr": "Cauldron",
             "maxItems": 4,
             "name": "Brewing Stand",
@@ -40,14 +37,12 @@
                     "type": "List"
                 }
             },
-            "id": "Chest",
             "idStr": "Chest",
             "maxItems": 27,
             "name": "Chest"
         },
         {
             "_name": "comparator",
-            "id": "Comparator",
             "idStr": "Comparator",
             "name": "Comparator"
         },
@@ -69,13 +64,11 @@
                     "type": "Byte"
                 }
             },
-            "id": "Control",
             "idStr": "Control",
             "name": "Command Block"
         },
         {
             "_name": "daylight_detector",
-            "id": "DLDetector",
             "idStr": "DLDetector",
             "name": "Daylight Sensor"
         },
@@ -86,7 +79,6 @@
                     "type": "List"
                 }
             },
-            "id": "Trap",
             "idStr": "Trap",
             "maxItems": 9,
             "name": "Dispenser"
@@ -98,7 +90,6 @@
                     "type": "List"
                 }
             },
-            "id": "Dropper",
             "idStr": "Dropper",
             "maxItems": 9,
             "name": "Dropper"
@@ -110,25 +101,21 @@
                     "type": "String"
                 }
             },
-            "id": "EnchantTable",
             "idStr": "EnchantTable",
             "name": "Enchantment Table"
         },
         {
             "_name": "ender_chest",
-            "id": "EnderChest",
             "idStr": "EnderChest",
             "name": "Ender Chest"
         },
         {
             "_name": "end_gateway",
-            "id": "EndGateway",
             "idStr": "EndGateway",
             "name": "End Gateway"
         },
         {
             "_name": "end_portal",
-            "id": "Airportal",
             "idStr": "Airportal",
             "name": "End Portal"
         },
@@ -142,7 +129,6 @@
                     "type": "String"
                 }
             },
-            "id": "FlowerPot",
             "idStr": "FlowerPot",
             "name": "Flower Pot"
         },
@@ -159,7 +145,6 @@
                     "type": "List"
                 }
             },
-            "id": "Furnace",
             "idStr": "Furnace",
             "maxItems": 3,
             "name": "Furnace",
@@ -176,7 +161,6 @@
                     "type": "List"
                 }
             },
-            "id": "Hopper",
             "idStr": "Hopper",
             "maxItems": 5,
             "name": "Hopper"
@@ -188,7 +172,6 @@
                     "type": "Int"
                 }
             },
-            "id": "RecordPlayer",
             "idStr": "RecordPlayer",
             "name": "Jukebox"
         },
@@ -206,7 +189,6 @@
                     "type": "Compound"
                 }
             },
-            "id": "MobSpawner",
             "idStr": "MobSpawner",
             "name": "Monster Spawner"
         },
@@ -217,7 +199,6 @@
                     "type": "Byte"
                 }
             },
-            "id": "Music",
             "idStr": "Music",
             "name": "Note Block"
         },
@@ -240,7 +221,6 @@
                     "type": "Float"
                 }
             },
-            "id": "Piston",
             "idStr": "Piston",
             "name": "Piston Moving"
         },
@@ -260,7 +240,6 @@
                     "type": "String"
                 }
             },
-            "id": "Sign",
             "idStr": "Sign",
             "name": "Sign"
         },
@@ -278,13 +257,11 @@
                     "value": 3
                 }
             },
-            "id": "Skull",
             "idStr": "Skull",
             "name": "Mob Head"
         },
         {
             "_name": "structure_block",
-            "id": "Structure",
             "idStr": "Structure",
             "name": "Structure Block"
         }

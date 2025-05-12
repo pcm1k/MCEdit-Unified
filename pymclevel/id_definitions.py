@@ -129,22 +129,24 @@ def _resolveTypes(actorTypes):
 
 # We wouldn't need this if different entries could overwrite each other while loading each dependency. Since it is a list, rather than a dict, they currently can not
 def _deleteOld(prefix, ids_dict, itemOld):
-    del ids_dict[prefix][itemOld["id"]]
+    id_ = itemOld.get("id")
+    ids_dict[prefix].pop(id_, None)
     idStr = itemOld.get("idStr")
-    if not idStr:
-        return
-    if idStr in ids_dict[prefix]:
-        del ids_dict[prefix][idStr]
+    ids_dict[prefix].pop(idStr, None)
     namespace = itemOld.get("namespace")
     if not namespace:
         return
     namespacedId = "%s:%s" % (namespace, idStr)
-    if namespacedId in ids_dict[prefix]:
-        del ids_dict[prefix][namespacedId]
+    ids_dict[prefix].pop(namespacedId, None)
 
 def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     # pcm1k - this should handle extra item in "data" like how MCMaterials does it
-    _name = item.get("_name", item.get("idStr", str(item["id"])))
+    if "_name" in item:
+        _name = item["_name"]
+    elif "idStr" in item:
+        _name = item["idStr"]
+    else:
+        _name = str(item["id"])
     entry_name = MCEditDefsIds.formatDefId(prefix, _name)
 
     itemOld = defs_dict.get(entry_name)
@@ -154,9 +156,9 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     defs_dict[entry_name] = item
     if prefix not in ids_dict:
         ids_dict[prefix] = {}
-    # pcm1k - storing ids_dict[prefix][_name] kinda makes storing defs_dict[entry_name] redundant
-#    ids_dict[prefix][item["id"]] = ids_dict[prefix][_name] = entry_name
-    ids_dict[prefix][item["id"]] = entry_name
+    id_ = item.get("id")
+    if id_:
+        ids_dict[prefix][id_] = entry_name
     idStr = item.get("idStr")
     if idStr:
         if namespace:
@@ -171,10 +173,11 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
 #    if "idStr" not in item:
 #        item["idStr"] = _name
 
-    fullid = item["id"]
-    if "actorType" in item and "actorTypesRes" in defs_dict:
-        fullid |= _resolveType(defs_dict["actorTypesRes"], "", item["actorType"], set())
-    item["fullid"] = fullid
+    if id_:
+        fullid = id_
+        if "actorType" in item and "actorTypesRes" in defs_dict:
+            fullid |= _resolveType(defs_dict["actorTypesRes"], "", item["actorType"], set())
+        item["fullid"] = fullid
 
     for a_name, a_value in autobuilds.iteritems():
         try:
@@ -442,7 +445,7 @@ class MCEditDefsIds(object):
 
     @property
     def isEmpty(self):
-        return not self.mcedit_defs or not self.mcedit_defs
+        return not self.mcedit_defs or not self.mcedit_ids
 
     @classmethod
     def formatDefId(cls, prefix, defName):

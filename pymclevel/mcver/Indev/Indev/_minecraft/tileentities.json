@@ -7,7 +7,6 @@
                     "type": "List"
                 }
             },
-            "id": "Chest",
             "idStr": "Chest",
             "maxItems": 27,
             "name": "Chest"
@@ -25,7 +24,6 @@
                     "type": "List"
                 }
             },
-            "id": "Furnace",
             "idStr": "Furnace",
             "maxItems": 3,
             "name": "Furnace",

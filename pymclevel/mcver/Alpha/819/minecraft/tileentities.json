@@ -1,12 +1,10 @@
 {
     "tileentities": [
         {
-            "id": "banner",
             "idStr": "banner",
             "name": "Banner"
         },
         {
-            "id": "beacon",
             "idStr": "beacon",
             "name": "Beacon"
         },
@@ -19,7 +17,6 @@
                     "type": "List"
                 }
             },
-            "id": "brewing_stand",
             "idStr": "brewing_stand",
             "maxItems": 4,
             "name": "Brewing Stand",
@@ -36,13 +33,11 @@
                     "type": "List"
                 }
             },
-            "id": "chest",
             "idStr": "chest",
             "maxItems": 27,
             "name": "Chest"
         },
         {
-            "id": "comparator",
             "idStr": "comparator",
             "name": "Comparator"
         },
@@ -63,12 +58,10 @@
                     "type": "Byte"
                 }
             },
-            "id": "command_block",
             "idStr": "command_block",
             "name": "Command Block"
         },
         {
-            "id": "daylight_detector",
             "idStr": "daylight_detector",
             "name": "Daylight Sensor"
         },
@@ -78,7 +71,6 @@
                     "type": "List"
                 }
             },
-            "id": "dispenser",
             "idStr": "dispenser",
             "maxItems": 9,
             "name": "Dispenser"
@@ -89,7 +81,6 @@
                     "type": "List"
                 }
             },
-            "id": "dropper",
             "idStr": "dropper",
             "maxItems": 9,
             "name": "Dropper"
@@ -100,22 +91,18 @@
                     "type": "String"
                 }
             },
-            "id": "enchanting_table",
             "idStr": "enchanting_table",
             "name": "Enchantment Table"
         },
         {
-            "id": "ender_chest",
             "idStr": "ender_chest",
             "name": "Ender Chest"
         },
         {
-            "id": "end_gateway",
             "idStr": "end_gateway",
             "name": "End Gateway"
         },
         {
-            "id": "end_portal",
             "idStr": "end_portal",
             "name": "End Portal"
         },
@@ -128,7 +115,6 @@
                     "type": "String"
                 }
             },
-            "id": "flower_pot",
             "idStr": "flower_pot",
             "name": "Flower Pot"
         },
@@ -144,7 +130,6 @@
                     "type": "List"
                 }
             },
-            "id": "furnace",
             "idStr": "furnace",
             "maxItems": 3,
             "name": "Furnace",
@@ -160,7 +145,6 @@
                     "type": "List"
                 }
             },
-            "id": "hopper",
             "idStr": "hopper",
             "maxItems": 5,
             "name": "Hopper"
@@ -171,7 +155,6 @@
                     "type": "Int"
                 }
             },
-            "id": "jukebox",
             "idStr": "jukebox",
             "name": "Jukebox"
         },
@@ -188,7 +171,6 @@
                     "type": "Compound"
                 }
             },
-            "id": "mob_spawner",
             "idStr": "mob_spawner",
             "name": "Monster Spawner"
         },
@@ -198,7 +180,6 @@
                     "type": "Byte"
                 }
             },
-            "id": "noteblock",
             "idStr": "noteblock",
             "name": "Note Block"
         },
@@ -220,7 +201,6 @@
                     "type": "Float"
                 }
             },
-            "id": "piston",
             "idStr": "piston",
             "name": "Piston Moving"
         },
@@ -230,7 +210,6 @@
                     "type": "List"
                 }
             },
-            "id": "shulker_box",
             "idStr": "shulker_box",
             "maxItems": 27,
             "name": "Shulker Box"
@@ -250,7 +229,6 @@
                     "type": "String"
                 }
             },
-            "id": "sign",
             "idStr": "sign",
             "name": "Sign"
         },
@@ -267,12 +245,10 @@
                     "value": 3
                 }
             },
-            "id": "skull",
             "idStr": "skull",
             "name": "Mob Head"
         },
         {
-            "id": "structure_block",
             "idStr": "structure_block",
             "name": "Structure Block"
         }
