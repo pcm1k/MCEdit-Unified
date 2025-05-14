@@ -1367,7 +1367,7 @@ class ItemRenderer(BaseEntityRenderer):
             if i % 10 == 0:
                 yield
             # Let get the color from the versioned data, and use the 'old' way as fallback
-            color = defsIds.get_id("entities", ent["id"].value, {}).get("mapcolor")
+            color = defsIds.get_id("entities", ent["id"].value, {}, resolve=True).get("mapcolor")
             if color is None:
                 color = colorMap.get(ent["id"].value)
 
