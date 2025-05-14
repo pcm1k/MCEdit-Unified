@@ -835,7 +835,7 @@ class LevelEditor(GLViewport):
 
                 for ent in chunk.getEntitiesInBox(box):
                     entID = level.entityDefs.getId(ent["id"].value)
-                    if ent["id"].value == "Item":
+                    if level.entityDefs.getDefId(ent["id"].value) == "DEF_ENTITIES_ITEM":
                         try:
                             v = pymclevel.items.items.findItem(ent["Item"]["id"].value,
                                                                ent["Item"]["Damage"].value).name
