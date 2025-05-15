@@ -43,7 +43,7 @@
         {
             "id": 8,
             "idStr": "hell",
-            "name": "Hell"
+            "name": "Hell (Nether)"
         },
         {
             "id": 9,
@@ -53,12 +53,12 @@
         {
             "id": 10,
             "idStr": "frozen_ocean",
-            "name": "FrozenOcean"
+            "name": "Frozen Ocean"
         },
         {
             "id": 11,
             "idStr": "frozen_river",
-            "name": "FrozenRiver"
+            "name": "Frozen River"
         },
         {
             "id": 12,
@@ -73,12 +73,12 @@
         {
             "id": 14,
             "idStr": "mushroom_island",
-            "name": "MushroomIsland"
+            "name": "Mushroom Island"
         },
         {
             "id": 15,
             "idStr": "mushroom_island_shore",
-            "name": "MushroomIslandShore"
+            "name": "Mushroom Island Shore"
         },
         {
             "id": 16,
@@ -88,17 +88,17 @@
         {
             "id": 17,
             "idStr": "desert_hills",
-            "name": "DesertHills"
+            "name": "Desert Hills"
         },
         {
             "id": 18,
             "idStr": "forest_hills",
-            "name": "ForestHills"
+            "name": "Forest Hills"
         },
         {
             "id": 19,
             "idStr": "taiga_hills",
-            "name": "TaigaHills"
+            "name": "Taiga Hills"
         },
         {
             "id": 20,
@@ -113,12 +113,12 @@
         {
             "id": 22,
             "idStr": "jungle_hills",
-            "name": "JungleHills"
+            "name": "Jungle Hills"
         },
         {
             "id": 23,
             "idStr": "jungle_edge",
-            "name": "JungleEdge"
+            "name": "Jungle Edge"
         },
         {
             "id": 24,
@@ -248,7 +248,7 @@
         {
             "id": 151,
             "idStr": "mutated_jungle_edge",
-            "name": "JungleEdge M"
+            "name": "Jungle Edge M"
         },
         {
             "id": 155,
