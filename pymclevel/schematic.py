@@ -742,10 +742,7 @@ class StructureNBT(object):
         self._size = None
         self._version = version
         self._mat = mats
-        if hasattr(mats, "blockstate_api"):
-            self.blockstate = mats.blockstate_api
-        else:
-            self.blockstate = alphaMaterials.blockstate_api
+        self.blockstate = mats.blockstate_api
 
         if filename:
             root_tag = nbt.load(filename)

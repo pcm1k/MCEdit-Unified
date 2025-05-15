@@ -52,8 +52,6 @@ def build_map_block(materials):
     if materials is map_block_mats:
         return
     map_block_mats = materials
-    if not hasattr(materials, "blockstate_api"):
-        return
     for k, v in materials.blockstate_api.block_map.items():
         map_block[v] = k
 

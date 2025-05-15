@@ -120,17 +120,22 @@ class BlockstateAPI(object):
         api = alphaMaterials.blockstate_api
     """
     material_map = {}
+    # unused
+    blockstates = {}
 
     def __init__(self, mats):
         self._mats = mats
         self.block_map = {}
-        self.blockstates = {}
 
-        for b in self._mats:
-            self.block_map[b.ID] = b.stringID
+        self._initBlockMap()
 
         # pcm1k - why is this even needed?
         self.material_map[self._mats] = self
+
+    def _initBlockMap(self):
+        self.block_map.clear()
+        for b in self._mats:
+            self.block_map[b.ID] = b.stringID
 
     def idToBlockstate(self, bid, data):
         """
@@ -287,6 +292,8 @@ class MCMaterials(object):
         self.opacity = self.lightAbsorption
         self.types = {}
 
+        self.blockstate_api = BlockstateAPI(self)
+
         self.Air = self.addBlock(0,
                                  name="Air",
                                  texture=(0, 336),
@@ -350,7 +357,7 @@ class MCMaterials(object):
             if block is not None:
                 return block
             # pcm1k - this can probably be improved
-            if "[" in key and hasattr(self, "blockstate_api"):
+            if "[" in key:
                 name, properties = self.blockstate_api.deStringifyBlockstate(key)
                 block = self._findBlock(self.blockstate_api.blockstateToID(name, properties))
                 if block is not None:
@@ -437,8 +444,7 @@ class MCMaterials(object):
         print "Game Version: {} : {}".format(platform, version)
         self.defsIds = get_defs_ids(platform, version, checkTimes=False)
         self.addJSONBlocks(self.defsIds.jsonDict)
-        if PLATFORM_ALPHA or PLATFORM_POCKET:
-            self.blockstate_api = BlockstateAPI(self)
+        self.blockstate_api._initBlockMap()
         build_materials(self, platform)
 
     def addJSONBlocks(self, blockyaml):
