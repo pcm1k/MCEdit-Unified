@@ -87,55 +87,55 @@ class TileEntityDefs(object):
                     continue
                 self.stringNames[idStr] = idStrTe
 
-    def _handleSpecialStruct(self, tileEntityTag, defId, name, tag, **kw):
-        if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
-            if self.defsIds is None:
-                return False
-
-            entity = kw.get("entity")
-            if name == "EntityId":
-                entityDefs = getEntityDefs(self.defsIds)
-                tileEntityTag[name] = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
-                return True
-            if name == "SpawnData":
-                entityDefs = getEntityDefs(self.defsIds)
-                spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
-                tileEntityTag["SpawnData"] = tag()
-                if entity:
-                    for k, v in entity.iteritems():
-                        tileEntityTag["SpawnData"][k] = deepcopy(v)
-                else:
-                    tileEntityTag["SpawnData"].add(spawn_id)
-                return True
-        return False
-
-    def _createBaseStruct(self, tileEntityID, tileEntityTag, **kw):
-        defId = self.getDefId(tileEntityID)
-
-        for name, tag, value in self.baseStructures[tileEntityID]:
-            if not self._handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
-                tileEntityTag[name] = tag(value) if value is not None else tag()
-        return True
-
-    def _getNewId(self, oldId):
-        if oldId not in self._oldToDefIds:
-            return oldId
-        item = self.defsIds.get_def(self._oldToDefIds[oldId])
-        if item is None:
-            return oldId
-        return item.get("idStr", oldId)
-
     def Create(self, tileEntityID, pos=(0, 0, 0), defsIds=None, convertOld=True, **kw):
         if defsIds is not None and defsIds is not self.defsIds:
             # redirect to the correct TileEntityDefs object
             entityDefs = getTileEntityDefs(defsIds)
             return entityDefs.Create(tileEntityID, pos=pos, defsIds=None, **kw)
 
+        def handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
+            if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
+                if self.defsIds is None:
+                    return False
+
+                entity = kw.get("entity")
+                if name == "EntityId":
+                    entityDefs = getEntityDefs(self.defsIds)
+                    tileEntityTag[name] = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
+                    return True
+                if name == "SpawnData":
+                    entityDefs = getEntityDefs(self.defsIds)
+                    spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
+                    tileEntityTag["SpawnData"] = tag()
+                    if entity:
+                        for k, v in entity.iteritems():
+                            tileEntityTag["SpawnData"][k] = deepcopy(v)
+                    else:
+                        tileEntityTag["SpawnData"].add(spawn_id)
+                    return True
+            return False
+
+        def createBaseStruct(tileEntityID, tileEntityTag, **kw):
+            defId = self.getDefId(tileEntityID)
+
+            for name, tag, value in self.baseStructures[tileEntityID]:
+                if not handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
+                    tileEntityTag[name] = tag(value) if value is not None else tag()
+            return True
+
+        def getNewId(oldId):
+            if oldId not in self._oldToDefIds:
+                return oldId
+            item = self.defsIds.get_def(self._oldToDefIds[oldId])
+            if item is None:
+                return oldId
+            return item.get("idStr", oldId)
+
         tileEntityTag = nbt.TAG_Compound()
         if convertOld:
-            tileEntityID = self._getNewId(tileEntityID)
+            tileEntityID = getNewId(tileEntityID)
         tileEntityTag["id"] = nbt.TAG_String(tileEntityID)
-        self._createBaseStruct(tileEntityID, tileEntityTag, **kw)
+        createBaseStruct(tileEntityID, tileEntityTag, **kw)
 
         self.setpos(tileEntityTag, pos)
         return tileEntityTag
@@ -615,18 +615,18 @@ class EntityDefs(object):
         else:
             self.monsters.extend(self.entityList.iterkeys())
 
-    def _getNewId(self, oldId):
-        if oldId not in self._oldToDefIds:
-            return oldId
-        item = self.defsIds.get_def(self._oldToDefIds[oldId])
-        if item is None:
-            return oldId
-        return item.get("idStr", oldId)
-
     def Create(self, entityID, pos=(0, 0, 0), convertOld=True, **kw):
+        def getNewId(oldId):
+            if oldId not in self._oldToDefIds:
+                return oldId
+            item = self.defsIds.get_def(self._oldToDefIds[oldId])
+            if item is None:
+                return oldId
+            return item.get("idStr", oldId)
+
         entityTag = nbt.TAG_Compound()
         if convertOld:
-            entityID = self._getNewId(entityID)
+            entityID = getNewId(entityID)
         entityTag["id"] = nbt.TAG_String(entityID)
         self.setpos(entityTag, pos)
         return entityTag

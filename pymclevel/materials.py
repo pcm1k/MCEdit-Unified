@@ -1370,15 +1370,6 @@ _materialsCache = {}
 #        _materialsCache[mats.defsIds.platform] = {}
 #    _materialsCache[mats.defsIds.platform][mats.defsIds.version] = mats
 
-def _checkCache(platform, version, defsIds):
-    if platform not in _materialsCache or version not in _materialsCache[platform]:
-        return None
-    materials = _materialsCache[platform][version]
-    if materials.defsIds is not None and materials.defsIds is not defsIds:
-        # different/outdated defsIds
-        return None
-    return materials
-
 def getMaterialsByVer(platform, version, forceNew=False, **kwargs):
     defsIds = get_defs_ids(platform, version, checkTimes=False)
     return getMaterials(defsIds, forceNew=forceNew, **kwargs)
@@ -1386,12 +1377,21 @@ def getMaterialsByVer(platform, version, forceNew=False, **kwargs):
 def getMaterials(defsIds, forceNew=False, **kwargs):
     """Creates a new MCMaterials object or retrieves one from the cache.
     forceNew will force a new object to be created, you should use this if you plan on potentially adding new blocks dynamically"""
+    def checkCache(platform, version, defsIds):
+        if platform not in _materialsCache or version not in _materialsCache[platform]:
+            return None
+        materials = _materialsCache[platform][version]
+        if materials.defsIds is not None and materials.defsIds is not defsIds:
+            # different/outdated defsIds
+            return None
+        return materials
+
     platform = defsIds.platform
     version = defsIds.version
     if forceNew:
         materials = MCMaterials(**kwargs)
     else:
-        materials = _checkCache(platform, version, defsIds)
+        materials = checkCache(platform, version, defsIds)
     if materials is not None:
         if materials.defsIds is None:
             # not initialized

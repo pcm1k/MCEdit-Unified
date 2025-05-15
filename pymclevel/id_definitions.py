@@ -477,25 +477,25 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
     log.info("Closest lower version found is MC {} {}.".format(platform, ver))
     return ver
 
-def _checkCache(platform, version, checkTimes, fileFuncs):
-    if platform not in version_defs_ids or version not in version_defs_ids[platform]:
-        return None
-    defsIds = version_defs_ids[platform][version]
-    while isinstance(defsIds, basestring):
-        # resolve pointer to other version
-        if defsIds not in version_defs_ids[platform]:
-            return None
-        defsIds = version_defs_ids[platform][defsIds]
-    if checkTimes and defsIds.check_timestamps(fileFuncs):
-        return None
-    return defsIds
-
 def get_defs_ids(platform, version, checkTimes=True):
     """Create a MCEditDefsIds instance only if one for the game version does not already exists, or a definition file has been changed.
     See MCEditDefsIds doc.
     Returns a MCEditDefsIds instance."""
+    def checkCache(platform, version, checkTimes, fileFuncs):
+        if platform not in version_defs_ids or version not in version_defs_ids[platform]:
+            return None
+        defsIds = version_defs_ids[platform][version]
+        while isinstance(defsIds, basestring):
+            # resolve pointer to other version
+            if defsIds not in version_defs_ids[platform]:
+                return None
+            defsIds = version_defs_ids[platform][defsIds]
+        if checkTimes and defsIds.check_timestamps(fileFuncs):
+            return None
+        return defsIds
+
     fileFuncs = _getFileFuncs()
-    defsIds = _checkCache(platform, version, checkTimes, fileFuncs)
+    defsIds = checkCache(platform, version, checkTimes, fileFuncs)
     if defsIds is not None:
         return defsIds
 
@@ -509,7 +509,7 @@ def get_defs_ids(platform, version, checkTimes=True):
         version_defs_ids[platform][version] = defsIds
         return defsIds
 
-    defsIds = _checkCache(platform, realVersion, checkTimes, fileFuncs)
+    defsIds = checkCache(platform, realVersion, checkTimes, fileFuncs)
     if defsIds is not None:
         version_defs_ids[platform][version] = realVersion
         return defsIds
