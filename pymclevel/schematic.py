@@ -14,7 +14,7 @@ import blockrotation
 from box import BoundingBox
 import infiniteworld
 from level import MCLevel, EntityLevel, GAME_PLATFORM_SCHEMATIC
-from materials import alphaMaterials, MCMaterials, namedMaterials
+from materials import alphaMaterials, MCMaterials, namedMaterials, BlockstateAPI
 from mclevelbase import exhaust
 import nbt
 from numpy import array, swapaxes, uint8, zeros, resize, ndenumerate
@@ -674,6 +674,16 @@ class StructureNBT(object):
         if filename:
             root_tag = nbt.load(filename)
 
+        def loadPalette(paletteTag):
+            result = []
+            for state in paletteTag:
+                if "Properties" in state:
+                    properties = {key: value.value for key, value in state["Properties"].iteritems()}
+                else:
+                    properties = {}
+                result.append(state["Name"].value, properties)
+            return result
+
         if root_tag:
             self._root_tag = root_tag
             self._size = (self._root_tag["size"][0].value, self._root_tag["size"][1].value, self._root_tag["size"][2].value)
@@ -681,7 +691,7 @@ class StructureNBT(object):
             self._author = self._root_tag.get("author", nbt.TAG_String()).value
             self._version = self._root_tag.get("DataVersion", nbt.TAG_Int(1)).value
 
-            self._palette = self.__nbtToDict(self._root_tag["palette"])
+            self._palette = loadPalette(self._root_tag["palette"])
 
             self._blocks = zeros(self.Size, dtype=tuple)
             self._blocks.fill((0, 0))
@@ -736,7 +746,7 @@ class StructureNBT(object):
 
     @classmethod
     def fromSchematic(cls, schematic, **kwargs):
-        structure = cls(size=(schematic.Width, schematic.Height, schematic.Length), mats=namedMaterials[getattr(schematic, "Materials", 'Alpha')], **kwargs)
+        structure = cls(size=(schematic.Width, schematic.Height, schematic.Length), mats=schematic.materials, **kwargs)
         schematic = copy.copy(schematic)
 
         for (x, z, y), b_id in ndenumerate(schematic.Blocks):
@@ -754,6 +764,7 @@ class StructureNBT(object):
             structure._entities.append(e)
         return structure
 
+    # pcm1k - might put this in nbt.py or something
     def __nbtToDict(self, _nbt):
         if isinstance(_nbt, nbt.TAG_Compound):
             d = {}
@@ -781,22 +792,20 @@ class StructureNBT(object):
                 else:
                     l.append(tag.value)
             return l
+        return _nbt
 
     def get_state(self, index):
-        if index >= len(self._palette):
-            raise IndexError()
-        return self._palette[index]["Name"], self._palette[index].get("Properties", {})
+        return self._palette[index]
 
+    # pcm1k - this is unused
     def get_palette_index(self, name, properties=None):  # TODO: Switch to string comparison of properties, instead of dict comparison
         for i in xrange(len(self._palette)):
-            if self._palette[i]["Name"] == name:
-                if properties and "Properties" in self._palette[i]:
+            if self._palette[i][0] == name:
+                if properties is not None:
                     for key, value in properties.iteritems():
-                        if self._palette[i]["Properties"].get(key, None) != value:
+                        if self._palette[i][1].get(key, None) != value:
                             continue
-                    return i
-                else:
-                    return i
+                return i
         return -1
 
     def save(self, filename=""):
@@ -818,7 +827,7 @@ class StructureNBT(object):
                                               ]
                                              )
 
-        def addToPalette(palette_tag, blockstate_api, name, properties):
+        def addToPalette(palette_tag, name, properties):
             state = nbt.TAG_Compound()
             state["Name"] = nbt.TAG_String(name)
 
@@ -841,12 +850,12 @@ class StructureNBT(object):
 
                     value = self._blocks[x, y, z]
                     name, properties = blockstate_api.idToBlockstate(*value)
-                    blockstate = blockstate_api.stringifyBlockstate(name, properties)
+                    blockstate = BlockstateAPI.stringifyBlockstate(name, properties)
 
                     index = index_table.get(blockstate)
                     if index is None:
                         index_table[blockstate] = index = len(index_table)
-                        addToPalette(palette_tag, blockstate_api, name, properties)
+                        addToPalette(palette_tag, name, properties)
 
                     block = nbt.TAG_Compound()
                     block["state"] = nbt.TAG_Int(index)
