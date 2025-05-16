@@ -212,9 +212,8 @@ class MCSchematic(EntityLevel):
     def TileTicks(self):
         if "TileTicks" in self.root_tag:
             return self.root_tag["TileTicks"]
-        else:
-            self.root_tag["TileTicks"] = nbt.TAG_List()
-            return self.root_tag["TileTicks"]
+        self.root_tag["TileTicks"] = nbt.TAG_List()
+        return self.root_tag["TileTicks"]
 
     @property
     def Materials(self):
@@ -228,6 +227,8 @@ class MCSchematic(EntityLevel):
 
     @property
     def Biomes(self):
+        if "Biomes" not in self.root_tag:
+            self.root_tag["Biomes"] = nbt.TAG_Byte_Array(zeros((self.Length, self.Width), uint8))
         return swapaxes(self.root_tag["Biomes"].value, 0, 1)
 
     @classmethod
@@ -241,73 +242,66 @@ class MCSchematic(EntityLevel):
         root_tag["Length"] = nbt.TAG_Short(shape[1])
         root_tag["Width"] = nbt.TAG_Short(shape[0])
 
+    @staticmethod
+    def _getPaintingFacing(entity):
+        facing = entity.get("Facing")
+        if facing is not None:
+            return facing
+        facing = entity.get("Direction")
+        if facing is not None:
+            return facing
+        facing = entity.get("Dir")
+        if facing is not None:
+            # swap 0 and 2
+            if facing.value == 0:
+                facing.value = 2
+            elif facing.value == 2:
+                facing.value = 0
+        return None
+
     def rotateLeftBlocks(self):
         """
-        rotateLeft the blocks direction without there location
+        rotateLeft the blocks direction without their location
         """
         blockrotation.RotateLeft(self.Blocks, self.Data)
 
     def rotateLeft(self):
         self._fakeEntities = None
+
         self._Blocks = swapaxes(self._Blocks, 1, 2)[:, ::-1, :]  # x=z; z=-x
+        self.root_tag["Data"].value = swapaxes(self.root_tag["Data"].value, 1, 2)[:, ::-1, :]
         if "Biomes" in self.root_tag:
             self.root_tag["Biomes"].value = swapaxes(self.root_tag["Biomes"].value, 0, 1)[::-1, :]
-
-        self.root_tag["Data"].value = swapaxes(self.root_tag["Data"].value, 1, 2)[:, ::-1, :]  # x=z; z=-x
         self._update_shape()
 
         blockrotation.RotateLeft(self.Blocks, self.Data)
 
         log.info(u"Relocating entities...")
         for entity in self.Entities:
-            for p in "Pos", "Motion":
-                if p == "Pos":
-                    zBase = self.Length
-                else:
-                    zBase = 0.0
-                if p in entity:
-                    newX = entity[p][2].value
-                    newZ = zBase - entity[p][0].value
+            pos = entity["Pos"]
+            # The "wrong" axis length is used because of the axis swap before. It's kinda confusing...
+            pos[0].value, pos[2].value = \
+                pos[2].value, self.Length - pos[0].value
+            if "Motion" in entity:
+                motion = entity["Motion"]
+                motion[0].value, motion[2].value = \
+                    motion[2].value, -motion[0].value
 
-                    entity[p][0].value = newX
-                    entity[p][2].value = newZ
             entity["Rotation"][0].value -= 90.0
-            if self.entityDefs.getDefId(entity["id"].value) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
-                x, z = entity["TileX"].value, entity["TileZ"].value
-                newx = z
-                newz = self.Length - x - 1
 
-                entity["TileX"].value, entity["TileZ"].value = newx, newz
-                facing = entity.get("Facing", entity.get("Direction"))
-                if facing is None:
-                    dirFacing = entity.get("Dir")
-                    if dirFacing is not None:
-                        if dirFacing.value == 0:
-                            dirFacing.value = 2
-                        elif dirFacing.value == 2:
-                            dirFacing.value = 0
-                        facing = dirFacing
-                    else:
-                        raise Exception("None of tags Facing/Direction/Dir found in entity %s during rotating -  %r" % (entity["id"].value, entity))
-                facing.value = (facing.value - 1) % 4
+            if "TileX" in entity and "TileZ" in entity:
+                entity["TileX"].value, entity["TileZ"].value = \
+                    entity["TileZ"].value, self.Length - entity["TileX"].value - 1
+                facing = self._getPaintingFacing(entity)
+                if facing is not None:
+                    facing.value = (facing.value - 1) % 4
 
-        for tileEntity in self.TileEntities:
-            if 'x' not in tileEntity:
-                continue
-
-            newX = tileEntity["z"].value
-            newZ = self.Length - tileEntity["x"].value - 1
-
-            tileEntity["x"].value = newX
-            tileEntity["z"].value = newZ
-
-        if "TileTicks" in self.root_tag:
-            for tileTick in self.TileTicks:
-                newX = tileTick["z"].value
-                newZ = tileTick["x"].value
-
-                tileTick["x"].value = newX
-                tileTick["z"].value = newZ
+        for tileEntities in self.TileEntities, self.TileTicks:
+            for tileEntity in tileEntities:
+                if "x" not in tileEntity or "z" not in tileEntity:
+                    continue
+                tileEntity["x"].value, tileEntity["z"].value = \
+                    tileEntity["z"].value, self.Length - tileEntity["x"].value - 1
 
     def rollBlocks(self):
         """
@@ -320,48 +314,41 @@ class MCSchematic(EntityLevel):
         self.root_tag.pop('Biomes', None)
         self._fakeEntities = None
 
-        self._Blocks = swapaxes(self._Blocks, 2, 0)[:, :, ::-1]  # x=y; y=-x
-        self.root_tag["Data"].value = swapaxes(self.root_tag["Data"].value, 2, 0)[:, :, ::-1]
+        self._Blocks = swapaxes(self._Blocks, 0, 2)[:, :, ::-1]  # x=-y; y=x
+        self.root_tag["Data"].value = swapaxes(self.root_tag["Data"].value, 0, 2)[:, :, ::-1]
         self._update_shape()
 
         blockrotation.Roll(self.Blocks, self.Data)
 
         log.info(u"N/S Roll: Relocating entities...")
-        for i, entity in enumerate(self.Entities):
-            newX = self.Width - entity["Pos"][1].value
-            newY = entity["Pos"][0].value
-            entity["Pos"][0].value = newX
-            entity["Pos"][1].value = newY
+        for entity in self.Entities:
+            pos = entity["Pos"]
+            # The "wrong" axis length is used because of the axis swap before. It's kinda confusing...
+            pos[0].value, pos[1].value = \
+                self.Width - pos[1].value, pos[0].value
             if "Motion" in entity:
-                newX = entity["Motion"][1].value
-                newY = -entity["Motion"][0].value
-                entity["Motion"][0].value = newX
-                entity["Motion"][1].value = newY
-            # I think this is right
-            # Although rotation isn't that important as most entities can't rotate and mobs
-            # don't serialize rotation.
-            newX = entity["Rotation"][1].value
-            newY = -entity["Rotation"][0].value
-            entity["Rotation"][0].value = newX
-            entity["Rotation"][1].value = newY
+                motion = entity["Motion"]
+                motion[0].value, motion[1].value = \
+                    -motion[1].value, motion[0].value
 
-            if self.entityDefs.getDefId(entity["id"].value) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
-                newX = self.Width - entity["TileY"].value - 1
-                newY = entity["TileX"].value
-                entity["TileX"].value = newX
-                entity["TileY"].value = newY
+            if "Rotation" in entity:
+                # I think this is right
+                # Although rotation isn't that important as most entities can't rotate and mobs
+                # don't serialize rotation.
+                rotation = entity["Rotation"]
+                rotation[0].value, rotation[1].value = \
+                    rotation[1].value, -rotation[0].value
 
-        for tileEntity in self.TileEntities:
-            newX = self.Width - tileEntity["y"].value - 1
-            newY = tileEntity["x"].value
-            tileEntity["x"].value = newX
-            tileEntity["y"].value = newY
-        if hasattr(self, "TileTicks"):
-            for tileTick in self.TileTicks:
-                newX = self.Width - tileTick["y"].value - 1
-                newY = tileTick["x"].value
-                tileTick["x"].value = newX
-                tileTick["y"].value = newY
+            if "TileX" in entity and "TileY" in entity:
+                entity["TileX"].value, entity["TileY"].value = \
+                    self.Width - entity["TileY"].value - 1, entity["TileX"].value
+
+        for tileEntities in self.TileEntities, self.TileTicks:
+            for tileEntity in tileEntities:
+                if "x" not in tileEntity or "z" not in tileEntity:
+                    continue
+                tileEntity["x"].value, tileEntity["y"].value = \
+                    self.Width - tileEntity["y"].value - 1, tileEntity["x"].value
 
     def flipVerticalBlocks(self):
         blockrotation.FlipVertical(self.Blocks, self.Data)
@@ -374,22 +361,25 @@ class MCSchematic(EntityLevel):
         self._Blocks = self._Blocks[::-1, :, :]  # y=-y
         self.root_tag["Data"].value = self.root_tag["Data"].value[::-1, :, :]
 
-        log.info(u"N/S Flip: Relocating entities...")
+        log.info(u"Vertical Flip: Relocating entities...")
         for entity in self.Entities:
-            ent_id_val = entity["id"].value
             entity["Pos"][1].value = self.Height - entity["Pos"][1].value
             if "Motion" in entity:
                 entity["Motion"][1].value = -entity["Motion"][1].value
-            entity["Rotation"][1].value = -entity["Rotation"][1].value
-            if self.entityDefs.getDefId(ent_id_val) in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
+
+            if "Rotation" in entity:
+                entity["Rotation"][1].value = -entity["Rotation"][1].value
+
+            if "TileY" in entity:
                 entity["TileY"].value = self.Height - entity["TileY"].value - 1
-        for tileEntity in self.TileEntities:
-            tileEntity["y"].value = self.Height - tileEntity["y"].value - 1
-        if "TileTicks" in self.root_tag:
-            for tileTick in self.TileTicks:
-                tileTick["y"].value = self.Height - tileTick["y"].value - 1
+
+        for tileEntities in self.TileEntities, self.TileTicks:
+            for tileEntity in tileEntities:
+                if "y" in tileEntity:
+                    tileEntity["y"].value = self.Height - tileEntity["y"].value - 1
 
     # Width of paintings
+    # pcm1k - this can probably go in the version data
     paintingMap = {'Kebab': 1,
                    'Aztec': 1,
                    'Alban': 1,
@@ -420,160 +410,97 @@ class MCSchematic(EntityLevel):
         blockrotation.FlipNorthSouth(self.Blocks, self.Data)
 
     def flipNorthSouth(self):
-        if "Biomes" in self.root_tag:
-            self.root_tag["Biomes"].value = self.root_tag["Biomes"].value[::-1, :]
-
         self._fakeEntities = None
 
         blockrotation.FlipNorthSouth(self.Blocks, self.Data)
         self._Blocks = self._Blocks[:, :, ::-1]  # x=-x
         self.root_tag["Data"].value = self.root_tag["Data"].value[:, :, ::-1]
 
-        northSouthPaintingMap = [0, 3, 2, 1]
+        if "Biomes" in self.root_tag:
+            self.root_tag["Biomes"].value = self.root_tag["Biomes"].value[::-1, :]
+
+        paintingFlipX = [0, 3, 2, 1]
 
         log.info(u"N/S Flip: Relocating entities...")
         for entity in self.Entities:
-
-            try:
-                entity["Pos"][0].value = self.Width - entity["Pos"][0].value
-            except:
-                pass
-            try:
+            entity["Pos"][0].value = self.Width - entity["Pos"][0].value
+            if "Motion" in entity:
                 entity["Motion"][0].value = -entity["Motion"][0].value
-            except:
-                pass
 
-            try:
-                entity["Rotation"][0].value *= -1.0
-            except:
-                pass
+            if "Rotation" in entity:
+                entity["Rotation"][0].value = -entity["Rotation"][0].value
 
             # Special logic for old width painting as TileX/TileZ favours -x/-z
 
-            try:
-                ent_id_val = entity["id"].value
-                mce_ent_id_val = self.entityDefs.getDefId(ent_id_val)
-                if mce_ent_id_val in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
-                    facing = entity.get("Facing", entity.get("Direction"))
-                    if facing is None:
-                        dirFacing = entity.get("Dir")
-                        if dirFacing is not None:
-                            if dirFacing.value == 0:
-                                dirFacing.value = 2
-                            elif dirFacing.value == 2:
-                                dirFacing.value = 0
-                            facing = dirFacing
-                        else:
-                            raise Exception("None of tags Facing/Direction/Dir found in entity %s during flipping -  %r" % (ent_id_val, entity))
+            facing = self._getPaintingFacing(entity)
+            if facing is not None and "TileX" in entity and "TileZ" in entity:
+                entity["TileX"].value = self.Width - entity["TileX"].value - 1
+                if "Motive" in entity and self.paintingMap.get(entity["Motive"].value, 1) % 2 == 0:
+                    if facing.value == 0: # south
+                        entity["TileX"].value -= 1
+                    elif facing.value == 2: # north
+                        entity["TileX"].value += 1
+                    elif facing.value == 1: # west
+                        entity["TileZ"].value += 1
+                    elif facing.value == 3: # east
+                        entity["TileZ"].value -= 1
+                facing.value = paintingFlipX[facing.value]
 
-                if mce_ent_id_val == "DEF_ENTITIES_PAINTING":
-                    if facing.value == 2:
-                        entity["TileX"].value = self.Width - entity["TileX"].value - self.paintingMap[entity["Motive"].value] % 2
-                    elif facing.value == 0:
-                        entity["TileX"].value = self.Width - entity["TileX"].value - 2 + self.paintingMap[entity["Motive"].value] % 2
-                    else:
-                        entity["TileX"].value = self.Width - entity["TileX"].value - 1
-                    if facing.value == 3:
-                        entity["TileZ"].value = entity["TileZ"].value - 1 + self.paintingMap[entity["Motive"].value] % 2
-                    elif facing.value == 1:
-                        entity["TileZ"].value = entity["TileZ"].value + 1 - self.paintingMap[entity["Motive"].value] % 2
-                    facing.value = northSouthPaintingMap[facing.value]
-                elif mce_ent_id_val == "DEF_ENTITIES_ITEM_FRAME":
-                    entity["TileX"].value = self.Width - entity["TileX"].value - 1
-                    facing.value = northSouthPaintingMap[facing.value]
-            except:
-                pass
-        for tileEntity in self.TileEntities:
-            if 'x' not in tileEntity:
-                continue
-
-            tileEntity["x"].value = self.Width - tileEntity["x"].value - 1
-
-        if "TileTicks" in self.root_tag:
-            for tileTick in self.TileTicks:
-                tileTick["x"].value = self.Width - tileTick["x"].value - 1
+        for tileEntities in self.TileEntities, self.TileTicks:
+            for tileEntity in tileEntities:
+                if "x" in tileEntity:
+                    tileEntity["x"].value = self.Width - tileEntity["x"].value - 1
 
     def flipEastWestBlocks(self):
         blockrotation.FlipEastWest(self.Blocks, self.Data)
 
     def flipEastWest(self):
-        if "Biomes" in self.root_tag:
-            self.root_tag["Biomes"].value = self.root_tag["Biomes"].value[:, ::-1]
-
         self._fakeEntities = None
 
         blockrotation.FlipEastWest(self.Blocks, self.Data)
         self._Blocks = self._Blocks[:, ::-1, :]  # z=-z
         self.root_tag["Data"].value = self.root_tag["Data"].value[:, ::-1, :]
 
-        eastWestPaintingMap = [2, 1, 0, 3]
+        if "Biomes" in self.root_tag:
+            self.root_tag["Biomes"].value = self.root_tag["Biomes"].value[:, ::-1]
+
+        paintingFlipZ = [2, 1, 0, 3]
 
         log.info(u"E/W Flip: Relocating entities...")
         for entity in self.Entities:
-
-            try:
-                entity["Pos"][2].value = self.Length - entity["Pos"][2].value
-            except:
-                pass
-            try:
+            entity["Pos"][2].value = self.Length - entity["Pos"][2].value
+            if "Motion" in entity:
                 entity["Motion"][2].value = -entity["Motion"][2].value
-            except:
-                pass
 
-            try:
-                entity["Rotation"][0].value = entity["Rotation"][0].value * -1.0 + 180
-            except:
-                pass
+            if "Rotation" in entity:
+                entity["Rotation"][0].value = -entity["Rotation"][0].value + 180
 
             # Special logic for old width painting as TileX/TileZ favours -x/-z
 
-            try:
-                ent_id_val = entity["id"].value
-                mce_ent_id_val = self.entityDefs.getDefId(ent_id_val)
-                if mce_ent_id_val in ("DEF_ENTITIES_PAINTING", "DEF_ENTITIES_ITEM_FRAME"):
-                    facing = entity.get("Facing", entity.get("Direction"))
-                    if facing is None:
-                        dirFacing = entity.get("Dir")
-                        if dirFacing is not None:
-                            if dirFacing.value == 0:
-                                dirFacing.value = 2
-                            elif dirFacing.value == 2:
-                                dirFacing.value = 0
-                            facing = dirFacing
-                        else:
-                            raise Exception("None of tags Facing/Direction/Dir found in entity %s during flipping -  %r" % (entity["id"].value, entity))
+            facing = self._getPaintingFacing(entity)
+            if facing is not None and "TileX" in entity and "TileZ" in entity:
+                entity["TileZ"].value = self.Length - entity["TileZ"].value - 1
+                if "Motive" in entity and self.paintingMap.get(entity["Motive"].value, 1) % 2 == 0:
+                    if facing.value == 1: # west
+                        entity["TileZ"].value -= 1
+                    elif facing.value == 3: # east
+                        entity["TileZ"].value += 1
+                    elif facing.value == 0: # south
+                        entity["TileX"].value += 1
+                    elif facing.value == 2: # north
+                        entity["TileX"].value -= 1
+                facing.value = paintingFlipZ[facing.value]
 
-                if mce_ent_id_val == "DEF_ENTITIES_PAINTING":
-                    if facing.value == 1:
-                        entity["TileZ"].value = self.Length - entity["TileZ"].value - 2 + self.paintingMap[entity["Motive"].value] % 2
-                    elif facing.value == 3:
-                        entity["TileZ"].value = self.Length - entity["TileZ"].value - self.paintingMap[entity["Motive"].value] % 2
-                    else:
-                        entity["TileZ"].value = self.Length - entity["TileZ"].value - 1
-                    if facing.value == 0:
-                        entity["TileX"].value = entity["TileX"].value + 1 - self.paintingMap[entity["Motive"].value] % 2
-                    elif facing.value == 2:
-                        entity["TileX"].value = entity["TileX"].value - 1 + self.paintingMap[entity["Motive"].value] % 2
-                    facing.value = eastWestPaintingMap[facing.value]
-                elif mce_ent_id_val == "DEF_ENTITIES_ITEM_FRAME":
-                    entity["TileZ"].value = self.Length - entity["TileZ"].value - 1
-                    facing.value = eastWestPaintingMap[facing.value]
-            except:
-                pass
-
-        for tileEntity in self.TileEntities:
-            tileEntity["z"].value = self.Length - tileEntity["z"].value - 1
-
-        if "TileTicks" in self.root_tag:
-            for tileTick in self.TileTicks:
-                tileTick["z"].value = self.Length - tileTick["z"].value - 1
+        for tileEntities in self.TileEntities, self.TileTicks:
+            for tileEntity in tileEntities:
+                if "z" in tileEntity:
+                    tileEntity["z"].value = self.Length - tileEntity["z"].value - 1
 
     def setBlockDataAt(self, x, y, z, newdata):
         if x < 0 or y < 0 or z < 0:
             return 0
         if x >= self.Width or y >= self.Height or z >= self.Length:
             return 0
-        # pcm1k - data limit?
         self.Data[x, z, y] = (newdata & 0xf)
 
     def blockDataAt(self, x, y, z):
