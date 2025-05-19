@@ -4,7 +4,7 @@ import directories
 import os
 import shutil
 import types
-from id_definitions import get_defs_ids, PLATFORM_ALPHA, VERSION_LATEST
+from id_definitions import get_defs_ids, BaseDefs, getBaseDefs, PLATFORM_ALPHA, VERSION_LATEST
 
 logger = getLogger(__name__)
 
@@ -24,15 +24,14 @@ class ItemType(object):
         return "ItemType {0}: {1}".format(self.id, self.name)
 
 
-class Items(object):
+class Items(BaseDefs):
     def __init__(self, defsIds):
-        self.defsIds = defsIds
+        super(Items, self).__init__(defsIds)
 
         self.items = {}
 
         def addItem(idStr, item):
-            # just ignore the non-namespaced ids I guess
-            if not isinstance(idStr, basestring) or ":" not in idStr:
+            if not isinstance(idStr, basestring):
                 return
             if "stacksize" not in item:
                 item["stacksize"] = 64
@@ -99,36 +98,8 @@ del _Items
 
 _itemsCache = {}
 
-def _checkCache(platform, version, defsIds):
-    if platform not in _itemsCache or version not in _itemsCache[platform]:
-        return None
-    itemDefs = _itemsCache[platform][version]
-    if itemDefs.defsIds is not defsIds:
-        # different/outdated defsIds
-        return None
-    return itemDefs
-
 def getItemDefs(defsIds, forceNew=False):
-    if defsIds is None or defsIds.isEmpty:
-        return items._itemDefs
-
-    platform = defsIds.platform
-    version = defsIds.version
-    if forceNew:
-        itemDefs = Items(defsIds)
-    else:
-        itemDefs = _checkCache(platform, version, defsIds)
-    if itemDefs is not None:
-        # update global
-        items._itemDefs = itemDefs
-        return itemDefs
-
-    itemDefs = Items(defsIds)
-
-    if platform not in _itemsCache:
-        _itemsCache[platform] = {}
-    _itemsCache[platform][version] = itemDefs
+    itemDefs = getBaseDefs(defsIds, Items, items._itemDefs, _itemsCache, forceNew)
     # update global
     items._itemDefs = itemDefs
-
     return itemDefs

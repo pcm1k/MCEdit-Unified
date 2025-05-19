@@ -8,6 +8,7 @@ from math import isnan
 import random
 import nbt
 from copy import deepcopy
+from id_definitions import BaseDefs, MCEditDefsIds, getBaseDefs
 
 __all__ = ["Entity", "TileEntity", "TileTick"]
 
@@ -16,7 +17,7 @@ UNKNOWN_ENTITY_MASK = 1000
 logger = getLogger(__name__)
 
 
-class TileEntityDefs(object):
+class TileEntityDefs(BaseDefs):
     _oldToDefIds = {
         "Airportal": "DEF_TILEENTITIES_END_PORTAL",
         "Banner": "DEF_TILEENTITIES_BANNER",
@@ -46,10 +47,9 @@ class TileEntityDefs(object):
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
     def __init__(self, defsIds):
-        self.defsIds = defsIds
+        super(TileEntityDefs, self).__init__(defsIds)
 
         self.baseStructures = {}
-        self.otherNames = {}
         self.stringNames = {}
         self.knownIDs = []
         self.maxItems = {}
@@ -62,37 +62,36 @@ class TileEntityDefs(object):
             result = []
             for name, data in jsonStruct.iteritems():
                 tagType = getattr(nbt, "TAG_%s" % data["type"])
-                entry = (name, tagType, data.get("value"))
+                # pcm1k - maybe just create an actual NBT tag object?
+                entry = name, tagType, data.get("value")
                 result.append(entry)
             return tuple(result)
 
         for idStr, defId in defsIds.mcedit_ids["tileentities"].iteritems():
+            if not isinstance(idStr, basestring):
+                continue
             item = defsIds.mcedit_defs[defId]
             self.knownIDs.append(idStr)
-#            if "name" in item:
-#                self.otherNames[idStr] = item["name"]
             if "maxItems" in item and isinstance(item["maxItems"], int):
                 self.maxItems[idStr] = item["maxItems"]
             if "slotNames" in item and isinstance(item["slotNames"], dict):
                 self.slotNames[idStr] = {int(slot): slotName for slot, slotName in item["slotNames"].iteritems()}
             if "baseStructure" in item and isinstance(item["baseStructure"], dict):
+                # pcm1k - this should be changed to allow nested compound tags
                 self.baseStructures[idStr] = parseBaseStruct(item["baseStructure"])
         for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
+            if not isinstance(idStr, basestring):
+                continue
             item = defsIds.mcedit_defs[defId]
             if "tileentity" in item and isinstance(item["tileentity"], basestring):
-                defIdTe = defsIds.formatDefId("tileentities", item["tileentity"])
+                defIdTe = MCEditDefsIds.formatDefId("tileentities", item["tileentity"])
                 idStrTe = self.getStrId(defIdTe)
                 if idStrTe is None:
                     logger.warn("Could not find tileentity %s", defIdTe)
                     continue
                 self.stringNames[idStr] = idStrTe
 
-    def Create(self, tileEntityID, pos=(0, 0, 0), defsIds=None, convertOld=True, **kw):
-        if defsIds is not None and defsIds is not self.defsIds:
-            # redirect to the correct TileEntityDefs object
-            entityDefs = getTileEntityDefs(defsIds)
-            return entityDefs.Create(tileEntityID, pos=pos, defsIds=None, **kw)
-
+    def Create(self, tileEntityID, pos=(0, 0, 0), convertOld=True, **kw):
         def handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
             if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
                 if self.defsIds is None:
@@ -137,27 +136,13 @@ class TileEntityDefs(object):
         tileEntityTag["id"] = nbt.TAG_String(tileEntityID)
         createBaseStruct(tileEntityID, tileEntityTag, **kw)
 
-        self.setpos(tileEntityTag, pos)
+        TileEntity.setpos(tileEntityTag, pos)
         return tileEntityTag
 
-    @classmethod
-    def pos(cls, tag):
-        return [tag[a].value for a in 'xyz']
-
-    @classmethod
-    def setpos(cls, tag, pos):
-        for a, p in zip('xyz', pos):
-            tag[a] = nbt.TAG_Int(p)
-
-    def copyWithOffset(self, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
+    def copyWithOffset(self, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False):
         # You'll need to use this function twice
         # The first time with first equals to True
         # The second time with first equals to False
-        if defsIds is not None and defsIds is not self.defsIds:
-            # redirect to the correct TileEntityDefs object
-            entityDefs = getTileEntityDefs(defsIds)
-            return entityDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset, defsIds=None)
-
         eTag = deepcopy(tileEntity)
         eTag['x'] = nbt.TAG_Int(tileEntity['x'].value + copyOffset[0])
         eTag['y'] = nbt.TAG_Int(tileEntity['y'].value + copyOffset[1])
@@ -483,7 +468,7 @@ class TileEntityDefs(object):
         return self._getName(self.defsIds, "tileentities", entityId, default)
 
 
-class EntityDefs(object):
+class EntityDefs(BaseDefs):
     _oldToDefIds = {
         "AreaEffectCloud": "DEF_ENTITIES_AREA_EFFECT_CLOUD",
         "ArmorStand": "DEF_ENTITIES_ARMOR_STAND",
@@ -557,39 +542,8 @@ class EntityDefs(object):
 
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
-    projectiles = ["Arrow",
-                   "Snowball",
-                   "Egg",
-                   "Fireball",
-                   "SmallFireball",
-                   "ThrownEnderpearl",
-                   "EyeOfEnderSignal",
-                   "ThrownPotion",
-                   "ThrownExpBottle",
-                   "WitherSkull",
-                   "FireworksRocketEntity"
-                   ]
-
-    items = ["Item",
-             "XPOrb",
-             "Painting",
-             "EnderCrystal",
-             "ItemFrame",
-             "WitherSkull",
-             ]
-    vehicles = ["MinecartRidable",
-                "MinecartChest",
-                "MinecartFurnace",
-                "MinecartTNT"
-                "MinecartHopper"
-                "MinecartSpawner"
-                "MinecartCommandBlock"
-                "Boat",
-                ]
-    tiles = ["PrimedTnt", "FallingSand"]
-
     def __init__(self, defsIds):
-        self.defsIds = defsIds
+        super(EntityDefs, self).__init__(defsIds)
 
         self.entityList = {}
         self.monsters = []
@@ -599,6 +553,8 @@ class EntityDefs(object):
             return
 
         for idStr, defId in defsIds.mcedit_ids["entities"].iteritems():
+            if not isinstance(idStr, basestring):
+                continue
             item = defsIds.mcedit_defs[defId]
             self.entityList[idStr] = item["id"]
             if "maxItems" in item and isinstance(item["maxItems"], int):
@@ -606,7 +562,7 @@ class EntityDefs(object):
         spawnerMonsters = defsIds.get_def("spawner_monsters")
         if spawnerMonsters is not None:
             for mob in spawnerMonsters:
-                defId = defsIds.formatDefId("entities", mob)
+                defId = MCEditDefsIds.formatDefId("entities", mob)
                 idStr = self.getStrId(defId)
                 if idStr is None:
                     logger.warn("Could not find spawner entity %s", defId)
@@ -628,28 +584,8 @@ class EntityDefs(object):
         if convertOld:
             entityID = getNewId(entityID)
         entityTag["id"] = nbt.TAG_String(entityID)
-        self.setpos(entityTag, pos)
+        Entity.setpos(entityTag, pos)
         return entityTag
-
-    @classmethod
-    def pos(cls, tag):
-        if "Pos" not in tag:
-            raise InvalidEntity(tag)
-        else:
-            values = [a.value for a in tag["Pos"]]
-
-        if isnan(values[0]) and 'xTile' in tag:
-            values[0] = tag['xTile'].value
-        if isnan(values[1]) and 'yTile' in tag:
-            values[1] = tag['yTile'].value
-        if isnan(values[2]) and 'zTile' in tag:
-            values[2] = tag['zTile'].value
-
-        return values
-
-    @classmethod
-    def setpos(cls, tag, pos):
-        tag["Pos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
 
     def copyWithOffset(self, entity, copyOffset, regenerateUUID=False):
         eTag = deepcopy(entity)
@@ -660,16 +596,8 @@ class EntityDefs(object):
         positionTags = map(lambda p, co: type(p)((p.value + co)), eTag["Pos"], copyOffset)
         eTag["Pos"] = nbt.TAG_List(positionTags)
 
-        # Also match the 'minecraft:XXX' names
-#         if eTag["id"].value in ("Painting", "ItemFrame", u'minecraft:painting', u'minecraft:item_frame'):
-#             print "#" * 40
-#             print eTag
-#             eTag["TileX"].value += copyOffset[0]
-#             eTag["TileY"].value += copyOffset[1]
-#             eTag["TileZ"].value += copyOffset[2]
-
         # Trying more agnostic way
-        if eTag.get('TileX') and eTag.get('TileY') and eTag.get('TileZ'):
+        if "TileX" in eTag and "TileY" in eTag and "TileZ" in eTag:
             eTag["TileX"].value += copyOffset[0]
             eTag["TileY"].value += copyOffset[1]
             eTag["TileZ"].value += copyOffset[2]
@@ -797,61 +725,109 @@ class PocketEntityDefs(EntityDefs):
         return id
 
 
-class _Entity(object):
-    def __init__(self, entityDefs=None):
-        self._entityDefs = entityDefs
+class TileEntity(object):
+    # trying to keep backwards compatibility
+    _entityDefs = TileEntityDefs(None)
 
-    def __getattr__(self, name):
-        return getattr(self._entityDefs, name)
+    baseStructures = {}
+    stringNames = {}
+    knownIDs = []
+    maxItems = {}
+    slotNames = {}
 
-# trying to keep backwards compatibility
-TileEntity = _Entity(TileEntityDefs(None))
-Entity = _Entity(EntityDefs(None))
+    @classmethod
+    def _updateGlobal(cls, entityDefs):
+        cls._entityDefs = entityDefs
+        cls.baseStructures = entityDefs.baseStructures
+        cls.stringNames = entityDefs.stringNames
+        cls.knownIDs = entityDefs.knownIDs
+        cls.maxItems = entityDefs.maxItems
+        cls.slotNames = entityDefs.slotNames
 
-del _Entity
+    @classmethod
+    def Create(cls, tileEntityID, pos=(0, 0, 0), defsIds=None, **kw):
+        if defsIds is not None and defsIds is not cls._entityDefs.defsIds:
+            # redirect to the correct TileEntityDefs object
+            cls._updateGlobal(getTileEntityDefs(defsIds))
+        return cls._entityDefs.Create(tileEntityID, pos=pos, convertOld=True, **kw)
+
+    @classmethod
+    def copyWithOffset(cls, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
+        if defsIds is not None and defsIds is not cls._entityDefs.defsIds:
+            # redirect to the correct TileEntityDefs object
+            cls._updateGlobal(getTileEntityDefs(defsIds))
+        return cls._entityDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset)
+
+    @classmethod
+    def pos(cls, tag):
+        return [tag[a].value for a in 'xyz']
+
+    @classmethod
+    def setpos(cls, tag, pos):
+        for a, p in zip('xyz', pos):
+            tag[a] = nbt.TAG_Int(p)
+
+
+class Entity(object):
+    # trying to keep backwards compatibility
+    _entityDefs = TileEntityDefs(None)
+
+    entityList = {}
+    monsters = []
+    maxItems = {}
+
+    @classmethod
+    def _updateGlobal(cls, entityDefs):
+        cls._entityDefs = entityDefs
+        cls.entityList = entityDefs.entityList
+        cls.monsters = entityDefs.monsters
+        cls.maxItems = entityDefs.maxItems
+
+    @classmethod
+    def Create(cls, entityID, pos=(0, 0, 0), **kw):
+        return cls._entityDefs.Create(entityID, pos=pos, convertOld=True, **kw)
+
+    @classmethod
+    def copyWithOffset(cls, entity, copyOffset, regenerateUUID=False):
+        return cls._entityDefs.copyWithOffset(entity, copyOffset, regenerateUUID=regenerateUUID)
+
+    @classmethod
+    def getId(cls, v, default="No ID"):
+        return cls._entityDefs.getId(v, default=default)
+
+    @classmethod
+    def pos(cls, tag):
+        if "Pos" not in tag:
+            raise InvalidEntity(tag)
+
+        values = [a.value for a in tag["Pos"]]
+
+        if isnan(values[0]) and 'xTile' in tag:
+            values[0] = tag['xTile'].value
+        if isnan(values[1]) and 'yTile' in tag:
+            values[1] = tag['yTile'].value
+        if isnan(values[2]) and 'zTile' in tag:
+            values[2] = tag['zTile'].value
+
+        return values
+
+    @classmethod
+    def setpos(cls, tag, pos):
+        tag["Pos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
+
 
 _tileEntityDefsCache = {}
 _entityDefsCache = {}
 
-def _checkCache(cache, platform, version, defsIds):
-    if platform not in cache or version not in cache[platform]:
-        return None
-    entityDefs = cache[platform][version]
-    if entityDefs.defsIds is not defsIds:
-        # different/outdated defsIds
-        return None
-    return entityDefs
-
-def _getEntityDefs(defsIds, defsClass, globalDefs, cache, forceNew):
-    if defsIds is None:
-        return globalDefs._entityDefs
-
-    platform = defsIds.platform
-    version = defsIds.version
-    if forceNew:
-        entityDefs = defsClass(defsIds)
-    else:
-        entityDefs = _checkCache(cache, platform, version, defsIds)
-    if entityDefs is not None:
-        # update global
-        globalDefs._entityDefs = entityDefs
-        return entityDefs
-
-    entityDefs = defsClass(defsIds)
-
-    if platform not in cache:
-        cache[platform] = {}
-    cache[platform][version] = entityDefs
-    # update global
-    globalDefs._entityDefs = entityDefs
-
-    return entityDefs
-
 def getTileEntityDefs(defsIds, forceNew=False):
-    return _getEntityDefs(defsIds, TileEntityDefs, TileEntity, _tileEntityDefsCache, forceNew)
+    entityDefs = getBaseDefs(defsIds, TileEntityDefs, TileEntity._entityDefs, _tileEntityDefsCache, forceNew)
+    TileEntity._updateGlobal(entityDefs)
+    return entityDefs
 
 def getEntityDefs(defsIds, forceNew=False):
-    return _getEntityDefs(defsIds, EntityDefs, Entity, _entityDefsCache, forceNew)
+    entityDefs = getBaseDefs(defsIds, EntityDefs, Entity._entityDefs, _entityDefsCache, forceNew)
+    Entity._updateGlobal(entityDefs)
+    return entityDefs
 
 
 class TileTick(object):
@@ -864,5 +840,5 @@ class InvalidEntity(ValueError):
     pass
 
 
-class InvalidTileEntiy(ValueError):
+class InvalidTileEntity(ValueError):
     pass

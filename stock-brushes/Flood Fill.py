@@ -74,7 +74,7 @@ def apply(self, op, point):
     if tileEntity:
         if op.level.tileEntityAt(x, y, z):
             op.level.removeTileEntitiesInBox(BoundingBox((x, y, z), (1, 1, 1)))
-        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (x, y, z), defsIds=op.level.defsIds)
+        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (x, y, z))
         createTileEntities(tileEntityObject, op.level)
 
     def processCoords(coords):

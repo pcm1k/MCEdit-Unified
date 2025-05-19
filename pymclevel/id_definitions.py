@@ -52,7 +52,6 @@ So the '1.2.3' data will override the '1.2' data.
 import os
 import json
 from logging import getLogger
-import pymclevel
 import re
 import collections
 import sys
@@ -424,7 +423,7 @@ class MCEditDefsIds(object):
 
     def get_id(self, prefix, obj_id, default=None, resolve=False):
         """Retrieves a "defId" from mcedit_ids and then optionally resolves it using mcedit_defs"""
-        if obj_id.startswith(self.formatDefId(prefix, "")):
+        if obj_id.startswith(MCEditDefsIds.formatDefId(prefix, "")):
             # it's actually a defId
             if not resolve:
                 return obj_id
@@ -447,9 +446,45 @@ class MCEditDefsIds(object):
     def isEmpty(self):
         return not self.mcedit_defs or not self.mcedit_ids
 
-    @classmethod
-    def formatDefId(cls, prefix, defName):
+    @staticmethod
+    def formatDefId(prefix, defName):
         return "DEF_%s_%s" % (prefix.upper(), defName.upper())
+
+class BaseDefs(object):
+    def __init__(self, defsIds):
+        self.defsIds = defsIds
+
+def getBaseDefs(defsIds, defsClass, globalDefs, cache, forceNew):
+    """A shared function that retrieves a BaseDefs instance from a cache or creates a new one.
+    Currently used by TileEntityDefs, EntityDefs, and Items"""
+    def checkCache(cache, platform, version, defsIds):
+        if platform not in cache or version not in cache[platform]:
+            return None
+        genericDefs = cache[platform][version]
+        if genericDefs.defsIds is not defsIds:
+            # different/outdated defsIds
+            return None
+        return genericDefs
+
+    if (defsIds is None or defsIds.isEmpty) and globalDefs is not None:
+        return globalDefs
+
+    platform = defsIds.platform
+    version = defsIds.version
+    if forceNew:
+        genericDefs = defsClass(defsIds)
+    else:
+        genericDefs = checkCache(cache, platform, version, defsIds)
+    if genericDefs is not None:
+        return genericDefs
+
+    genericDefs = defsClass(defsIds)
+
+    if platform not in cache:
+        cache[platform] = {}
+    cache[platform][version] = genericDefs
+
+    return genericDefs
 
 def _findVersionDir(platformDir, platform, version, fileFuncs):
     verDir = fileFuncs.join(platformDir, version)

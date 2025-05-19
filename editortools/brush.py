@@ -1161,6 +1161,6 @@ def createTileEntities(block, box, chunk, defsIds=None):
         if chunk.world.blockAt(x, y, z) == block.ID:
             if chunk.tileEntityAt(x, y, z):
                 chunk.removeTileEntitiesInBox(BoundingBox((x, y, z), (1, 1, 1)))
-            tileEntityObject = chunk.world.tileEntityDefs.Create(tileEntity, (x, y, z), defsIds=defsIds)
+            tileEntityObject = TileEntity.Create(tileEntity, (x, y, z), defsIds=defsIds)
             chunk.TileEntities.append(tileEntityObject)
             chunk._fakeEntities = None
