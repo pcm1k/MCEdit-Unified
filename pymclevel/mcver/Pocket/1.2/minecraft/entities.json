@@ -58,18 +58,36 @@
             "actorType": "Mob",
             "id": 61,
             "idStr": "armor_stand",
+            "mapcolor": [
+                34,
+                255,
+                34,
+                95
+            ],
             "name": "Armor stand",
             "type": "Other"
         },
         {
             "id": 64,
             "idStr": "item",
+            "mapcolor": [
+                34,
+                255,
+                34,
+                95
+            ],
             "name": "Dropped item",
             "type": "Drops"
         },
         {
             "id": 69,
             "idStr": "xp_orb",
+            "mapcolor": [
+                136,
+                255,
+                136,
+                95
+            ],
             "name": "Experience Orb",
             "type": "Drops"
         },
@@ -163,6 +181,12 @@
         {
             "id": 83,
             "idStr": "painting",
+            "mapcolor": [
+                134,
+                96,
+                67,
+                95
+            ],
             "name": "Painting",
             "type": "Immobile and projectiles"
         },

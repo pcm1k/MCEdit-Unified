@@ -15,6 +15,12 @@
         {
             "id": 2,
             "idStr": "xp_orb",
+            "mapcolor": [
+                136,
+                255,
+                136,
+                95
+            ],
             "name": "Experience Orb",
             "type": "Drops"
         },
@@ -529,18 +535,6 @@
     "noRenderDelta": [
         "item_frame",
         "painting",
-        "minecraft:item_frame",
-        "minecraft:painting"
-    ],
-    "notMonsters": [
-        "item",
-        "xp_orb",
-        "armor_stand",
-        "item_frame",
-        "painting",
-        "minecraft:item",
-        "minecraft:xp_orb",
-        "minecraft:armor_stand",
         "minecraft:item_frame",
         "minecraft:painting"
     ],

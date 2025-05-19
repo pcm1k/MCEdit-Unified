@@ -17,6 +17,12 @@
             "_name": "xp_orb",
             "id": 2,
             "idStr": "XPOrb",
+            "mapcolor": [
+                136,
+                255,
+                136,
+                95
+            ],
             "name": "Experience Orb",
             "type": "Drops"
         },

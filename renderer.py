@@ -1317,17 +1317,18 @@ class BaseEntityRenderer(EntityRendererGeneric):
 
 class MonsterRenderer(BaseEntityRenderer):
     layer = Layer.Entities  # xxx Monsters
-    notMonsters = {"Item", "XPOrb", "Painting", "ItemFrame", "ArmorStand"}
 
     def makeChunkVertices(self, chunk):
         monsterPositions = []
         append = monsterPositions.append
-        notMonsters = self.chunkCalculator.level.defsIds.get_def("notMonsters", self.notMonsters)
+        defsIds = self.chunkCalculator.level.defsIds
         for i, ent in enumerate(chunk.Entities):
             if i % 10 == 0:
                 yield
             id = ent["id"].value
-            if id in notMonsters:
+            color = defsIds.get_id("entities", id, {}, resolve=True).get("mapcolor")
+            if color is not None:
+                # will be handled by ItemRenderer instead
                 continue
             pos = pymclevel.Entity.pos(ent)
             pos[1] += 0.5
@@ -1353,26 +1354,17 @@ class ItemRenderer(BaseEntityRenderer):
     def makeChunkVertices(self, chunk):
         entityPositions = []
         entityColors = []
-        colorMap = {
-            "Item": (0x22, 0xff, 0x22, 0x5f),
-            "XPOrb": (0x88, 0xff, 0x88, 0x5f),
-            "Painting": (134, 96, 67, 0x5f),
-            "ItemFrame": (134, 96, 67, 0x5f),
-            "ArmorStand": (0x22, 0xff, 0x22, 0x5f),
-        }
         pos_append = entityPositions.append
         color_append = entityColors.append
         defsIds = self.chunkCalculator.level.defsIds
         for i, ent in enumerate(chunk.Entities):
             if i % 10 == 0:
                 yield
-            # Let get the color from the versioned data, and use the 'old' way as fallback
+            # Let get the color from the versioned data
             color = defsIds.get_id("entities", ent["id"].value, {}, resolve=True).get("mapcolor")
             if color is None:
-                color = colorMap.get(ent["id"].value)
-
-            if color is None:
                 continue
+
             pos = pymclevel.Entity.pos(ent)
             noRenderDelta = defsIds.get_def("noRenderDelta", ("Painting", "ItemFrame"))
             if ent["id"].value not in noRenderDelta:
