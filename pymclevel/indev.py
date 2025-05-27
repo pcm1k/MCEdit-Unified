@@ -208,6 +208,8 @@ class MCIndevLevel(EntityLevel):
 
                 TileEntity.setpos(te, (x, y, z))
 
+            self.TileTicks = nbt.TAG_List()
+
             localPlayerList = [tag for tag in root_tag["Entities"] if tag['id'].value == 'LocalPlayer']
             if len(localPlayerList) == 0:  # omen doesn't make a player entity
                 playerTag = nbt.TAG_Compound()

@@ -20,7 +20,7 @@ from infiniteworld import SessionLockLost, AnvilChunkData, AnvilWorldFolder, unp
 from pocket import PocketWorldBase
 from level import LightedChunk
 from contextlib import contextmanager
-from pymclevel import entity, BoundingBox, Entity, TileEntity
+from pymclevel import BoundingBox, Entity, TileEntity
 import traceback
 import shutil
 
@@ -35,7 +35,8 @@ try:
 except Exception as e:
     trace_msg = traceback.format_exc().splitlines()
     logger.warn("Error while trying to import leveldb:")
-    [logger.warn(a) for a in trace_msg]
+    for a in trace_msg:
+        logger.warn(a)
 
 try:
     if leveldb_mcpe is None:
@@ -179,7 +180,7 @@ def get_blocks_storage_from_blocks_and_data(blocks, data, level):
     uniqueBlocks = numpy.transpose(numpy.unique(blocksCombined, axis=1))
     palette = []
     numpy_blocks = numpy.zeros(4096, 'uint16')
-    for index, (blockID, blockData) in enumerate(uniqueBlocks):
+    for blockID, blockData in uniqueBlocks:
         try:
             if blockID != 0:
                 block_string = "minecraft:" + level.materials.idStr[blockID]
@@ -187,7 +188,7 @@ def get_blocks_storage_from_blocks_and_data(blocks, data, level):
             else:
                 block_string = "minecraft:air"
                 block_data = blockData
-        except:
+        except KeyError:
             block_string = "minecraft:air"
             block_data = 0
         with nbt.littleEndianNBT():
@@ -228,8 +229,7 @@ class PocketLeveldbDatabase(object):
     To access the actual database, world_db() should be called.
     """
     holdDatabaseOpen = True
-    _world_db = None
-    world_version = None  # to be set to 'pre1.0' or '1.plus'
+#    world_version = None  # to be set to 'pre1.0' or '1.plus'
 
     def __open_db(self):
         """Opens a DB and return the associated object."""
@@ -257,7 +257,6 @@ class PocketLeveldbDatabase(object):
             if self._world_db is None:
                 self._world_db = self.__open_db()
             yield self._world_db
-            pass
         else:
             db = self.__open_db()
             yield db
@@ -278,6 +277,7 @@ class PocketLeveldbDatabase(object):
             raise TypeError("Wrong world version sent: %s"%world_version)
         self.world_version = world_version
         self.dat_world_version = dat_world_version
+        self._world_db = None
         self.path = path
         if not os.path.exists(path):
             file(path, 'w').close()
@@ -660,7 +660,7 @@ class PocketLeveldbDatabase(object):
         chunk = self._readChunk(cx, cz, world)
         return chunk
 
-    _allChunks = None
+#    _allChunks = None
 
     def deleteChunk(self, cx, cz, batch=None):
         if self.world_version == 'pre1.0':
@@ -784,12 +784,6 @@ class PocketLeveldbWorld(PocketWorldBase):
     _bounds = None
     oldPlayerFolderFormat = False
 
-    _allChunks = None  # An array of cx, cz pairs.
-    _loadedChunks = {}  # A dictionary of actual PocketLeveldbChunk objects mapped by (cx, cz)
-    _playerData = None
-    playerTagCache = {}
-    _playerList = None
-
     world_version = None # to be set to 'pre1.0' or '1.plus'
     # It may happen that 1+ world has a an internale .dat version set to pre 1 (0x04).
     # Let store this internal .dat version to be able to deal with mixed pre 1 and 1+ chunks.
@@ -837,7 +831,7 @@ class PocketLeveldbWorld(PocketWorldBase):
     def players(self):
         if self._playerList is None:
             self._playerList = []
-            for key in self.playerData.keys():
+            for key in self.playerData.iterkeys():
                 self._playerList.append(key)
         return self._playerList
 
@@ -857,6 +851,7 @@ class PocketLeveldbWorld(PocketWorldBase):
         """
         if dim == 0:
             return player
+        return None
 
     def __init__(self, filename=None, create=False, random_seed=None, last_played=None, readonly=False, height=None):
         """
@@ -885,6 +880,12 @@ class PocketLeveldbWorld(PocketWorldBase):
             if height is not None:
                 self.Height = height
             logger.info('Creating PE world version %s (%s)' % (self.world_version, repr(self.dat_world_version)))
+
+        self._allChunks = None  # An array of cx, cz pairs.
+        self._loadedChunks = {}  # A dictionary of actual PocketLeveldbChunk objects mapped by (cx, cz)
+        self._playerData = None
+        self.playerTagCache = {}
+        self._playerList = None
 
         self.filename = filename
         self.worldFile = PocketLeveldbDatabase(filename, self, create=create, world_version=self.world_version, dat_world_version=self.dat_world_version)
@@ -1038,13 +1039,10 @@ class PocketLeveldbWorld(PocketWorldBase):
         :return: None
         """
         self.worldFile.deleteChunk(cx, cz, batch=batch)
-        try:
-            del self._loadedChunks[(cx, cz)]
-        except:
-            pass
+        self._loadedChunks.pop((cx, cz), None)
         try:
             self.allChunks.remove((cx, cz))
-        except:
+        except KeyError:
             pass
 
     def deleteChunksInBox(self, box):
@@ -1113,14 +1111,13 @@ class PocketLeveldbWorld(PocketWorldBase):
         return ".".join([str(num) for num in version])
 
     def _findGameVersionId(self):
-        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+        data = self.root_tag.get("Data")
+        if data is None or not isinstance(data, nbt.TAG_Compound):
             return None
-        data = self.root_tag["Data"]
-        if "lastOpenedWithVersion" not in data or not isinstance(data["lastOpenedWithVersion"], nbt.TAG_List):
+        lastVersion = data.get("lastOpenedWithVersion")
+        if lastVersion is None or not isinstance(lastVersion, nbt.TAG_List) or lastVersion.list_type != nbt.TAG_INT:
             return None
-        if data["lastOpenedWithVersion"].list_type != nbt.TAG_INT:
-            return None
-        return [num.value for num in data["lastOpenedWithVersion"]]
+        return [num.value for num in lastVersion]
 
     def _loadMaterials(self):
         return getMaterials(self.defsIds, forceNew=True, name="Pocket", defaultName="Future Block!")
@@ -1152,7 +1149,7 @@ class PocketLeveldbWorld(PocketWorldBase):
         for c in self.chunksNeedingLighting:
             self.getChunk(*c).genFastLights()
 
-        for chunkCoords in self._loadedChunks.keys():
+        for chunkCoords in self._loadedChunks.iterkeys():
             chunk = self._loadedChunks[chunkCoords]
             if chunk.dirty:
                 dirtyChunkCount += 1
@@ -1252,7 +1249,7 @@ class PocketLeveldbWorld(PocketWorldBase):
         Generator containing all chunks that need lighting.
         :yield: int (cx, cz) Coordinates of the chunk
         """
-        for chunkCoords in self._loadedChunks.keys():
+        for chunkCoords in self._loadedChunks.iterkeys():
             chunk = self._loadedChunks[chunkCoords]
             if chunk.needsLighting:
                 yield chunk.chunkPosition
@@ -1799,6 +1796,7 @@ class PE1PlusDataContainer:
         if subchunk in self.subchunks:
             binary_data = self.binary_data[subchunk]
             return binary_data[x, z, y - (subchunk * 16)]
+        return None
 
     def __setitem__(self, x, z, y, data):
         subchunk = y / 16
@@ -1957,7 +1955,7 @@ class PocketLeveldbChunk1Plus(LightedChunk):
         terrain, tile_entities, entities: str: 4096 long string. Defaults to 'None'.
         subchunk: int: subchunk 'height'; generaly 0 to 15 number.
         """
-        if type(subchunk) != int:
+        if not isinstance(subchunk, int):
             raise TypeError("Bad subchunk type. Must be an int, got %s (%s)"%(type(subchunk), subchunk))
         if terrain:
             self.subchunks.append(subchunk)
@@ -2063,7 +2061,7 @@ class PocketLeveldbChunk1Plus(LightedChunk):
                                               'id': -1,
                                               'type': 'Unknown'}
                                              )['name']
-                    except:
+                    except KeyError:
                         continue
                     if DEBUG_PE:
                         ent_def = defs_get(ids_get(v, 'Unknown'),

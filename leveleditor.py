@@ -963,7 +963,10 @@ class LevelEditor(GLViewport):
             directories.schematicsDir, self.level.displayName, ({"Minecraft Schematics": ["schematic"], "Minecraft Structure NBT": ["nbt"]},[]))
 
         def save_as_nbt(schem, filename):
-            structure = StructureNBT.fromSchematic(schem, version=self.level.gameVersionId[0] if self.level.gameVersionId else None)
+            gameVersionId = self.level.gameVersionId
+            structure = StructureNBT.fromSchematic(schem,
+                version=gameVersionId[0] if gameVersionId else None,
+                author="MCEdit-Unified v{}".format(release.TAG))
             structure.save(filename)
 
         if filename:

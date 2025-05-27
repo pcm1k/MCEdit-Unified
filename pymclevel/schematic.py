@@ -18,7 +18,6 @@ from materials import alphaMaterials, MCMaterials, namedMaterials, BlockstateAPI
 from mclevelbase import exhaust
 import nbt
 from numpy import array, swapaxes, uint8, zeros, resize, ndenumerate
-from release import TAG as RELEASE_TAG
 import math
 import copy
 
@@ -543,6 +542,7 @@ class INVEditChest(MCSchematic):
     Width = 1
     Height = 1
     Length = 1
+    Blocks = None
     Data = array([[[0]]], 'uint8')
     Entities = nbt.TAG_List()
     _materials = alphaMaterials
@@ -660,8 +660,8 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
 class StructureNBT(object):
     SUPPORTED_VERSIONS = [1, ]
 
-    def __init__(self, filename=None, root_tag=None, size=None, mats=alphaMaterials, version=None):
-        self._author = None
+    def __init__(self, filename=None, root_tag=None, size=None, mats=alphaMaterials, version=None, author=None):
+        self._author = author
         self._blocks = None
         self._palette = None
         self._entities = []
@@ -810,7 +810,7 @@ class StructureNBT(object):
 
     def save(self, filename=""):
         if not self._author:
-            self._author = "MCEdit-Unified v{}".format(RELEASE_TAG)
+            self._author = "MCEdit-Unified"
 
         structure_tag = nbt.TAG_Compound()
         structure_tag["author"] = nbt.TAG_String(self._author)
@@ -913,6 +913,7 @@ class StructureNBT(object):
     @property
     def DataVersion(self):
         return self._version
+
 
 def adjustExtractionParameters(self, box):
     x, y, z = box.origin

@@ -24,8 +24,8 @@ from mclevelbase import ChunkMalformed, ChunkNotPresent
 import nbt
 from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
-from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN
-from items import getItemDefs
+from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN, VERSION_STR_FILTER
+from items import items as globalItems, getItemDefs
 import re
 
 log = getLogger(__name__)
@@ -156,8 +156,6 @@ class MCLevel(object):
     parentWorld = None
     world = None
 
-    VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
-
     # Game version check. Stores the info found in the 'Version::Name' tag
 
     @property
@@ -185,7 +183,7 @@ class MCLevel(object):
             return self._gameVersionNumber
         version = self._findGameVersionNumber()
         if version:
-            self._gameVersionNumber = self.VERSION_STR_FILTER.sub("", version)
+            self._gameVersionNumber = VERSION_STR_FILTER.sub("", version)
         else:
             # unavailable
             self._gameVersionNumber = VERSION_UNKNOWN
@@ -206,7 +204,7 @@ class MCLevel(object):
 
     @property
     def defsVersion(self):
-        """Returns the version id the world was last opened in as a string, or gameVersionNumber if unavailable.
+        """Returns the id of the version the world was last opened in as a string, or gameVersionNumber if unavailable.
         This value should be used for loading version data"""
         if hasattr(self, "_defsVersion"):
             return self._defsVersion
@@ -217,9 +215,9 @@ class MCLevel(object):
         return self._defsVersion
 
     def loadVersionData(self):
-        self._defsIds = get_defs_ids(self.defsPlatform, self.defsVersion, checkTimes=False)
-        self._entityDefs = getEntityDefs(self.defsIds)
-        self._tileEntityDefs = getTileEntityDefs(self.defsIds)
+        Entity.updateGlobal(self.entityDefs)
+        TileEntity.updateGlobal(self.tileEntityDefs)
+        globalItems.updateGlobal(self.itemDefs)
 
     def _loadMaterials(self):
         if self.defsPlatform == PLATFORM_UNKNOWN:
@@ -374,8 +372,8 @@ class MCLevel(object):
         return (self.getChunk(cx, cz) for (cx, cz) in chunks if self.containsChunk(cx, cz))
 
     def _getFakeChunkEntities(self, cx, cz):
-        """Returns Entities, TileEntities"""
-        return nbt.TAG_List(), nbt.TAG_List()
+        """Returns Entities, TileEntities, TileTicks"""
+        return nbt.TAG_List(), nbt.TAG_List(), nbt.TAG_List()
 
     def getChunk(self, cx, cz):
         """Synthesize a FakeChunk object representing the chunk at the given

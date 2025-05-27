@@ -72,19 +72,23 @@ class TileEntityDefs(BaseDefs):
                 continue
             item = defsIds.mcedit_defs[defId]
             self.knownIDs.append(idStr)
-            if "maxItems" in item and isinstance(item["maxItems"], int):
-                self.maxItems[idStr] = item["maxItems"]
-            if "slotNames" in item and isinstance(item["slotNames"], dict):
-                self.slotNames[idStr] = {int(slot): slotName for slot, slotName in item["slotNames"].iteritems()}
-            if "baseStructure" in item and isinstance(item["baseStructure"], dict):
+            maxItems = item.get("maxItems")
+            if maxItems is not None and isinstance(maxItems, int):
+                self.maxItems[idStr] = maxItems
+            slotNames = item.get("slotNames")
+            if slotNames is not None and isinstance(slotNames, dict):
+                self.slotNames[idStr] = {int(slot): slotName for slot, slotName in slotNames.iteritems()}
+            baseStructure = item.get("baseStructure")
+            if baseStructure is not None and isinstance(baseStructure, dict):
                 # pcm1k - this should be changed to allow nested compound tags
                 self.baseStructures[idStr] = parseBaseStruct(item["baseStructure"])
         for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
             item = defsIds.mcedit_defs[defId]
-            if "tileentity" in item and isinstance(item["tileentity"], basestring):
-                defIdTe = MCEditDefsIds.formatDefId("tileentities", item["tileentity"])
+            tileentity = item.get("tileentity")
+            if tileentity is not None and isinstance(tileentity, basestring):
+                defIdTe = MCEditDefsIds.formatDefId("tileentities", tileentity)
                 idStrTe = self.getStrId(defIdTe)
                 if idStrTe is None:
                     logger.warn("Could not find tileentity %s", defIdTe)
@@ -123,7 +127,7 @@ class TileEntityDefs(BaseDefs):
             return True
 
         def getNewId(oldId):
-            if oldId not in self._oldToDefIds:
+            if oldId not in self._oldToDefIds or self.defsIds is None:
                 return oldId
             item = self.defsIds.get_def(self._oldToDefIds[oldId])
             if item is None:
@@ -557,8 +561,9 @@ class EntityDefs(BaseDefs):
                 continue
             item = defsIds.mcedit_defs[defId]
             self.entityList[idStr] = item["id"]
-            if "maxItems" in item and isinstance(item["maxItems"], int):
-                self.maxItems[idStr] = item["maxItems"]
+            maxItems = item.get("maxItems")
+            if maxItems is not None and isinstance(maxItems, int):
+                self.maxItems[idStr] = maxItems
         spawnerMonsters = defsIds.get_def("spawner_monsters")
         if spawnerMonsters is not None:
             for mob in spawnerMonsters:
@@ -573,7 +578,7 @@ class EntityDefs(BaseDefs):
 
     def Create(self, entityID, pos=(0, 0, 0), convertOld=True, **kw):
         def getNewId(oldId):
-            if oldId not in self._oldToDefIds:
+            if oldId not in self._oldToDefIds or self.defsIds is None:
                 return oldId
             item = self.defsIds.get_def(self._oldToDefIds[oldId])
             if item is None:
@@ -736,7 +741,7 @@ class TileEntity(object):
     slotNames = {}
 
     @classmethod
-    def _updateGlobal(cls, entityDefs):
+    def updateGlobal(cls, entityDefs):
         cls._entityDefs = entityDefs
         cls.baseStructures = entityDefs.baseStructures
         cls.stringNames = entityDefs.stringNames
@@ -770,14 +775,14 @@ class TileEntity(object):
 
 class Entity(object):
     # trying to keep backwards compatibility
-    _entityDefs = TileEntityDefs(None)
+    _entityDefs = EntityDefs(None)
 
     entityList = {}
     monsters = []
     maxItems = {}
 
     @classmethod
-    def _updateGlobal(cls, entityDefs):
+    def updateGlobal(cls, entityDefs):
         cls._entityDefs = entityDefs
         cls.entityList = entityDefs.entityList
         cls.monsters = entityDefs.monsters
@@ -821,12 +826,12 @@ _entityDefsCache = {}
 
 def getTileEntityDefs(defsIds, forceNew=False):
     entityDefs = getBaseDefs(defsIds, TileEntityDefs, TileEntity._entityDefs, _tileEntityDefsCache, forceNew)
-    TileEntity._updateGlobal(entityDefs)
+    TileEntity.updateGlobal(entityDefs)
     return entityDefs
 
 def getEntityDefs(defsIds, forceNew=False):
     entityDefs = getBaseDefs(defsIds, EntityDefs, Entity._entityDefs, _entityDefsCache, forceNew)
-    Entity._updateGlobal(entityDefs)
+    Entity.updateGlobal(entityDefs)
     return entityDefs
 
 

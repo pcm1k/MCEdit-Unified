@@ -1,6 +1,5 @@
 from logging import getLogger
 import json
-import directories
 import os
 import shutil
 import types
@@ -91,6 +90,9 @@ class _Items(object):
     def __getattr__(self, name):
         return getattr(self._itemDefs, name)
 
+    def updateGlobal(self, itemDefs):
+        self._itemDefs = itemDefs
+
 # trying to keep backwards compatibility
 items = _Items(Items(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST)))
 
@@ -100,6 +102,5 @@ _itemsCache = {}
 
 def getItemDefs(defsIds, forceNew=False):
     itemDefs = getBaseDefs(defsIds, Items, items._itemDefs, _itemsCache, forceNew)
-    # update global
-    items._itemDefs = itemDefs
+    items.updateGlobal(itemDefs)
     return itemDefs

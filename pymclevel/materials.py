@@ -4,7 +4,6 @@ import traceback
 from os.path import join
 from collections import defaultdict
 from pprint import pformat
-import mclangres
 import json
 import os
 import pkg_resources
@@ -92,8 +91,12 @@ class Block(object):
 
     @property
     def stringID(self):
-        """Like idStr, but also includes the namespace"""
-        return "%s:%s" % (self.namespace, self.idStr)
+        """Like idStr, but also includes the namespace.
+        Returns "mcedit:unknown_<ID>" if idStr is unavailable"""
+        idStr = self.idStr
+        if not idStr:
+            return "mcedit:unknown_%s" % self.ID
+        return "%s:%s" % (self.namespace, idStr)
 
     @property
     def properties(self):
@@ -101,9 +104,15 @@ class Block(object):
 
     @property
     def Blockstate(self):
-        return self.stringID, self.properties
+        """Returns (stringID, properties) as a tuple.
+        Will instead return ("mcedit:unknown_<ID>", {"data": <blockData>}) if either idStr or properties is unavailable"""
+        properties = self.properties
+        if not self.idStr or properties is None:
+            return "mcedit:unknown_%s" % self.ID, {"data": blockData}
+        return self.stringID, properties
 
 
+# these are exclusive
 id_limit = 4096
 data_limit = 16
 
@@ -148,15 +157,8 @@ class BlockstateAPI(object):
         :return: A tuple of BlockState name and it's properties
         :rtype: tuple
         """
-        if bid not in self.block_map:
-            return "mcedit:unknown_%s" % bid, {"data": data}
-
-        name = self.block_map[bid]
         block = self._mats[bid, data]
-
-        if block.properties is None:
-            return "mcedit:unknown_%s" % bid, {"data": data}
-        return name, block.properties
+        return block.Blockstate
 
     def blockstateToID(self, name, properties):
         """
@@ -166,12 +168,15 @@ class BlockstateAPI(object):
         :type name: str
         :param properties: A list of Property/Value pairs in dict form
         :type properties: list
-        :return: A tuple containing the numerical ID/Data pair (<id>, <data>)
+        :return: A tuple containing the numerical ID/Data pair (<id>, <data>), or (-1, -1) if unavailable
         :rtype: tuple
         """
         if name.startswith("mcedit:unknown_"):
-            bid = int(name[15:])
-            data = int(properties["data"])
+            try:
+                bid = int(name[15:])
+                data = int(properties.get("data", -1))
+            except ValueError:
+                return -1, -1
             return bid, data
 
         try:
@@ -188,10 +193,11 @@ class BlockstateAPI(object):
             return True
 
         bid = block.ID
-        for propI in xrange(len(self._mats.properties[bid])):
-            if compareDicts(self._mats.properties[bid][propI], properties):
-                return bid, propI
-        return bid, block.blockData
+        for data, prop in enumerate(self._mats.properties[bid]):
+            if compareDicts(prop, properties):
+                return bid, data
+
+        return bid, -1
 
     @staticmethod
     def stringifyBlockstate(name, properties):
@@ -209,10 +215,11 @@ class BlockstateAPI(object):
             name = "minecraft:%s" % name
         if not properties:
             return name
-        result = name + "["
-        for (key, value) in properties.iteritems():
-            result += "{}={},".format(key, value)
-        return result[:-1] + "]"
+
+        propList = ["%s=%s" % (key, value) for key, value in properties.iteritems()]
+        propList.sort()
+        result = name + "[" + ",".join(propList) + "]"
+        return result
 
     @staticmethod
     def deStringifyBlockstate(blockstate):
@@ -224,25 +231,22 @@ class BlockstateAPI(object):
         :return: A tuple containing the base name and the properties for the Blockstate
         :rtype: tuple
         """
-        seperated = blockstate.split("[")
+        seperated = blockstate.split("[", 1)
 
+        if ":" not in seperated[0]:
+            seperated[0] = "minecraft:%s" % seperated[0]
         if len(seperated) == 1:
-            if ":" not in seperated[0]:
-                seperated[0] = "minecraft:%s" % seperated[0]
             return seperated[0], {}
 
-        name, props = seperated
-
-        if ":" not in name:
-            name = "minecraft:%s" % name
-
+        name, propStr = seperated
         properties = {}
 
-        props = props[:-1]
-        props = props.split(",")
-        for prop in props:
-            prop = prop.split("=")
-            properties[prop[0]] = prop[1]
+        if propStr.endswith("]"):
+            propStr = propStr[:-1]
+        propSplit = propStr.split(",")
+        for prop in propSplit:
+            key, value = prop.split("=", 1)
+            properties[key] = value
         return name, properties
 
 
@@ -441,7 +445,7 @@ class MCMaterials(object):
     def addJSONBlocksFromVersion(self, platform, version):
         # Load first the versioned stuff
         log.debug("Loading block definitions from versioned file")
-        print "Game Version: {} : {}".format(platform, version)
+        log.info("Game Version: {} : {}".format(platform, version))
         self.defsIds = get_defs_ids(platform, version, checkTimes=False)
         self.addJSONBlocks(self.defsIds.jsonDict)
         self.blockstate_api._initBlockMap()
@@ -1362,7 +1366,7 @@ def convertBlocks(destMats, sourceMats, blocks, blockData):
     return conversionFunc(destMats, sourceMats)(blocks, blockData)
 
 
-namedMaterials = dict((i.name, i) for i in allMaterials)
+namedMaterials = {i.name: i for i in allMaterials}
 
 _materialsCache = {}
 #for mats in namedMaterials.itervalues():
@@ -1388,6 +1392,8 @@ def getMaterials(defsIds, forceNew=False, **kwargs):
 
     platform = defsIds.platform
     version = defsIds.version
+    if "name" not in kwargs:
+        kwargs["name"] = platform
     if forceNew:
         materials = MCMaterials(**kwargs)
     else:

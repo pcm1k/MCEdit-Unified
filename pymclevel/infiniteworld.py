@@ -1532,26 +1532,28 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         return False
 
     def _findGameVersionNumber(self):
-        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+        data = self.root_tag.get("Data")
+        if data is None or not isinstance(data, nbt.TAG_Compound):
             return None
-        data = self.root_tag["Data"]
-        if "Version" not in data or not isinstance(data["Version"], nbt.TAG_Compound):
+        version = data.get("Version")
+        if version is None or not isinstance(version, nbt.TAG_Compound):
             return None
-        version = data["Version"]
-        if "Name" not in version or not isinstance(version["Name"], nbt.TAG_String):
+        name = version.get("Name")
+        if name is None or not isinstance(name, nbt.TAG_String):
             return None
-        return version["Name"].value
+        return name.value
 
     def _findGameVersionId(self):
-        if "Data" not in self.root_tag or not isinstance(self.root_tag["Data"], nbt.TAG_Compound):
+        data = self.root_tag.get("Data")
+        if data is None or not isinstance(data, nbt.TAG_Compound):
             return None
-        data = self.root_tag["Data"]
-        if "Version" not in data or not isinstance(data["Version"], nbt.TAG_Compound):
+        version = data.get("Version")
+        if version is None or not isinstance(version, nbt.TAG_Compound):
             return None
-        version = data["Version"]
-        if "Id" not in version or not isinstance(version["Id"], nbt.TAG_Int):
+        id_ = version.get("Id")
+        if id_ is None or not isinstance(id_, nbt.TAG_Int):
             return None
-        return [version["Id"].value]
+        return [id_.value]
 
     def _loadMaterials(self):
         return materials.getMaterials(self.defsIds, forceNew=True, name="Alpha", defaultName="Future Block!")

@@ -127,16 +127,16 @@ def _resolveTypes(actorTypes):
     return result
 
 # We wouldn't need this if different entries could overwrite each other while loading each dependency. Since it is a list, rather than a dict, they currently can not
-def _deleteOld(prefix, ids_dict, itemOld):
+def _deleteOld(prefix, prefixDict, itemOld):
     id_ = itemOld.get("id")
-    ids_dict[prefix].pop(id_, None)
+    prefixDict.pop(id_, None)
     idStr = itemOld.get("idStr")
-    ids_dict[prefix].pop(idStr, None)
+    prefixDict.pop(idStr, None)
     namespace = itemOld.get("namespace")
     if not namespace:
         return
     namespacedId = "%s:%s" % (namespace, idStr)
-    ids_dict[prefix].pop(namespacedId, None)
+    prefixDict.pop(namespacedId, None)
 
 def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     # pcm1k - this should handle extra item in "data" like how MCMaterials does it
@@ -150,7 +150,7 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
 
     itemOld = defs_dict.get(entry_name)
     if itemOld:
-        _deleteOld(prefix, ids_dict, itemOld)
+        _deleteOld(prefix, ids_dict[prefix], itemOld)
 
     defs_dict[entry_name] = item
     if prefix not in ids_dict:
@@ -398,14 +398,9 @@ class MCEditDefsIds(object):
         self.timestamps = timestamps if timestamps is not None else {}
 
         # ensure these are present
-        if "blocks" not in self.mcedit_ids:
-            self.mcedit_ids["blocks"] = {}
-        if "entities" not in self.mcedit_ids:
-            self.mcedit_ids["entities"] = {}
-        if "items" not in self.mcedit_ids:
-            self.mcedit_ids["items"] = {}
-        if "tileentities" not in self.mcedit_ids:
-            self.mcedit_ids["tileentities"] = {}
+        for prefix in "blocks", "entities", "items", "tileentities":
+            if prefix not in self.mcedit_ids:
+                self.mcedit_ids[prefix] = {}
 
     # pcm1k - this works inconsistently and probably not worth it, may remove
     def check_timestamps(self, fileFuncs):
@@ -512,6 +507,8 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
     log.info("Closest lower version found is MC {} {}.".format(platform, ver))
     return ver
 
+VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
+
 def get_defs_ids(platform, version, checkTimes=True):
     """Create a MCEditDefsIds instance only if one for the game version does not already exists, or a definition file has been changed.
     See MCEditDefsIds doc.
@@ -528,6 +525,9 @@ def get_defs_ids(platform, version, checkTimes=True):
         if checkTimes and defsIds.check_timestamps(fileFuncs):
             return None
         return defsIds
+
+    platform = VERSION_STR_FILTER.sub("", platform)
+    version = VERSION_STR_FILTER.sub("", version)
 
     fileFuncs = _getFileFuncs()
     defsIds = checkCache(platform, version, checkTimes, fileFuncs)
