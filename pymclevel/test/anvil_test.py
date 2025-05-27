@@ -87,7 +87,7 @@ class TestAnvilLevel(unittest.TestCase):
         level = self.anvilLevel.level
         cx, cz = level.allChunks.next()
 
-        schem = mclevel.fromFile("schematics/CreativeInABox.schematic")
+        schem = mclevel.fromFile("testfiles/CreativeInABox.schematic")
         box = BoundingBox((cx * 16, 64, cz * 16), schem.bounds.size)
         level.copyBlocksFrom(schem, schem.bounds, (0, 64, 0))
         schem = MCSchematic(shape=schem.bounds.size)

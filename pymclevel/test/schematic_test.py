@@ -31,7 +31,7 @@ class TestSchematics(unittest.TestCase):
 
         schematic.saveInPlace()
 
-        schem = mclevel.fromFile("schematics/CreativeInABox.schematic")
+        schem = mclevel.fromFile("testfiles/CreativeInABox.schematic")
         tempSchematic = MCSchematic(shape=(1, 1, 3))
         tempSchematic.copyBlocksFrom(schem, BoundingBox((0, 0, 0), (1, 1, 3)), (0, 0, 0))
 
@@ -72,7 +72,7 @@ class TestSchematics(unittest.TestCase):
         os.remove(zs.filename)
 
     def testINVEditChests(self):
-        invFile = mclevel.fromFile("schematics/Chests/TinkerersBox.inv")
+        invFile = mclevel.fromFile("testfiles/TinkerersBox.inv")
         assert invFile.Blocks.any()
         assert not invFile.Data.any()
         assert len(invFile.Entities) == 0
