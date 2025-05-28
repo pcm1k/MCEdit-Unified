@@ -58,14 +58,24 @@ class TileEntityDefs(BaseDefs):
         if defsIds is None:
             return
 
-        def parseBaseStruct(jsonStruct):
-            result = []
-            for name, data in jsonStruct.iteritems():
-                tagType = getattr(nbt, "TAG_%s" % data["type"])
-                # pcm1k - maybe just create an actual NBT tag object?
-                entry = name, tagType, data.get("value")
-                result.append(entry)
-            return tuple(result)
+        def parseNbtDict(jsonTag):
+            if not isinstance(jsonTag, dict):
+                return None
+            tagType = getattr(nbt, "TAG_%s" % jsonTag["type"])
+            value = jsonTag.get("value")
+            if value is None:
+                return tagType()
+            if tagType is nbt.TAG_Compound:
+                resultTag = tagType()
+                for name, jsonTag2 in value.iteritems():
+                    resultTag[name] = parseNbtDict(jsonTag2)
+                return resultTag
+            if tagType is nbt.TAG_List:
+                resultTag = tagType()
+                for jsonTag2 in value:
+                    resultTag.append(parseNbtDict(jsonTag2))
+                return resultTag
+            return tagType(value)
 
         for idStr, defId in defsIds.mcedit_ids["tileentities"].iteritems():
             if not isinstance(idStr, basestring):
@@ -80,8 +90,7 @@ class TileEntityDefs(BaseDefs):
                 self.slotNames[idStr] = {int(slot): slotName for slot, slotName in slotNames.iteritems()}
             baseStructure = item.get("baseStructure")
             if baseStructure is not None and isinstance(baseStructure, dict):
-                # pcm1k - this should be changed to allow nested compound tags
-                self.baseStructures[idStr] = parseBaseStruct(item["baseStructure"])
+                self.baseStructures[idStr] = parseNbtDict({"type": "Compound", "value": baseStructure})
         for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
@@ -96,35 +105,27 @@ class TileEntityDefs(BaseDefs):
                 self.stringNames[idStr] = idStrTe
 
     def Create(self, tileEntityID, pos=(0, 0, 0), convertOld=True, **kw):
-        def handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
+        def handleSpecialStruct(defId, name, **kw):
             if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
                 if self.defsIds is None:
-                    return False
+                    return None
 
                 entity = kw.get("entity")
                 if name == "EntityId":
                     entityDefs = getEntityDefs(self.defsIds)
-                    tileEntityTag[name] = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
-                    return True
+                    structTag = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
+                    return structTag
                 if name == "SpawnData":
                     entityDefs = getEntityDefs(self.defsIds)
                     spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
-                    tileEntityTag["SpawnData"] = tag()
+                    structTag = nbt.TAG_Compound()
                     if entity:
                         for k, v in entity.iteritems():
-                            tileEntityTag["SpawnData"][k] = deepcopy(v)
+                            structTag[k] = deepcopy(v)
                     else:
-                        tileEntityTag["SpawnData"].add(spawn_id)
-                    return True
-            return False
-
-        def createBaseStruct(tileEntityID, tileEntityTag, **kw):
-            defId = self.getDefId(tileEntityID)
-
-            for name, tag, value in self.baseStructures[tileEntityID]:
-                if not handleSpecialStruct(tileEntityTag, defId, name, tag, **kw):
-                    tileEntityTag[name] = tag(value) if value is not None else tag()
-            return True
+                        structTag.add(spawn_id)
+                    return structTag
+            return None
 
         def getNewId(oldId):
             if oldId not in self._oldToDefIds or self.defsIds is None:
@@ -134,11 +135,21 @@ class TileEntityDefs(BaseDefs):
                 return oldId
             return item.get("idStr", oldId)
 
-        tileEntityTag = nbt.TAG_Compound()
+        tileEntityTag = self.baseStructures.get(tileEntityID)
+        if tileEntityTag is None:
+            tileEntityTag = nbt.TAG_Compound()
+        else:
+            tileEntityTag = deepcopy(tileEntityTag)
+
         if convertOld:
             tileEntityID = getNewId(tileEntityID)
         tileEntityTag["id"] = nbt.TAG_String(tileEntityID)
-        createBaseStruct(tileEntityID, tileEntityTag, **kw)
+
+        defId = self.getDefId(tileEntityID)
+        for name in tileEntityTag.iterkeys():
+            structTag = handleSpecialStruct(defId, name, **kw)
+            if structTag is not None:
+                tileEntityTag[name] = structTag
 
         TileEntity.setpos(tileEntityTag, pos)
         return tileEntityTag
