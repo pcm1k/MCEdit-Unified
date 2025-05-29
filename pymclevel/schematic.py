@@ -681,7 +681,7 @@ class StructureNBT(object):
                     properties = {key: value.value for key, value in state["Properties"].iteritems()}
                 else:
                     properties = {}
-                result.append(state["Name"].value, properties)
+                result.append((state["Name"].value, properties))
             return result
 
         if root_tag:
@@ -701,7 +701,10 @@ class StructureNBT(object):
 
             for block in self._root_tag["blocks"]:
                 x, y, z = [p.value for p in block["pos"].value]
-                self._blocks[x, y, z] = self.blockstate.blockstateToID(*self.get_state(block["state"].value))
+                blockID, blockData = self.blockstate.blockstateToID(*self.get_state(block["state"].value))
+                if blockID == -1 or blockData == -1:
+                    continue
+                self._blocks[x, y, z] = blockID, blockData
                 if "nbt" in block:
                     compound = nbt.TAG_Compound()
                     compound.update(block["nbt"])
