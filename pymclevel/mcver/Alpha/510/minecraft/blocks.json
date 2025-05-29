@@ -4838,7 +4838,6 @@
                     }
                 }
             },
-            "explored": true,
             "id": 50,
             "idStr": "torch",
             "mapcolor": [
@@ -6884,7 +6883,6 @@
                     }
                 }
             },
-            "explored": true,
             "id": 75,
             "idStr": "unlit_redstone_torch",
             "mapcolor": [
@@ -6934,7 +6932,6 @@
                     }
                 }
             },
-            "explored": true,
             "id": 76,
             "idStr": "redstone_torch",
             "mapcolor": [
@@ -7588,7 +7585,6 @@
         },
         {
             "brightness": 15,
-            "explored": true,
             "id": 89,
             "idStr": "glowstone",
             "mapcolor": [
@@ -7717,7 +7713,6 @@
                     }
                 }
             },
-            "explored": true,
             "id": 91,
             "idStr": "lit_pumpkin",
             "mapcolor": [
