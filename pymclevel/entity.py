@@ -12,7 +12,7 @@ from id_definitions import BaseDefs, MCEditDefsIds, getBaseDefs
 
 __all__ = ["Entity", "TileEntity", "TileTick"]
 
-UNKNOWN_ENTITY_MASK = 1000
+#UNKNOWN_ENTITY_MASK = 1000
 
 logger = getLogger(__name__)
 
@@ -653,92 +653,21 @@ class EntityDefs(BaseDefs):
         return TileEntityDefs._getName(self.defsIds, "entities", entityId, default)
 
 
-# pcm1k - something should be done with this
-class PocketEntityDefs(EntityDefs):
-    unknown_entity_top = UNKNOWN_ENTITY_MASK + 0
-    entityList = {"Chicken": 10,
-                  "Cow": 11,
-                  "Pig": 12,
-                  "Sheep": 13,
-                  "Wolf": 14,
-                  "Villager": 15,
-                  "Mooshroom": 16,
-                  "Squid": 17,
-                  "Rabbit": 18,
-                  "Bat": 19,
-                  "Iron Golem": 20,
-                  "Snow Golem": 21,
-                  "Ocelot": 22,
-                  "Horse": 23,
-                  "Donkey": 24,
-                  "Mule": 25,
-                  "SkeletonHorse": 26,
-                  "ZombieHorse": 27,
-                  "PolarBear": 28,
-                  "Zombie": 32,
-                  "Creeper": 33,
-                  "Skeleton": 34,
-                  "Spider": 35,
-                  "Zombie Pigman": 36,
-                  "Slime": 37,
-                  "Enderman": 38,
-                  "Silverfish": 39,
-                  "Cave Spider": 40,
-                  "Ghast": 41,
-                  "Magma Cube": 42,
-                  "Blaze": 43,
-                  "Zombie Villager": 44,
-                  "Witch": 45,
-                  "StraySkeleton": 46,
-                  "Hust": 47,
-                  "WitherSkeleton": 48,
-                  "Guardian": 49,
-                  "ElderGuardian": 50,
-                  "WitherBoss": 52,
-                  "EnderDragon": 53,
-                  "Shulker": 54,
-                  "Endermite": 55,
-                  "Player": 63,
-                  "Item": 64,
-                  "PrimedTnt": 65,
-                  "FallingSand": 66,
-                  "ThrownExpBottle": 68,
-                  "XPOrb": 69,
-                  "EyeOfEnderSignal": 70,
-                  "EnderCrystal": 71,
-                  "ShulkerBullet": 76,
-                  "Fishing Rod Bobber": 77,
-                  "DragonFireball": 79,
-                  "Arrow": 80,
-                  "Snowball": 81,
-                  "Egg": 82,
-                  "Painting": 83,
-                  "MinecartRideable": 84,
-                  "Fireball": 85,
-                  "ThrownPotion": 86,
-                  "ThrownEnderpearl": 87,
-                  "LeashKnot": 88,
-                  "WitherSkull": 89,
-                  "Boat": 90,
-                  "Lightning": 93,
-                  "Blaze Fireball": 94,
-                  "AreaEffectCloud": 95,
-                  "Minecart with Hopper": 96,
-                  "Minecart with TNT": 97,
-                  "Minecart with Chest": 98,
-                  "LingeringPotion": 101}
+#class PocketEntityDefs(EntityDefs):
+#    unknown_entity_top = UNKNOWN_ENTITY_MASK + 0
+#    entityList = {}
 
-    def getNumId(self, v):
-        """Returns the numeric ID of an entity, or a generated one if the entity is not known.
-        The generated one is generated like this: 'UNKNOWN_ENTITY_MASK + X', where 'X' is a number.
-        The first unknown entity will have the numerical ID 1001, the second one 1002, and so on.
-        :v: the entity string ID to search for."""
-        id = self.getId(v)
-        if not isinstance(id, int) and v not in self.entityList:
-            id = self.unknown_entity_top + 1
-            self.entityList[v] = self.entityList['Entity %s'%id] = id
-            self.unknown_entity_top += 1
-        return id
+#    def getNumId(self, v):
+#        """Returns the numeric ID of an entity, or a generated one if the entity is not known.
+#        The generated one is generated like this: 'UNKNOWN_ENTITY_MASK + X', where 'X' is a number.
+#        The first unknown entity will have the numerical ID 1001, the second one 1002, and so on.
+#        :v: the entity string ID to search for."""
+#        id_ = self.getId(v)
+#        if not isinstance(id_, int) and v not in self.entityList:
+#            id_ = self.unknown_entity_top + 1
+#            self.entityList[v] = self.entityList["Entity %s" % id_] = id_
+#            self.unknown_entity_top += 1
+#        return id_
 
 
 class TileEntity(object):
