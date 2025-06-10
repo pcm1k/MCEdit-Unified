@@ -1,0 +1,6 @@
+Station.schematic:
+    Downloaded from http://www.mcschematics.com/index.php?topic=14331.msg91903
+    Credit goes to the author, bas_de_paljas.
+
+Emerald Base - Christmas 2016 House.nbt:
+    Downloaded from https://github.com/Podshot/MCEdit-Unified/issues/886#issuecomment-358845996
