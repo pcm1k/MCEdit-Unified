@@ -113,14 +113,14 @@ class MCIndevLevel(EntityLevel):
         self.LocalPlayer["Pos"] = nbt.TAG_List([nbt.TAG_Float(p) for p in pos])
 
     def getPlayerPosition(self, player="Ignored"):
-        return array(map(lambda x: x.value, self.LocalPlayer["Pos"]))
+        return tuple(map(lambda x: x.value, self.LocalPlayer["Pos"]))
 
     def setPlayerOrientation(self, yp, player="Ignored"):
         self.LocalPlayer["Rotation"] = nbt.TAG_List([nbt.TAG_Float(p) for p in yp])
 
     def getPlayerOrientation(self, player="Ignored"):
         """ returns (yaw, pitch) """
-        return array(map(lambda x: x.value, self.LocalPlayer["Rotation"]))
+        return tuple(map(lambda x: x.value, self.LocalPlayer["Rotation"]))
 
     def setBlockDataAt(self, x, y, z, newdata):
         if x < 0 or y < 0 or z < 0:
