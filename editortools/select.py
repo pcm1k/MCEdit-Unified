@@ -35,6 +35,7 @@ from mceutils import alertException, drawCube, drawFace, drawTerrainCuttingWire,
 from operation import Operation
 import pymclevel
 from pymclevel.box import Vector, BoundingBox, FloatBox
+from pymclevel.materials import BlockstateAPI
 from fill import BlockFillOperation
 import tempfile
 from pymclevel import nbt
@@ -305,13 +306,17 @@ class SelectionTool(EditorTool):
     # --- Tooltips ---
 
     def describeBlockAt(self, pos):
-        blockID = self.editor.level.blockAt(*pos)
-        blockdata = self.editor.level.blockDataAt(*pos)
+        level = self.editor.level
+        blockID = level.blockAt(*pos)
+        blockdata = level.blockDataAt(*pos)
+        block = level.materials.blockWithID(blockID, blockdata)
+        blockstate = BlockstateAPI.stringifyBlockstate(*block.Blockstate)
+
         text = "X: {pos[0]}\nY: {pos[1]}\nZ: {pos[2]}\n".format(pos=pos)
-        text += "Light: {0} Sky: {1}\n".format(self.editor.level.blockLightAt(*pos), self.editor.level.skylightAt(*pos))
-        text += "{name} ({bid}:{bdata})\n".format(name=self.editor.level.materials.names[blockID][blockdata],
-                                                  bid=blockID, pos=pos, bdata=blockdata)
-        t = self.editor.level.tileEntityAt(*pos)
+        text += "Light: {0} Sky: {1}\n".format(level.blockLightAt(*pos), level.skylightAt(*pos))
+        text += "{name} ({bid}:{bdata}) ({state})\n".format(name=block.name,
+                                                  bid=blockID, pos=pos, bdata=blockdata, state=blockstate)
+        t = level.tileEntityAt(*pos)
         if t:
             text += "TileEntity:\n"
             try:
