@@ -225,11 +225,13 @@ def _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix
     deps = [data]
     depData = data
     ver = defsIds.version
-    while "load" in depData:
-        log.info('Found dependency for %s %s "%s"' % (defsIds.platform, ver, prefix))
-        ver = depData["load"]
+    while True:
         # don't actually include the "load"
-        del depData["load"]
+        loadVer = depData.pop("load", None)
+        if not loadVer:
+            break
+        log.info('Found dependency for %s %s "%s"' % (defsIds.platform, ver, prefix))
+        ver = loadVer
 
         jsonPath2 = fileFuncs.join(platformDir, ver, namespace, jsonName)
         if not fileFuncs.isfile(jsonPath2):
@@ -256,9 +258,7 @@ def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     if len(deps) > 0:
         log.info("Loading definitions dependencies")
     for depData in reversed(deps):
-        #allData.update(depData)
         updateRecursive(allData, depData)
-    #allData.update(data)
     if namespace.startswith("_"):
         namespace = ""
     _parseData(allData, prefix, namespace, defsIds.mcedit_defs, defsIds.mcedit_ids)
@@ -284,14 +284,13 @@ def _loadDefsIds(platformDir, platform, version, fileFuncs):
             if not fileFuncs.isdir(namespaceDir):
                 continue
             for jsonName in fileFuncs.listdir(namespaceDir):
-                if not jsonName.lower().endswith('.json') or not fileFuncs.isfile(fileFuncs.join(namespaceDir, jsonName)):
+                if not jsonName.lower().endswith(".json") or not fileFuncs.isfile(fileFuncs.join(namespaceDir, jsonName)):
                     continue
                 _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs)
                 filesLoaded += 1
 
     if filesLoaded > 0:
-        # pcm1k - this actually reports the wrong amount of ids, but who cares
-        log.info("Loaded %s defs and %s ids" % (len(defsIds.mcedit_defs), len(defsIds.mcedit_ids)))
+        log.info("Loaded %s defs and %s ids" % (len(defsIds.mcedit_defs), sum([len(ids) for ids in defsIds.mcedit_ids.itervalues()])))
     else:
         log.info("MC {} {} resources not found.".format(platform, version))
 
@@ -425,37 +424,38 @@ class BaseDefs(object):
     def __init__(self, defsIds):
         self.defsIds = defsIds
 
-def getBaseDefs(defsIds, defsClass, globalDefs, cache, forceNew):
-    """A shared function that retrieves a BaseDefs instance from a cache or creates a new one.
-    Currently used by TileEntityDefs, EntityDefs, and Items"""
-    def checkCache(cache, platform, version, defsIds):
-        if platform not in cache or version not in cache[platform]:
-            return None
-        genericDefs = cache[platform][version]
-        if genericDefs.defsIds is not defsIds:
-            # different/outdated defsIds
-            return None
+    @classmethod
+    def _getBaseDefs(cls, defsIds, cache, forceNew=False, globalDefs=None, **kwargs):
+        """Retrieves a BaseDefs instance from a cache or creates a new one"""
+        def checkCache(cache, platform, version, defsIds):
+            if platform not in cache or version not in cache[platform]:
+                return None
+            genericDefs = cache[platform][version]
+            if genericDefs.defsIds is not defsIds:
+                # different/outdated defsIds
+                return None
+            return genericDefs
+
+        if (defsIds is None or defsIds.isEmpty) and globalDefs is not None:
+            return globalDefs
+
+        platform = defsIds.platform
+        version = defsIds.version
+        if forceNew:
+            genericDefs = cls(defsIds, **kwargs)
+        else:
+            genericDefs = checkCache(cache, platform, version, defsIds)
+        if genericDefs is not None:
+            return genericDefs
+
+        genericDefs = cls(defsIds, **kwargs)
+        genericDefs.locked = True
+
+        if platform not in cache:
+            cache[platform] = {}
+        cache[platform][version] = genericDefs
+
         return genericDefs
-
-    if (defsIds is None or defsIds.isEmpty) and globalDefs is not None:
-        return globalDefs
-
-    platform = defsIds.platform
-    version = defsIds.version
-    if forceNew:
-        genericDefs = defsClass(defsIds)
-    else:
-        genericDefs = checkCache(cache, platform, version, defsIds)
-    if genericDefs is not None:
-        return genericDefs
-
-    genericDefs = defsClass(defsIds)
-
-    if platform not in cache:
-        cache[platform] = {}
-    cache[platform][version] = genericDefs
-
-    return genericDefs
 
 def _findVersionDir(platformDir, platform, version, fileFuncs):
     verDir = fileFuncs.join(platformDir, version)

@@ -8,7 +8,7 @@ from math import isnan
 import random
 import nbt
 from copy import deepcopy
-from id_definitions import BaseDefs, MCEditDefsIds, getBaseDefs
+from id_definitions import BaseDefs, MCEditDefsIds
 
 __all__ = ["Entity", "TileEntity", "TileTick"]
 
@@ -45,6 +45,8 @@ class TileEntityDefs(BaseDefs):
     }
 
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
+
+    _defsCache = {}
 
     def __init__(self, defsIds):
         super(TileEntityDefs, self).__init__(defsIds)
@@ -103,6 +105,12 @@ class TileEntityDefs(BaseDefs):
                     logger.warn("Could not find tileentity %s", defIdTe)
                     continue
                 self.stringNames[idStr] = idStrTe
+
+    @classmethod
+    def getDefs(cls, defsIds, forceNew=False):
+        entityDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=TileEntity.globalDefs)
+        TileEntity.updateGlobal(entityDefs)
+        return entityDefs
 
     def Create(self, tileEntityID, pos=(0, 0, 0), convertOld=True, **kw):
         def handleSpecialStruct(defId, name, **kw):
@@ -557,6 +565,8 @@ class EntityDefs(BaseDefs):
 
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
+    _defsCache = {}
+
     def __init__(self, defsIds):
         super(EntityDefs, self).__init__(defsIds)
 
@@ -586,6 +596,12 @@ class EntityDefs(BaseDefs):
                 self.monsters.append(idStr)
         else:
             self.monsters.extend(self.entityList.iterkeys())
+
+    @classmethod
+    def getDefs(cls, defsIds, forceNew=False):
+        entityDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=Entity.globalDefs)
+        Entity.updateGlobal(entityDefs)
+        return entityDefs
 
     def Create(self, entityID, pos=(0, 0, 0), convertOld=True, **kw):
         def getNewId(oldId):
@@ -672,9 +688,8 @@ class EntityDefs(BaseDefs):
 
 class TileEntity(object):
     # trying to keep backwards compatibility
-    _entityDefs = TileEntityDefs(None)
+    globalDefs = TileEntityDefs(None)
 
-    baseStructures = {}
     stringNames = {}
     knownIDs = []
     maxItems = {}
@@ -682,8 +697,7 @@ class TileEntity(object):
 
     @classmethod
     def updateGlobal(cls, entityDefs):
-        cls._entityDefs = entityDefs
-        cls.baseStructures = entityDefs.baseStructures
+        cls.globalDefs = entityDefs
         cls.stringNames = entityDefs.stringNames
         cls.knownIDs = entityDefs.knownIDs
         cls.maxItems = entityDefs.maxItems
@@ -691,17 +705,17 @@ class TileEntity(object):
 
     @classmethod
     def Create(cls, tileEntityID, pos=(0, 0, 0), defsIds=None, **kw):
-        if defsIds is not None and defsIds is not cls._entityDefs.defsIds:
+        if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
             # redirect to the correct TileEntityDefs object
             cls._updateGlobal(getTileEntityDefs(defsIds))
-        return cls._entityDefs.Create(tileEntityID, pos=pos, convertOld=True, **kw)
+        return cls.globalDefs.Create(tileEntityID, pos=pos, convertOld=True, **kw)
 
     @classmethod
     def copyWithOffset(cls, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
-        if defsIds is not None and defsIds is not cls._entityDefs.defsIds:
+        if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
             # redirect to the correct TileEntityDefs object
             cls._updateGlobal(getTileEntityDefs(defsIds))
-        return cls._entityDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset)
+        return cls.globalDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset)
 
     @classmethod
     def pos(cls, tag):
@@ -715,7 +729,7 @@ class TileEntity(object):
 
 class Entity(object):
     # trying to keep backwards compatibility
-    _entityDefs = EntityDefs(None)
+    globalDefs = EntityDefs(None)
 
     entityList = {}
     monsters = []
@@ -723,22 +737,22 @@ class Entity(object):
 
     @classmethod
     def updateGlobal(cls, entityDefs):
-        cls._entityDefs = entityDefs
+        cls.globalDefs = entityDefs
         cls.entityList = entityDefs.entityList
         cls.monsters = entityDefs.monsters
         cls.maxItems = entityDefs.maxItems
 
     @classmethod
     def Create(cls, entityID, pos=(0, 0, 0), **kw):
-        return cls._entityDefs.Create(entityID, pos=pos, convertOld=True, **kw)
+        return cls.globalDefs.Create(entityID, pos=pos, convertOld=True, **kw)
 
     @classmethod
     def copyWithOffset(cls, entity, copyOffset, regenerateUUID=False):
-        return cls._entityDefs.copyWithOffset(entity, copyOffset, regenerateUUID=regenerateUUID)
+        return cls.globalDefs.copyWithOffset(entity, copyOffset, regenerateUUID=regenerateUUID)
 
     @classmethod
     def getId(cls, v, default="No ID"):
-        return cls._entityDefs.getId(v, default=default)
+        return cls.globalDefs.getId(v, default=default)
 
     @classmethod
     def pos(cls, tag):
@@ -761,18 +775,8 @@ class Entity(object):
         tag["Pos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
 
 
-_tileEntityDefsCache = {}
-_entityDefsCache = {}
-
-def getTileEntityDefs(defsIds, forceNew=False):
-    entityDefs = getBaseDefs(defsIds, TileEntityDefs, TileEntity._entityDefs, _tileEntityDefsCache, forceNew)
-    TileEntity.updateGlobal(entityDefs)
-    return entityDefs
-
-def getEntityDefs(defsIds, forceNew=False):
-    entityDefs = getBaseDefs(defsIds, EntityDefs, Entity._entityDefs, _entityDefsCache, forceNew)
-    Entity.updateGlobal(entityDefs)
-    return entityDefs
+getTileEntityDefs = TileEntityDefs.getDefs
+getEntityDefs = EntityDefs.getDefs
 
 
 class TileTick(object):

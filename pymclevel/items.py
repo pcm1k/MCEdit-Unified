@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import types
-from id_definitions import get_defs_ids, BaseDefs, getBaseDefs, PLATFORM_ALPHA, VERSION_LATEST
+from id_definitions import get_defs_ids, BaseDefs, PLATFORM_ALPHA, VERSION_LATEST
 
 logger = getLogger(__name__)
 
@@ -24,6 +24,8 @@ class ItemType(object):
 
 
 class Items(BaseDefs):
+    _defsCache = {}
+
     def __init__(self, defsIds):
         super(Items, self).__init__(defsIds)
 
@@ -52,6 +54,12 @@ class Items(BaseDefs):
             addItem(idStr, defsIds.mcedit_defs[defId])
         for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
             addItem(idStr, defsIds.mcedit_defs[defId])
+
+    @classmethod
+    def getDefs(cls, defsIds, forceNew=False):
+        itemDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=items.globalDefs)
+        items.updateGlobal(itemDefs)
+        return itemDefs
 
     def findItem(self, id=0, damage=0):
         try:
@@ -85,22 +93,18 @@ class ItemNotFound(KeyError):
 
 class _Items(object):
     def __init__(self, itemDefs=None):
-        self._itemDefs = itemDefs
+        self.globalDefs = itemDefs
 
     def __getattr__(self, name):
-        return getattr(self._itemDefs, name)
+        return getattr(self.globalDefs, name)
 
     def updateGlobal(self, itemDefs):
-        self._itemDefs = itemDefs
+        self.globalDefs = itemDefs
 
 # trying to keep backwards compatibility
 items = _Items(Items(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST)))
 
 del _Items
 
-_itemsCache = {}
 
-def getItemDefs(defsIds, forceNew=False):
-    itemDefs = getBaseDefs(defsIds, Items, items._itemDefs, _itemsCache, forceNew)
-    items.updateGlobal(itemDefs)
-    return itemDefs
+getItemDefs = Items.getDefs
