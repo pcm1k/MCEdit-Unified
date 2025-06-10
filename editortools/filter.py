@@ -912,8 +912,6 @@ class FilterOperation(Operation):
 
         # Inject the defs for blocks/entities in the module
         self.filter.MCEDIT_DEFS = self.level.defsIds.mcedit_defs
-        # pcm1k - we changed how mcedit_ids works anyways, so we can probably remove it from filters and it wouldn't matter
-        self.filter.MCEDIT_IDS = self.level.defsIds.mcedit_ids
         self.filter.perform(self.level, BoundingBox(self.box), self.options)
 
         self.canUndo = True
@@ -939,7 +937,6 @@ class MacroOperation(Operation):
         for o, f in zip(self.options, self.filters):
             # Inject the defs for blocks/entities in the module
             f.MCEDIT_DEFS = self.level.defsIds.mcedit_defs
-            f.MCEDIT_IDS = self.level.defsIds.mcedit_ids
             f.perform(self.level, BoundingBox(self._box), o)
         self.canUndo = True
 
