@@ -54,7 +54,7 @@ directory:
 * libleveldb.so.1
 * libleveldb.so.1.20 (or so)
 
-Then you can run 'python test_leveldb.py' to verify the library can run.
+Then you can run 'python test/test_leveldb.py' to verify the library can run.
 You shall get an output like that:
 
 > ...........................................................
