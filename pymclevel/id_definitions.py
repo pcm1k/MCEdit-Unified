@@ -210,15 +210,11 @@ def _parseData(data, prefix, namespace, defs_dict, ids_dict):
             if definition == "actorTypes":
                 defs_dict["actorTypesRes"] = _resolveTypes(value)
 
-def _loadJsonData(jsonPath, fileFuncs, timestamps=None):
+def _loadJsonData(jsonPath, fileFuncs):
     data = None
     try:
         with fileFuncs.openRead(jsonPath) as fp:
             data = json.load(fp)
-        if timestamps is not None:
-            statResult = fileFuncs.stat(jsonPath)
-            if statResult is not None:
-                timestamps[jsonPath] = statResult.st_mtime
     except Exception as e:
         log.error("Could not load data from %s" % jsonPath)
         log.error("Error is: %s" % e)
@@ -239,14 +235,14 @@ def _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix
         if not fileFuncs.isfile(jsonPath2):
             log.error("Could not find %s" % jsonPath2)
             return deps
-        depData = _loadJsonData(jsonPath2, fileFuncs, timestamps=defsIds.timestamps)
+        depData = _loadJsonData(jsonPath2, fileFuncs)
         deps.append(depData)
     return deps
 
 def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     log.info("Found %s" % jsonName)
     jsonPath = fileFuncs.join(platformDir, defsIds.version, namespace, jsonName)
-    data = _loadJsonData(jsonPath, fileFuncs, timestamps=defsIds.timestamps)
+    data = _loadJsonData(jsonPath, fileFuncs)
     # We use here names coming from the 'minecraft:name_of_the_stuff' ids
     # The second part of the name is present in the first file used (for MC 1.11) in the 'idStr' value).
     # The keys of MCEDIT_DEFS are built by concatenating the file base name and the idStr
@@ -271,19 +267,14 @@ def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
 
 NAMESPACE_FILTER = re.compile("[^-.0-9_a-z]")
 
-def _loadDefsIds(platformDir, platform, version, fileFuncs, timestamps=False):
+def _loadDefsIds(platformDir, platform, version, fileFuncs):
     """Load the whole files from mcver directory.
-    :version: str/unicode: the game version for which the resources will be loaded.
-    :timestamps: bool: whether to also return the loaded file timestamp."""
+    :version: str/unicode: the game version for which the resources will be loaded."""
     log.info("Loading resources for MC {} {}".format(platform, version))
-    if timestamps:
-        timestampsDict = {}
-    else:
-        timestampsDict = None
 
     verDir = fileFuncs.join(platformDir, version)
 
-    defsIds = MCEditDefsIds(platform, version, timestamps=timestampsDict)
+    defsIds = MCEditDefsIds(platform, version)
     filesLoaded = 0
     if fileFuncs.isdir(verDir):
         for namespace in fileFuncs.listdir(verDir):
@@ -388,33 +379,18 @@ version_defs_ids = {}
 class MCEditDefsIds(object):
     """Class to handle MCEDIT_DEFS and MCEDIT_IDS dicts."""
 
-    def __init__(self, platform, version, mcedit_defs=None, mcedit_ids=None, jsonDict=None, timestamps=None):
+    def __init__(self, platform, version, mcedit_defs=None, mcedit_ids=None, jsonDict=None):
         self.platform = platform
         self.version = version
 
         self.mcedit_defs = mcedit_defs if mcedit_defs is not None else {}
         self.mcedit_ids = mcedit_ids if mcedit_ids is not None else {}
         self.jsonDict = jsonDict if jsonDict is not None else {}
-        self.timestamps = timestamps if timestamps is not None else {}
 
         # ensure these are present
         for prefix in "blocks", "entities", "items", "tileentities":
             if prefix not in self.mcedit_ids:
                 self.mcedit_ids[prefix] = {}
-
-    # pcm1k - this works inconsistently and probably not worth it, may remove
-    def check_timestamps(self, fileFuncs):
-        """Compare the stored and current modification time stamp of files.
-        :timestamps: dict: {"file_path": <modification timestamp>}
-        Returns a list of files which don't have the same timestamp as stored."""
-        result = []
-        if not self.timestamps or fileFuncs.stat is None:
-            return result
-        for file_name, ts in self.timestamps.iteritems():
-            statResult = fileFuncs.stat(file_name)
-            if statResult is not None and statResult.st_mtime > ts:
-                result.append(file_name)
-        return result
 
     def get_id(self, prefix, obj_id, default=None, resolve=False):
         """Retrieves a "defId" from mcedit_ids and then optionally resolves it using mcedit_defs"""
@@ -509,11 +485,11 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
 
 VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
 
-def get_defs_ids(platform, version, checkTimes=True):
-    """Create a MCEditDefsIds instance only if one for the game version does not already exists, or a definition file has been changed.
+def get_defs_ids(platform, version):
+    """Create a MCEditDefsIds instance only if one for the game version does not already exists.
     See MCEditDefsIds doc.
     Returns a MCEditDefsIds instance."""
-    def checkCache(platform, version, checkTimes, fileFuncs):
+    def checkCache(platform, version, fileFuncs):
         if platform not in version_defs_ids or version not in version_defs_ids[platform]:
             return None
         defsIds = version_defs_ids[platform][version]
@@ -522,15 +498,13 @@ def get_defs_ids(platform, version, checkTimes=True):
             if defsIds not in version_defs_ids[platform]:
                 return None
             defsIds = version_defs_ids[platform][defsIds]
-        if checkTimes and defsIds.check_timestamps(fileFuncs):
-            return None
         return defsIds
 
     platform = VERSION_STR_FILTER.sub("", platform)
     version = VERSION_STR_FILTER.sub("", version)
 
     fileFuncs = _getFileFuncs()
-    defsIds = checkCache(platform, version, checkTimes, fileFuncs)
+    defsIds = checkCache(platform, version, fileFuncs)
     if defsIds is not None:
         return defsIds
 
@@ -544,12 +518,12 @@ def get_defs_ids(platform, version, checkTimes=True):
         version_defs_ids[platform][version] = defsIds
         return defsIds
 
-    defsIds = checkCache(platform, realVersion, checkTimes, fileFuncs)
+    defsIds = checkCache(platform, realVersion, fileFuncs)
     if defsIds is not None:
         version_defs_ids[platform][version] = realVersion
         return defsIds
 
-    defsIds = _loadDefsIds(platformDir, platform, realVersion, fileFuncs, timestamps=True)
+    defsIds = _loadDefsIds(platformDir, platform, realVersion, fileFuncs)
 
     if platform not in version_defs_ids:
         version_defs_ids[platform] = {}

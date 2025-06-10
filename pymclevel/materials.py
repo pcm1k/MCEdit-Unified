@@ -446,7 +446,7 @@ class MCMaterials(object):
         # Load first the versioned stuff
         log.debug("Loading block definitions from versioned file")
         log.info("Game Version: {} : {}".format(platform, version))
-        self.defsIds = get_defs_ids(platform, version, checkTimes=False)
+        self.defsIds = get_defs_ids(platform, version)
         self.addJSONBlocks(self.defsIds.jsonDict)
         self.blockstate_api._initBlockMap()
         build_materials(self, platform)
@@ -1375,7 +1375,7 @@ _materialsCache = {}
 #    _materialsCache[mats.defsIds.platform][mats.defsIds.version] = mats
 
 def getMaterialsByVer(platform, version, forceNew=False, **kwargs):
-    defsIds = get_defs_ids(platform, version, checkTimes=False)
+    defsIds = get_defs_ids(platform, version)
     return getMaterials(defsIds, forceNew=forceNew, **kwargs)
 
 def getMaterials(defsIds, forceNew=False, **kwargs):

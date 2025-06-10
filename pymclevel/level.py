@@ -232,7 +232,7 @@ class MCLevel(object):
             # this is relevant for at least MCSchematic
             self._defsIds = self._materials.defsIds
             return self._defsIds
-        self._defsIds = get_defs_ids(self.defsPlatform, self.defsVersion, checkTimes=False)
+        self._defsIds = get_defs_ids(self.defsPlatform, self.defsVersion)
         return self._defsIds
 
     @defsIds.setter
