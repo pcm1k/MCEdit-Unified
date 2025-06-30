@@ -13,7 +13,7 @@
             "type": "Passive mobs"
         }
     ],
-    "load": "819",
+    "load": "921",
     "spawner_monsters": [
         "illusion_illager",
         "parrot"
