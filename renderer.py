@@ -779,8 +779,7 @@ class ChunkCalculator(object):
     def addTransparentMaterials(self, mats, materialCount):
         logging.debug("renderer::ChunkCalculator: Dynamically adding transparent materials.")
         for b in self.level.materials:
-            yaml = getattr(b, 'yaml', None)
-            if yaml is not None and yaml.get('opacity', 1) < 1:
+            if b.opacity < 1:
                 logging.debug("Adding '%s'" % b)
                 mats[b.ID] = materialCount
                 materialCount += 1
@@ -1073,8 +1072,8 @@ class ChunkCalculator(object):
 
     def computeGeometry(self, chunk, areaBlockMats, facingBlockIndices, areaBlockLights, chunkRenderer, blockRenderers):
         blocks, blockData = chunk.Blocks, chunk.Data
-        # pcm1k - data limit
-        blockData &= 0xf
+        # pcm1k TODO - should this be masked?
+        blockData = blockData & 0xf
         blockMaterials = areaBlockMats[1:-1, 1:-1, 1:-1]
         if self.roughGraphics:
             blockMaterials.clip(0, 1, blockMaterials)
@@ -1160,6 +1159,7 @@ class Layer:
     AllLayers = (Blocks, Entities, Monsters, Items, TileEntities, TileTicks, TerrainPopulated, ChunkBorder)
 
 
+# pcm1k TODO - this stuff needs to be rewritten to use blockstates
 class BlockRenderer(object):
     detailLevels = (0,)
     layer = Layer.Blocks
@@ -1773,7 +1773,7 @@ class PlantBlockRenderer(BlockRenderer):
         lights = blockLight[blockIndices][..., numpy.newaxis, numpy.newaxis]
 
         colorize = None
-        if self.materials.name != "Classic":  #so hacky, someone more competent fix this
+        if self.materials.name in ("Alpha", "Pocket"):  #so hacky, someone more competent fix this
             colorize = (theseBlocks == self.materials.TallGrass.ID) & (bdata != 0)
             colorize2 = (theseBlocks == self.materials.TallFlowers.ID) & (bdata != 0) & (
             bdata != 1) & (bdata != 4) & (bdata != 5)
@@ -1973,7 +1973,7 @@ class LeverBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:lever"].ID]
+        return [block.ID for block in mats.blocksByType["LEVER"]]
 
     leverBaseTemplate = makeVertexTemplatesFromJsonModel((5, 0, 4), (11, 3, 12), {
         "down": (10, 0, 16, 8),
@@ -2125,7 +2125,7 @@ class LadderBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:ladder"].ID]
+        return [block.ID for block in mats.blocksByType["LADDER"]]
 
     ladderOffsets = numpy.array([
                                     [(0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)],
@@ -2173,7 +2173,7 @@ class WallSignBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:wall_sign"].ID]
+        return [block.ID for block in mats.blocksByType["WALLSIGN"]]
 
     wallSignTemplate = makeVertexTemplatesFromJsonModel((0, 4.5, 0), (16, 13.5, 2), {
         "down": (0, 11, 18, 13),
@@ -2201,7 +2201,7 @@ class StandingSignRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:standing_sign"].ID]
+        return [block.ID for block in mats.blocksByType["SIGNPOST"]]
 
     signTemplate = makeVertexTemplatesFromJsonModel((0, 7, 7), (16, 16, 9), {
         "down": (0, 14, 16, 16),
@@ -2439,7 +2439,7 @@ class EnchantingBlockRenderer(
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:enchanting_table"].ID, mats["minecraft:end_portal_frame"].ID]
+        return [b.ID for b in mats if b.type in ("ENCHANTMENT_TABLE", "ENDER_PORTAL_FRAME")]
 
     def makeEnchantingVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         materialIndices = self.getMaterialIndices(blockMaterials)
@@ -2512,7 +2512,7 @@ class BedBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:bed"].ID]
+        return [block.ID for block in mats.blocksByType["BED"]]
 
     def makeBedVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         materialIndices = self.getMaterialIndices(blockMaterials)
@@ -2547,7 +2547,7 @@ class CakeBlockRenderer(BlockRenderer):  #Only shows whole cakes
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:cake"].ID]
+        return [block.ID for block in mats.blocksByType["CAKE"]]
 
     def makeCakeVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         materialIndices = self.getMaterialIndices(blockMaterials)
@@ -2634,7 +2634,7 @@ class RedstoneBlockRenderer(BlockRenderer):
         if not len(vertexArray):
             return
 
-        vertexArray[_ST] += self.materials.blockTextures[55, 0, 0]
+        vertexArray[_ST] += self.materials.blockTextures[self.materials.RedstoneWire.ID, 0, 0]
         vertexArray[_XYZ][..., 1] -= 0.9
 
         bdata = blockData[blockIndices]
@@ -2655,6 +2655,7 @@ class RedstoneBlockRenderer(BlockRenderer):
 # button, floor plate, door -> 1-cube features
 
 class DoorRenderer(BlockRenderer):
+    blocktypes = ()
 
     @classmethod
     def getBlocktypes(cls, mats):
@@ -2732,7 +2733,7 @@ class ButtonRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [a.ID for a in mats.blocksByType["BUTTON"]]
+        return [block.ID for block in mats.blocksByType["BUTTON"]]
 
     buttonTemplate = makeVertexTemplatesFromJsonModel((5, 0, 6), (11, 2, 10), {
         "down": (5, 6, 11, 10),
@@ -2775,7 +2776,7 @@ class TrapDoorRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [a.ID for a in mats.blocksByType["TRAPDOOR"]]
+        return [block.ID for block in mats.blocksByType["TRAPDOOR"]]
 
     openTemplate = makeVertexTemplatesFromJsonModel((0, 0, 13), (16, 16, 16), {
         "down": (0, 13, 16, 16),
@@ -2827,21 +2828,12 @@ class TrapDoorRenderer(BlockRenderer):
 
 
 class FenceBlockRenderer(BlockRenderer):
-#     def __init__(self, *args, **kwargs):
-#         BlockRenderer.__init__(self, *args, **kwargs)
-#         self.blocktypes = [block.ID for block in self.materials.blocksByType["FENCE"]]
-
     fenceTemplates = makeVertexTemplates(3 / 8., 0, 3 / 8., 5 / 8., 1, 5 / 8.)
 
     makeVertices = makeVerticesFromModel(fenceTemplates)
 
     @classmethod
     def getBlocktypes(cls, mats):
-#         if mats.name == "Pocket":
-#             cls.blocktypes = cls.blocktypes_pocket
-#         else:
-#             cls.blocktypes = cls.blocktypes_alpha
-#         return cls.blocktypes
         return [block.ID for block in mats.blocksByType["FENCE"]]
 
 
@@ -2863,7 +2855,7 @@ class FenceGateBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [a.ID for a in mats.AllStairs]
+        return [block.ID for block in mats.blocksByType["FENCE_GATE"]]
 
     def fenceGateVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         fenceMask = self.getMaterialIndices(blockMaterials)
@@ -2932,7 +2924,7 @@ class StairBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [a.ID for a in mats.AllStairs]
+        return [block.ID for block in mats.AllStairs]
 
     # South - FaceXIncreasing
     # North - FaceXDecreasing
@@ -2997,9 +2989,10 @@ class VineBlockRenderer(BlockRenderer):
 
     renderstate = ChunkCalculator.renderstateVines
 
-    def __init__(self, *args, **kwargs):
-        BlockRenderer.__init__(self, *args, **kwargs)
-        self.blocktypes = [self.materials["minecraft:vine"].ID]
+    @classmethod
+    def getBlocktypes(cls, mats):
+        cls.blocktypes = [block.ID for block in mats.blocksByType["VINE"]]
+        return cls.blocktypes
 
     def vineFaceVertices(self, direction, blockIndices, exposedFaceIndices, blocks, blockData, blockLight,
                          facingBlockLight, texMap):
@@ -3132,16 +3125,10 @@ class EndRodRenderer(BlockRenderer):
 class WaterBlockRenderer(BlockRenderer):
     renderstate = ChunkCalculator.renderstateWater
 
-    def __init__(self, *args, **kwargs):
-        BlockRenderer.__init__(self, *args, **kwargs)
-        materials = self.materials
-        self.waterID = materials["minecraft:water"].ID
-        self.blocktypes = [materials["minecraft:flowing_water"].ID, self.waterID]
-
     @classmethod
     def getBlocktypes(cls, mats):
-        cls.waterID = mats["minecraft:water"].ID
-        return [mats["minecraft:flowing_water"].ID, cls.waterID]
+        cls.waterID = mats.Water.ID
+        return [block.ID for block in mats.blocksByType["WATER"]]
 
     def waterFaceVertices(self, direction, blockIndices, exposedFaceIndices, blocks, blockData, blockLight,
                           facingBlockLight, texMap):
