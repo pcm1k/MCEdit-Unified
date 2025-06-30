@@ -597,10 +597,12 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
             zf = zipfile.ZipFile(filename, allowZip64=True)
             zf.extractall(tempdir)
             zf.close()
-            if os.path.exists(os.path.join(tempdir, '##MCEDIT.TEMP##', 'region')):
-                shutil.move(os.path.join(tempdir, '##MCEDIT.TEMP##', 'region'), os.path.join(tempdir, 'region'))
+            # see commits 698c959cd, fe1324274, 303eb675c for why this is needed
+            tempRegionPath = os.path.join(tempdir, "##MCEDIT.TEMP##", "region")
+            if os.path.exists(tempRegionPath):
+                shutil.move(tempRegionPath, os.path.join(tempdir, "region"))
 
-        super(ZipSchematic, self).__init__(tempdir, create, dat_name='schematic')
+        super(ZipSchematic, self).__init__(tempdir, create)
         atexit.register(shutil.rmtree, self.worldFolder.filename, True)
 
         try:
@@ -626,6 +628,8 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
         yield
 
     def saveToFile(self, filename):
+        for _ in super(ZipSchematic, self).saveInPlaceGen():
+            pass
         schematicDat = nbt.TAG_Compound()
         schematicDat.name = "Mega Schematic"
 
@@ -644,8 +648,6 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
                 # NOTE: ignore empty directories
                 for fn in files:
                     absfn = os.path.join(root, fn)
-                    shutil.move(absfn, absfn.replace("##MCEDIT.TEMP##" + os.sep, ""))
-                    absfn = absfn.replace("##MCEDIT.TEMP##" + os.sep, "")
                     zfn = absfn[len(basedir) + len(os.sep):]  # XXX: relative path
                     z.write(absfn, zfn)
 
