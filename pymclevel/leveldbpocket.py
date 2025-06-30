@@ -895,11 +895,10 @@ class PocketLeveldbWorld(PocketWorldBase):
         self.loadLevelDat(create, random_seed, last_played)
 
         self.worldFolder = AnvilWorldFolder(filename)
-        workFolderPath2 = self.worldFolder.getFolderPath("##MCEDIT.TEMP2##")
-        if os.path.exists(workFolderPath2):
-            shutil.rmtree(workFolderPath2, True)
-        self.fileEditsFolder = AnvilWorldFolder(workFolderPath2)
-        self.editFileNumber = 1
+#        workFolderPath2 = self.worldFolder.getFolderPath("##MCEDIT.TEMP2##")
+#        if os.path.exists(workFolderPath2):
+#            shutil.rmtree(workFolderPath2, True)
+#        self.fileEditsFolder = AnvilWorldFolder(workFolderPath2)
 
     def _createLevelDat(self, random_seed, last_played):
         """
@@ -1025,11 +1024,11 @@ class PocketLeveldbWorld(PocketWorldBase):
         """
         self.playerTagCache.clear()
         self.unload()
-        try:
-            shutil.rmtree(self.fileEditsFolder.filename, True)
+#        try:
+#            shutil.rmtree(self.fileEditsFolder.filename, True)
             # Setup a way to close a work-folder?
-        except SessionLockLost:
-            pass
+#        except SessionLockLost:
+#            pass
 
     def deleteChunk(self, cx, cz, batch=None):
         """

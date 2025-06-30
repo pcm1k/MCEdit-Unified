@@ -206,7 +206,7 @@ class SelectionToolPanel(Panel):
             deleteEntitiesButton,
         ]
 
-        if not hasattr(self.editor.level, "noTileTicks"):
+        if not getattr(self.editor.level, "noTileTicks", False):
             buttonsColumn.append(deleteTileTicksButton)
 
         buttonsColumn.extend([
@@ -217,8 +217,8 @@ class SelectionToolPanel(Panel):
             exportButton,
         ])
 
-        if hasattr(self.editor.level, "editFileNumber"):
-            buttonsColumn.append(openButton)
+#        if hasattr(self.editor.level, "editFileNumber"):
+        buttonsColumn.append(openButton)
 
         buttonsColumn = Column(buttonsColumn)
 
@@ -1234,9 +1234,8 @@ class SelectionTool(EditorTool):
 
     @alertException
     def openCommands(self):
-        name = "CommandsFile" + str(self.editor.level.editFileNumber) + "." + config.commands.fileFormat.get()
-        filename = os.path.join(self.editor.level.fileEditsFolder.filename, name)
-        fp = open(filename, 'w')
+        # pcm1k TODO - all this stuff should probably be rewritten, possibly as a filter instead, as it feels too specific to be part of the "select" tool
+        fp, filename = tempfile.mkstemp(suffix="." + config.commands.fileFormat.get(), prefix="CommandsFile", text=True)
         first = True
         space = config.commands.space.get()
         sorting = config.commands.sorting.get()
@@ -1286,7 +1285,6 @@ class SelectionTool(EditorTool):
             del edit
             return
         edit.order = order
-        self.editor.level.editFileNumber += 1
         self.root.filesToChange.append(edit)
         if sys.platform == "win32":
             os.startfile(filename)
