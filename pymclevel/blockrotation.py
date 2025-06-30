@@ -1,971 +1,620 @@
-import materials
-from materials import alphaMaterials
+from materials import alphaMaterials, id_limit, data_limit
 from numpy import arange, zeros
 
-# #!# Needed for the bad hack done with 'blocktable'...
-import collections
-import re
-
-
-class __Rotation:
-    def __init__(self):
-        for i, blocktype in enumerate(self.blocktypes):
-            self.blocktypes[i] = eval(blocktype)
-
-
-def genericRoll(cls):
-    rotation = arange(16, dtype='uint8')
-    if hasattr(cls, "Up") and hasattr(cls, "Down"):
-        rotation[cls.Up] = cls.North
-        rotation[cls.Down] = cls.South
-        rotation[cls.South] = cls.Up
-        rotation[cls.North] = cls.Down
-    return rotation
 
-
-def genericVerticalFlip(cls):
-    rotation = arange(16, dtype='uint8')
-    if hasattr(cls, "Up") and hasattr(cls, "Down"):
-        rotation[cls.Up] = cls.Down
-        rotation[cls.Down] = cls.Up
-
-    if hasattr(cls, "TopNorth") and hasattr(cls, "TopWest") and hasattr(cls, "TopSouth") and hasattr(cls, "TopEast"):
-        rotation[cls.North] = cls.TopNorth
-        rotation[cls.West] = cls.TopWest
-        rotation[cls.South] = cls.TopSouth
-        rotation[cls.East] = cls.TopEast
-        rotation[cls.TopNorth] = cls.North
-        rotation[cls.TopWest] = cls.West
-        rotation[cls.TopSouth] = cls.South
-        rotation[cls.TopEast] = cls.East
-
-    return rotation
-
-
-def genericRotation(cls):
-    rotation = arange(16, dtype='uint8')
-    rotation[cls.North] = cls.West
-    rotation[cls.West] = cls.South
-    rotation[cls.South] = cls.East
-    rotation[cls.East] = cls.North
-    if hasattr(cls, "TopNorth") and hasattr(cls, "TopWest") and hasattr(cls, "TopSouth") and hasattr(cls, "TopEast"):
-        rotation[cls.TopNorth] = cls.TopWest
-        rotation[cls.TopWest] = cls.TopSouth
-        rotation[cls.TopSouth] = cls.TopEast
-        rotation[cls.TopEast] = cls.TopNorth
-
-    return rotation
-
-
-def genericEastWestFlip(cls):
-    rotation = arange(16, dtype='uint8')
-    rotation[cls.West] = cls.East
-    rotation[cls.East] = cls.West
-    if hasattr(cls, "TopWest") and hasattr(cls, "TopEast"):
-        rotation[cls.TopWest] = cls.TopEast
-        rotation[cls.TopEast] = cls.TopWest
-
-    return rotation
-
-
-def genericNorthSouthFlip(cls):
-    rotation = arange(16, dtype='uint8')
-    rotation[cls.South] = cls.North
-    rotation[cls.North] = cls.South
-    if hasattr(cls, "TopNorth") and hasattr(cls, "TopSouth"):
-        rotation[cls.TopSouth] = cls.TopNorth
-        rotation[cls.TopNorth] = cls.TopSouth
-
-    return rotation
-
-
-rotationClasses = []
-
-
-def genericFlipRotation(cls):
-    cls.rotateLeft = genericRotation(cls)
-    cls.roll = genericRoll(cls)
-
-    cls.flipVertical = genericVerticalFlip(cls)
-    cls.flipEastWest = genericEastWestFlip(cls)
-    cls.flipNorthSouth = genericNorthSouthFlip(cls)
-    rotationClasses.append(cls)
-    return cls
-
-
-# Note, directions are based on the old north. North in here is East ingame.
-class Torch(__Rotation):
-    blocktypes = [
-        'alphaMaterials.Torch.ID',
-        'alphaMaterials.RedstoneTorchOn.ID',
-        'alphaMaterials.RedstoneTorchOff.ID',
-    ]
-
-    South = 1
-    North = 2
-    West = 3
-    East = 4
-    # on the bottom
-    Up = 5
-
-
-genericFlipRotation(Torch)
-Torch.roll = arange(16, dtype='uint8')
-Torch.roll[Torch.Up] = Torch.North
-Torch.roll[Torch.South] = Torch.Up
-
-
-class Ladder(__Rotation):
-    blocktypes = ['alphaMaterials.Ladder.ID']
-
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-genericFlipRotation(Ladder)
-
-
-class Stair(__Rotation):
-    blocktypes = ['list(set([b.ID for b in alphaMaterials.AllStairs]))']
-
-    South = 0
-    North = 1
-    West = 2
-    East = 3
-    TopSouth = 4
-    TopNorth = 5
-    TopWest = 6
-    TopEast = 7
-
-
-genericFlipRotation(Stair)
-
-Stair.roll = arange(16, dtype='uint8')
-Stair.roll[Stair.East] = Stair.East
-Stair.roll[Stair.West] = Stair.West
-Stair.roll[Stair.TopEast] = Stair.TopEast
-Stair.roll[Stair.TopWest] = Stair.TopWest
-
-Stair.roll[Stair.North] = Stair.South
-Stair.roll[Stair.South] = Stair.TopSouth
-Stair.roll[Stair.TopSouth] = Stair.TopNorth
-Stair.roll[Stair.TopNorth] = Stair.North
-
-# data value 0-8 bottom and 9-15 Top
-
-
-class HalfSlab(__Rotation):
-    blocktypes = ['list(set([b.ID for b in alphaMaterials.AllSlabs]))']
-
-
-HalfSlab.flipVertical = arange(16, dtype='uint8')
-for i in xrange(8):
-    HalfSlab.flipVertical[i] = i + 8
-    HalfSlab.flipVertical[i + 8] = i
-rotationClasses.append(HalfSlab)
-
-
-class WallSign(__Rotation):
-    blocktypes = ['alphaMaterials.WallSign.ID', 'alphaMaterials.WallBanner.ID']
-
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-genericFlipRotation(WallSign)
-
-
-class FurnaceDispenserChest(__Rotation):
-    blocktypes = [
-        'alphaMaterials.Furnace.ID',
-        'alphaMaterials.LitFurnace.ID',
-        'alphaMaterials.Chest.ID',
-        'alphaMaterials.EnderChest.ID',
-        'alphaMaterials.TrappedChest.ID'
-    ]
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-genericFlipRotation(FurnaceDispenserChest)
-
-
-class Pumpkin(__Rotation):
-    blocktypes = [
-        'alphaMaterials.Pumpkin.ID',
-        'alphaMaterials.JackOLantern.ID',
-    ]
-
-    East = 0
-    South = 1
-    West = 2
-    North = 3
-
-
-genericFlipRotation(Pumpkin)
-
-
-class Rail(__Rotation):
-    blocktypes = ['alphaMaterials.Rail.ID']
-
-    EastWest = 0
-    NorthSouth = 1
-    South = 2
-    North = 3
-    East = 4
-    West = 5
-
-    Northeast = 6
-    Southeast = 7
-    Southwest = 8
-    Northwest = 9
-
-
-def generic8wayRotation(cls):
-    cls.rotateLeft = genericRotation(cls)
-    cls.rotateLeft[cls.Northeast] = cls.Northwest
-    cls.rotateLeft[cls.Southeast] = cls.Northeast
-    cls.rotateLeft[cls.Southwest] = cls.Southeast
-    cls.rotateLeft[cls.Northwest] = cls.Southwest
-
-    cls.flipEastWest = genericEastWestFlip(cls)
-    cls.flipEastWest[cls.Northeast] = cls.Northwest
-    cls.flipEastWest[cls.Northwest] = cls.Northeast
-    cls.flipEastWest[cls.Southwest] = cls.Southeast
-    cls.flipEastWest[cls.Southeast] = cls.Southwest
-
-    cls.flipNorthSouth = genericNorthSouthFlip(cls)
-    cls.flipNorthSouth[cls.Northeast] = cls.Southeast
-    cls.flipNorthSouth[cls.Southeast] = cls.Northeast
-    cls.flipNorthSouth[cls.Southwest] = cls.Northwest
-    cls.flipNorthSouth[cls.Northwest] = cls.Southwest
-    rotationClasses.append(cls)
-
-
-generic8wayRotation(Rail)
-Rail.rotateLeft[Rail.NorthSouth] = Rail.EastWest
-Rail.rotateLeft[Rail.EastWest] = Rail.NorthSouth
-
-Rail.roll = arange(16, dtype='uint8')
-Rail.roll[Rail.North] = Rail.South
-
-
-def applyBit(apply):
-    def _applyBit(class_or_array):
-        if hasattr(class_or_array, "rotateLeft"):
-            for a in (class_or_array.flipEastWest,
-                      class_or_array.flipNorthSouth,
-                      class_or_array.rotateLeft):
-                apply(a)
-            if hasattr(class_or_array, "flipVertical"):
-                apply(class_or_array.flipVertical)
-            if hasattr(class_or_array, "roll"):
-                apply(class_or_array.roll)
-        else:
-            array = class_or_array
-            apply(array)
-
-    return _applyBit
-
-
-@applyBit
-def applyBit8(array):
-    array[8:16] = array[0:8] | 0x8
-
-
-@applyBit
-def applyBit4(array):
-    array[4:8] = array[0:4] | 0x4
-    array[12:16] = array[8:12] | 0x4
-
-
-@applyBit
-def applyBits48(array):
-    array[4:8] = array[0:4] | 0x4
-    array[8:16] = array[0:8] | 0x8
-
-
-applyThrownBit = applyBit8
-
-
-class PoweredDetectorRail(Rail):
-    blocktypes = ['alphaMaterials.PoweredRail.ID', 'alphaMaterials.DetectorRail.ID', 'alphaMaterials.ActivatorRail.ID']
-
-
-PoweredDetectorRail.rotateLeft = genericRotation(PoweredDetectorRail)
-
-PoweredDetectorRail.rotateLeft[PoweredDetectorRail.NorthSouth] = PoweredDetectorRail.EastWest
-PoweredDetectorRail.rotateLeft[PoweredDetectorRail.EastWest] = PoweredDetectorRail.NorthSouth
-
-PoweredDetectorRail.flipEastWest = genericEastWestFlip(PoweredDetectorRail)
-PoweredDetectorRail.flipNorthSouth = genericNorthSouthFlip(PoweredDetectorRail)
-applyThrownBit(PoweredDetectorRail)
-rotationClasses.append(PoweredDetectorRail)
-
-
-class Lever(__Rotation):
-    blocktypes = ['alphaMaterials.Lever.ID']
-    ThrownBit = 0x8
-    # DownSouth indicates floor lever pointing South in off state
-    DownSouth = 0
-    South = 1
-    North = 2
-    West = 3
-    East = 4
-    UpSouth = 5
-    UpWest = 6
-    DownWest = 7
-
-
-Lever.rotateLeft = genericRotation(Lever)
-Lever.rotateLeft[Lever.UpSouth] = Lever.UpWest
-Lever.rotateLeft[Lever.UpWest] = Lever.UpSouth
-Lever.rotateLeft[Lever.DownSouth] = Lever.DownWest
-Lever.rotateLeft[Lever.DownWest] = Lever.DownSouth
-Lever.flipEastWest = genericEastWestFlip(Lever)
-Lever.flipNorthSouth = genericNorthSouthFlip(Lever)
-Lever.flipVertical = arange(16, dtype='uint8')
-Lever.flipVertical[Lever.UpSouth] = Lever.DownSouth
-Lever.flipVertical[Lever.DownSouth] = Lever.UpSouth
-Lever.flipVertical[Lever.UpWest] = Lever.DownWest
-Lever.flipVertical[Lever.DownWest] = Lever.UpWest
-Lever.roll = arange(16, dtype='uint8')
-Lever.roll[Lever.North] = Lever.DownSouth
-Lever.roll[Lever.South] = Lever.UpSouth
-Lever.roll[Lever.DownSouth] = Lever.South
-Lever.roll[Lever.DownWest] = Lever.South
-Lever.roll[Lever.UpSouth] = Lever.North
-Lever.roll[Lever.UpWest] = Lever.North
-
-applyThrownBit(Lever)
-rotationClasses.append(Lever)
-
-
-@genericFlipRotation
-class Button(__Rotation):
-    blocktypes = ['alphaMaterials.Button.ID', 'alphaMaterials.WoodenButton.ID']
-    PressedBit = 0x8
-    Down = 0
-    South = 1
-    North = 2
-    West = 3
-    East = 4
-    Up = 5
-
-applyThrownBit(Button)
-
-
-class SignPost(__Rotation):
-    blocktypes = ['alphaMaterials.Sign.ID', 'alphaMaterials.MobHead.ID', 'alphaMaterials.StandingBanner.ID']
-
-    South = 0
-    SouthSouthWest = 1
-    SouthWest = 2
-    SouthWestWest = 3
-    West = 4
-    NorthWestWest = 5
-    NorthWest = 6
-    NorthNorthWest = 7
-    North = 8
-    NorthNorthEast = 9
-    NorthEast = 10
-    NorthEastEast = 11
-    East = 12
-    SouthEastEast = 13
-    SouthEast = 14
-    SouthSouthEast = 15
-
-    #rotate by increasing clockwise
-    rotateLeft = arange(16, dtype='uint8')
-    rotateLeft -= 4
-    rotateLeft &= 0xf
-
-
-SignPost.flipNorthSouth = arange(16, dtype='uint8')
-SignPost.flipNorthSouth[SignPost.East] = SignPost.West
-SignPost.flipNorthSouth[SignPost.West] = SignPost.East
-SignPost.flipNorthSouth[SignPost.SouthWestWest] = SignPost.SouthEastEast
-SignPost.flipNorthSouth[SignPost.SouthEastEast] = SignPost.SouthWestWest
-SignPost.flipNorthSouth[SignPost.SouthWest] = SignPost.SouthEast
-SignPost.flipNorthSouth[SignPost.SouthEast] = SignPost.SouthWest
-SignPost.flipNorthSouth[SignPost.SouthSouthWest] = SignPost.SouthSouthEast
-SignPost.flipNorthSouth[SignPost.SouthSouthEast] = SignPost.SouthSouthWest
-SignPost.flipNorthSouth[SignPost.NorthEastEast] = SignPost.NorthWestWest
-SignPost.flipNorthSouth[SignPost.NorthWestWest] = SignPost.NorthEastEast
-SignPost.flipNorthSouth[SignPost.NorthEast] = SignPost.NorthWest
-SignPost.flipNorthSouth[SignPost.NorthWest] = SignPost.NorthEast
-SignPost.flipNorthSouth[SignPost.NorthNorthEast] = SignPost.NorthNorthWest
-SignPost.flipNorthSouth[SignPost.NorthNorthWest] = SignPost.NorthNorthEast
-
-
-SignPost.flipEastWest = arange(16, dtype='uint8')
-SignPost.flipEastWest[SignPost.North] = SignPost.South
-SignPost.flipEastWest[SignPost.South] = SignPost.North
-SignPost.flipEastWest[SignPost.SouthSouthEast] = SignPost.NorthNorthEast
-SignPost.flipEastWest[SignPost.NorthNorthEast] = SignPost.SouthSouthEast
-SignPost.flipEastWest[SignPost.NorthEast] = SignPost.SouthEast
-SignPost.flipEastWest[SignPost.SouthEast] = SignPost.NorthEast
-SignPost.flipEastWest[SignPost.SouthEastEast] = SignPost.NorthEastEast
-SignPost.flipEastWest[SignPost.NorthEastEast] = SignPost.SouthEastEast
-SignPost.flipEastWest[SignPost.NorthNorthWest] = SignPost.SouthSouthWest
-SignPost.flipEastWest[SignPost.SouthSouthWest] = SignPost.NorthNorthWest
-SignPost.flipEastWest[SignPost.NorthWest] = SignPost.SouthWest
-SignPost.flipEastWest[SignPost.SouthWest] = SignPost.NorthWest
-SignPost.flipEastWest[SignPost.NorthWestWest] = SignPost.SouthWestWest
-SignPost.flipEastWest[SignPost.SouthWestWest] = SignPost.NorthWestWest
-
-rotationClasses.append(SignPost)
-
-
-class Bed(__Rotation):
-    blocktypes = ['alphaMaterials.Bed.ID']
-    West = 0
-    North = 1
-    East = 2
-    South = 3
-
-
-genericFlipRotation(Bed)
-applyBit8(Bed)
-applyBit4(Bed)
-
-
-class EndPortal(__Rotation):
-    blocktypes = ['alphaMaterials.PortalFrame.ID']
-    West = 0
-    North = 1
-    East = 2
-    South = 3
-
-
-genericFlipRotation(EndPortal)
-applyBit4(EndPortal)
-
-
-class Door(__Rotation):
-    blocktypes = [
-        'alphaMaterials.IronDoor.ID',
-        'alphaMaterials.WoodenDoor.ID',
-        'alphaMaterials.SpruceDoor.ID',
-        'alphaMaterials.BirchDoor.ID',
-        'alphaMaterials.JungleDoor.ID',
-        'alphaMaterials.AcaciaDoor.ID',
-        'alphaMaterials.DarkOakDoor.ID',
-        'alphaMaterials.WoodenDoor.ID',
-    ]
-    South = 0
-    West = 1
-    North = 2
-    East = 3
-    SouthOpen = 4
-    WestOpen = 5
-    NorthOpen = 6
-    EastOpen = 7
-    Left = 8
-    Right = 9
-
-    rotateLeft = arange(16, dtype='uint8')
-
-
-Door.rotateLeft[Door.South] = Door.West
-Door.rotateLeft[Door.West] = Door.North
-Door.rotateLeft[Door.North] = Door.East
-Door.rotateLeft[Door.East] = Door.South
-Door.rotateLeft[Door.SouthOpen] = Door.WestOpen
-Door.rotateLeft[Door.WestOpen] = Door.NorthOpen
-Door.rotateLeft[Door.NorthOpen] = Door.EastOpen
-Door.rotateLeft[Door.EastOpen] = Door.SouthOpen
-
-# applyBit4(Door.rotateLeft)
-
-Door.flipEastWest = arange(16, dtype='uint8')
-Door.flipEastWest[Door.Left] = Door.Right
-Door.flipEastWest[Door.Right] = Door.Left
-Door.flipEastWest[Door.East] = Door.West
-Door.flipEastWest[Door.West] = Door.East
-Door.flipEastWest[Door.EastOpen] = Door.WestOpen
-Door.flipEastWest[Door.WestOpen] = Door.EastOpen
-
-Door.flipNorthSouth = arange(16, dtype='uint8')
-Door.flipNorthSouth[Door.Left] = Door.Right
-Door.flipNorthSouth[Door.Right] = Door.Left
-Door.flipNorthSouth[Door.North] = Door.South
-Door.flipNorthSouth[Door.South] = Door.North
-Door.flipNorthSouth[Door.NorthOpen] = Door.SouthOpen
-Door.flipNorthSouth[Door.SouthOpen] = Door.NorthOpen
-
-rotationClasses.append(Door)
-
-
-class Log(__Rotation):
-    blocktypes = [
-        'alphaMaterials.Wood.ID',
-        'alphaMaterials.Wood2.ID',
-    ]
-    Type1Up = 0
-    Type2Up = 1
-    Type3Up = 2
-    Type4Up = 3
-    Type1NorthSouth = 4
-    Type2NorthSouth = 5
-    Type3NorthSouth = 6
-    Type4NorthSouth = 7
-    Type1EastWest = 8
-    Type2EastWest = 9
-    Type3EastWest = 10
-    Type4EastWest = 11
-
-
-Log.rotateLeft = arange(16, dtype='uint8')
-Log.rotateLeft[Log.Type1NorthSouth] = Log.Type1EastWest
-Log.rotateLeft[Log.Type1EastWest] = Log.Type1NorthSouth
-Log.rotateLeft[Log.Type2NorthSouth] = Log.Type2EastWest
-Log.rotateLeft[Log.Type2EastWest] = Log.Type2NorthSouth
-Log.rotateLeft[Log.Type3NorthSouth] = Log.Type3EastWest
-Log.rotateLeft[Log.Type3EastWest] = Log.Type3NorthSouth
-Log.rotateLeft[Log.Type4NorthSouth] = Log.Type4EastWest
-Log.rotateLeft[Log.Type4EastWest] = Log.Type4NorthSouth
-
-Log.roll = arange(16, dtype='uint8')
-Log.roll[Log.Type1NorthSouth] = Log.Type1Up
-Log.roll[Log.Type2NorthSouth] = Log.Type2Up
-Log.roll[Log.Type3NorthSouth] = Log.Type3Up
-Log.roll[Log.Type4NorthSouth] = Log.Type4Up
-
-Log.roll[Log.Type1Up] = Log.Type1NorthSouth
-Log.roll[Log.Type2Up] = Log.Type2NorthSouth
-Log.roll[Log.Type3Up] = Log.Type3NorthSouth
-Log.roll[Log.Type4Up] = Log.Type4NorthSouth
-
-rotationClasses.append(Log)
-
-
-class RedstoneRepeater(__Rotation):
-    blocktypes = [
-        'alphaMaterials.RedstoneRepeaterOff.ID',
-        'alphaMaterials.RedstoneRepeaterOn.ID'
-    ]
-
-    East = 0
-    South = 1
-    West = 2
-    North = 3
-
-
-genericFlipRotation(RedstoneRepeater)
-
-# high bits of the repeater indicate repeater delay, and should be preserved
-applyBits48(RedstoneRepeater)
-
-
-class Trapdoor(__Rotation):
-    blocktypes = ['alphaMaterials.Trapdoor.ID', 'alphaMaterials.IronTrapdoor.ID']
-
-    West = 0
-    East = 1
-    South = 2
-    North = 3
-    TopWest = 4
-    TopEast = 5
-    TopSouth = 6
-    TopNorth = 7
-
-
-genericFlipRotation(Trapdoor)
-applyOpenedBit = applyBit8
-applyOpenedBit(Trapdoor)
-
-
-class PistonBody(__Rotation):
-    blocktypes = ['alphaMaterials.StickyPiston.ID', 'alphaMaterials.Piston.ID']
-
-    Down = 0
-    Up = 1
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-genericRoll(PistonBody)
-genericFlipRotation(PistonBody)
-applyPistonBit = applyBit8
-applyPistonBit(PistonBody)
-
-
-class PistonHead(PistonBody):
-    blocktypes = ['alphaMaterials.PistonHead.ID']
-
-
-rotationClasses.append(PistonHead)
-
-
-# Mushroom types:
-# Value     Description     Textures
-# 0     Fleshy piece     Pores on all sides
-# 1     Corner piece     Cap texture on top, directions 1 (cloud direction) and 2 (sunrise)
-# 2     Side piece     Cap texture on top and direction 2 (sunrise)
-# 3     Corner piece     Cap texture on top, directions 2 (sunrise) and 3 (cloud origin)
-# 4     Side piece     Cap texture on top and direction 1 (cloud direction)
-# 5     Top piece     Cap texture on top
-# 6     Side piece     Cap texture on top and direction 3 (cloud origin)
-# 7     Corner piece     Cap texture on top, directions 0 (sunset) and 1 (cloud direction)
-# 8     Side piece     Cap texture on top and direction 0 (sunset)
-# 9     Corner piece     Cap texture on top, directions 3 (cloud origin) and 0 (sunset)
-# 10     Stem piece     Stem texture on all four sides, pores on top and bottom
-
-
-class HugeMushroom(__Rotation):
-    blocktypes = ['alphaMaterials.HugeRedMushroom.ID', 'alphaMaterials.HugeBrownMushroom.ID']
-    Northeast = 1
-    East = 2
-    Southeast = 3
-    South = 6
-    Southwest = 9
-    West = 8
-    Northwest = 7
-    North = 4
-
-
-generic8wayRotation(HugeMushroom)
-HugeMushroom.roll = arange(16, dtype='uint8')
-HugeMushroom.roll[HugeMushroom.Southeast] = HugeMushroom.Northeast
-HugeMushroom.roll[HugeMushroom.South] = HugeMushroom.North
-HugeMushroom.roll[HugeMushroom.Southwest] = HugeMushroom.Northwest
-
-
-class Vines(__Rotation):
-    blocktypes = ['alphaMaterials.Vines.ID']
-
-    WestBit = 1
-    NorthBit = 2
-    EastBit = 4
-    SouthBit = 8
-
-    rotateLeft = arange(16, dtype='uint8')
-    flipEastWest = arange(16, dtype='uint8')
-    flipNorthSouth = arange(16, dtype='uint8')
-
-
-# Hmm... Since each bit is a direction, we can rotate by shifting!
-Vines.rotateLeft = 0xf & ((Vines.rotateLeft >> 1) | (Vines.rotateLeft << 3))
-# Wherever each bit is set, clear it and set the opposite bit
-EastWestBits = (Vines.EastBit | Vines.WestBit)
-Vines.flipEastWest[(Vines.flipEastWest & EastWestBits) > 0] ^= EastWestBits
-
-NorthSouthBits = (Vines.NorthBit | Vines.SouthBit)
-Vines.flipNorthSouth[(Vines.flipNorthSouth & NorthSouthBits) > 0] ^= NorthSouthBits
-
-rotationClasses.append(Vines)
-
-
-class Anvil(__Rotation):
-    blocktypes = ['alphaMaterials.Anvil.ID']
-
-    East = 0
-    South = 1
-    West = 2
-    North = 3
-
-
-genericFlipRotation(Anvil)
-applyAnvilBit = applyBit8
-applyAnvilBit(Anvil)
-
-
-@genericFlipRotation
-class Hay(__Rotation):
-    blocktypes = ['alphaMaterials.HayBlock.ID']
-
-    Up = 0
-    Down = 0
-    East = 8
-    West = 8
-    North = 4
-    South = 4
-
-
-@genericFlipRotation
-class QuartzPillar(__Rotation):
-    blocktypes = ['alphaMaterials.BlockofQuartz.ID']
-
-    Up = 2
-    Down = 2
-    East = 4
-    West = 4
-    North = 3
-    South = 3
-
-
-@genericFlipRotation
-class PurpurPillar(__Rotation):
-    blocktypes = ['alphaMaterials.PurpurPillar.ID']
-
-    Up = 0
-    Down = 0
-    East = 8
-    West = 8
-    North = 4
-    South = 4
-
-
-@genericFlipRotation
-class NetherPortal(__Rotation):
-    blocktypes = ['alphaMaterials.NetherPortal.ID']
-
-    East = 1
-    West = 1
-    North = 2
-    South = 2
-
-
-class FenceGate(__Rotation):
-    blocktypes = ['materials.alphaMaterials.FenceGate.ID',
-                  'materials.alphaMaterials.SpruceFenceGate.ID',
-                  'materials.alphaMaterials.BirchFenceGate.ID',
-                  'materials.alphaMaterials.JungleFenceGate.ID',
-                  'materials.alphaMaterials.DarkOakFenceGate.ID',
-                  'materials.alphaMaterials.AcaciaFenceGate.ID']
-
-    South = 1
-    West = 2
-    North = 3
-    East = 0
-
-
-genericFlipRotation(FenceGate)
-applyFenceGateBits = applyBits48
-applyFenceGateBits(FenceGate)
-
-
-@genericFlipRotation
-class EnderPortal(__Rotation):
-    blocktypes = ['alphaMaterials.EnderPortal.ID']
-
-    South = 0
-    West = 1
-    North = 2
-    East = 3
-
-
-@genericFlipRotation
-class CocoaPlant(__Rotation):
-    blocktypes = ['alphaMaterials.CocoaPlant.ID']
-
-    North = 0
-    East = 1
-    South = 2
-    West = 3
-
-
-applyBits48(CocoaPlant)  # growth state
-
-@genericFlipRotation
-class TripwireHook(__Rotation):
-    blocktypes = ['alphaMaterials.TripwireHook.ID']
-
-    South = 1
-    West = 2
-    North = 3
-    East = 0
-
-
-applyBits48(TripwireHook)
-
-
-@genericFlipRotation
-class MobHead(__Rotation):
-    blocktypes = ['alphaMaterials.MobHead.ID']
-
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-@genericFlipRotation
-class Hopper(__Rotation):
-    blocktypes = ['alphaMaterials.Hopper.ID']
-    Down = 0
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-applyBit8(Hopper)
-Hopper.roll = arange(16, dtype='uint8')
-Hopper.roll[Hopper.Down] = Hopper.South
-Hopper.roll[Hopper.North] = Hopper.Down
-
-
-@genericFlipRotation
-class DropperCommandblock(__Rotation):
-    blocktypes = [
-        'alphaMaterials.Dropper.ID',
-        'alphaMaterials.Dispenser.ID',
-        'alphaMaterials.CommandBlock.ID',
-        'alphaMaterials.CommandBlockRepeating.ID',
-        'alphaMaterials.CommandBlockChain.ID'
-    ]
-    Down = 0
-    Up = 1
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-applyBit8(DropperCommandblock)
-
-
-@genericFlipRotation
-class RedstoneComparator(__Rotation):
-    blocktypes = ['alphaMaterials.RedstoneComparatorInactive.ID', 'alphaMaterials.RedstoneComparatorActive.ID']
-
-    East = 0
-    South = 1
-    West = 2
-    North = 3
-
-
-applyBits48(RedstoneComparator)
-
-
-@genericFlipRotation
-class EndRod(__Rotation):
-    blocktypes = ['alphaMaterials.EndRod.ID']
-    Down = 0
-    Up = 1
-    East = 2
-    West = 3
-    North = 4
-    South = 5
-
-
-def _get_attribute(obj, attr):
-    # Helper function used to get arbitrary attribute from an arbitrary object.
-    if hasattr(obj, attr):
-        return getattr(obj, attr)
-    else:
-        raise AttributeError("Object {0} does not have attribute '{1}".format(obj, attr))
-
-
-# pcm1k - ok I think all this can perhaps use something with block properties and be WAY simpler
-def masterRotationTable(attrname):
-    # compute a materials.id_limit x materials.data_limit table mapping each possible blocktype/data combination to
-    # the resulting data when the block is rotated
-    table = zeros((materials.id_limit, materials.data_limit), dtype='uint8')
-    table[:] = arange(materials.data_limit, dtype='uint8')
-    for cls in rotationClasses:
-        if hasattr(cls, attrname):
-            blocktable = getattr(cls, attrname)
-            for blocktype in cls.blocktypes:
-                # Very bad stuff here...
-                # pcm1k - very bad stuff in this entire file
-                try:
-                    table[eval(blocktype)] = blocktable
-                except (NameError, ValueError) as e:
-                    try:
-                        table[eval(blocktype)] = blocktable
-                    except (NameError, SyntaxError):
-                        raise_malformed = False
-                        res = re.findall(r"^([a-zA-Z_][,a-zA-Z0-9._]*)[ ]+for[ ]+([(a-zA-Z_][, a-zA-Z0-9_.)]*)[ ]+in[ ]+([a-zA-Z_][,a-zA-Z0-9._]*)$", blocktype)
-                        if res and len(res[0]) == 3:
-                            # No function call is made in 'bolcktype', so we don't need to check for them.
-                            # Only 'stuff for stuff in other_stuff' is used.
-                            # 'res[0]' is split in 3 elements: left part of 'for', inner part between 'for'and 'in', and right part of 'in'
-                            # Let define 'left' is the left part of 'for', 'right' is the inner part between 'for'and 'in', and 'iter_obj' the right part of 'in'.
-
-                            # If the 'left' and 'right' are the same, check 'iter_obj' for nested attributes (like in 'a for a in b.c.d')
-
-                            # If 'left' and 'right' aren't the same, check if 'left' is using calls to attributes (like in 'a.b for a in c')
-                            # If yes, check the 'iter_obj for nested attributes.
-
-                            # To not write repeated code, let use variables to store the status of each of the three elements.
-
-                            left, right, iter_obj = res[0]
-                            left_valid = False
-                            right_valid = False
-                            iter_obj_valid = False
-
-                            # Test 'right' first, since calling attribute on this element in 'for' loops is invalid in Python.
-                            if '.' in right:
-                                SyntaxError("Malformed string: %s. Calling attributes on the right of 'for' is invalid." % blocktype)
-
-                            # Test 'iter_obj'.
-                            _iter_obj, _o_str = iter_obj.split('.', 1)
-                            if _iter_obj in globals().keys():
-                                iter_obj = globals()[_iter_obj]
-                                while '.' in _o_str:
-                                    _iter_obj, _ostr = _ostr.split('.')
-                                    iter_obj = getattr(iter_obj, _iter_obj)
-
-                            # Test 'left'.
-                            left_name, left_attrs = left.split('.')
-                            if left_name != right:
-                                SyntaxError("Malformed string: '%s'" % blocktype)
-
-                            # All checks passed, we can proceed the loop.
-                            if left_attrs:
-                                [table[eval('a.%s' % left_attrs)] for a in iter_obj]
-                                # print table
-                            else:
-                                table[blocktype] = [a for a in iter_obj]
-
-                        else:
-                            raise_malformed = True
-                        if raise_malformed:
-                            raise SyntaxError("Malformed string: %s" % blocktype)
-
-    return table
-
-
-def rotationTypeTable():
-    table = {}
-    for cls in rotationClasses:
-        for b in cls.blocktypes:
-            table[b] = cls
-
-    return table
-
-
-class BlockRotation:
-    def __init__(self):
-        self.rotateLeft = masterRotationTable("rotateLeft")
-        self.flipEastWest = masterRotationTable("flipEastWest")
-        self.flipNorthSouth = masterRotationTable("flipNorthSouth")
-        self.flipVertical = masterRotationTable("flipVertical")
-        self.roll = masterRotationTable("roll")
-        self.typeTable = rotationTypeTable()
-
-
-def SameRotationType(blocktype1, blocktype2):
-    # use different default values for typeTable.get() to make it return false when neither blocktype is present
-    return BlockRotation().typeTable.get(blocktype1.ID) == BlockRotation().typeTable.get(blocktype2.ID, BlockRotation())
+class _AngleType(object):
+    def __init__(self, name, toValueDict, requiredProps=None):
+        self.name = name
+        self.toValueDict = toValueDict
+        self.toAngleDict = {propValue: angle for angle, propValue in toValueDict.iteritems()}
+        self.requiredProps = requiredProps
+
+
+_ANGLE_SOUTH = 0
+_ANGLE_SOUTH_WEST = 2
+_ANGLE_WEST = 4
+_ANGLE_NORTH_WEST = 6
+_ANGLE_NORTH = 8
+_ANGLE_NORTH_EAST = 10
+_ANGLE_EAST = 12
+_ANGLE_SOUTH_EAST = 14
+
+_ANGLE_DOWN = 0
+_ANGLE_MIDDLE = 1
+_ANGLE_UP = 2
+
+_angleTypeList = [
+    # TYPE_LEVER
+    _AngleType(
+        "facing",
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): "down_z",
+            (_ANGLE_NORTH, _ANGLE_DOWN): "down_z",
+            (_ANGLE_WEST, _ANGLE_DOWN): "down_x",
+            (_ANGLE_EAST, _ANGLE_DOWN): "down_x",
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "south",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "west",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "north",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "east",
+            (_ANGLE_SOUTH, _ANGLE_UP): "up_z",
+            (_ANGLE_NORTH, _ANGLE_UP): "up_z",
+            (_ANGLE_WEST, _ANGLE_UP): "up_x",
+            (_ANGLE_EAST, _ANGLE_UP): "up_x",
+        },
+        requiredProps={"facing": {"down_x", "down_z", "up_x", "up_z"}}
+    ),
+    # TYPE_STAIRS
+    _AngleType(
+        ("facing", "half"),
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): ("south", "bottom"),
+            (_ANGLE_WEST, _ANGLE_DOWN): ("west", "bottom"),
+            (_ANGLE_NORTH, _ANGLE_DOWN): ("north", "bottom"),
+            (_ANGLE_EAST, _ANGLE_DOWN): ("east", "bottom"),
+            (_ANGLE_SOUTH, _ANGLE_UP): ("south", "top"),
+            (_ANGLE_WEST, _ANGLE_UP): ("west", "top"),
+            (_ANGLE_NORTH, _ANGLE_UP): ("north", "top"),
+            (_ANGLE_EAST, _ANGLE_UP): ("east", "top"),
+        }
+    ),
+    # TYPE_FACING
+    _AngleType(
+        "facing",
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): "down",
+            (_ANGLE_WEST, _ANGLE_DOWN): "down",
+            (_ANGLE_NORTH, _ANGLE_DOWN): "down",
+            (_ANGLE_EAST, _ANGLE_DOWN): "down",
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "south",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "west",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "north",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "east",
+            (_ANGLE_SOUTH, _ANGLE_UP): "up",
+            (_ANGLE_WEST, _ANGLE_UP): "up",
+            (_ANGLE_NORTH, _ANGLE_UP): "up",
+            (_ANGLE_EAST, _ANGLE_UP): "up",
+        }
+    ),
+    # TYPE_MUSHROOM
+    _AngleType(
+        "variant",
+        {
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "south",
+            (_ANGLE_SOUTH_WEST, _ANGLE_MIDDLE): "south_west",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "west",
+            (_ANGLE_NORTH_WEST, _ANGLE_MIDDLE): "north_west",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "north",
+            (_ANGLE_NORTH_EAST, _ANGLE_MIDDLE): "north_east",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "east",
+            (_ANGLE_SOUTH_EAST, _ANGLE_MIDDLE): "south_east",
+        }
+    ),
+    # TYPE_RAIL_UP
+    _AngleType(
+        "shape",
+        {
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "ascending_south",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "ascending_west",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "ascending_north",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "ascending_east",
+        }
+    ),
+    # TYPE_RAIL
+    _AngleType(
+        "shape",
+        {
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "north_south",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "north_south",
+            (_ANGLE_SOUTH_WEST, _ANGLE_MIDDLE): "south_west",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "east_west",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "east_west",
+            (_ANGLE_NORTH_WEST, _ANGLE_MIDDLE): "north_west",
+            (_ANGLE_NORTH_EAST, _ANGLE_MIDDLE): "north_east",
+            (_ANGLE_SOUTH_EAST, _ANGLE_MIDDLE): "south_east",
+        }
+    ),
+    # TYPE_SLAB
+    _AngleType(
+        "half",
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): "bottom",
+            (_ANGLE_SOUTH, _ANGLE_UP): "top",
+        }
+    ),
+    # TYPE_AXIS
+    _AngleType(
+        "axis",
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): "y",
+            (_ANGLE_WEST, _ANGLE_DOWN): "y",
+            (_ANGLE_NORTH, _ANGLE_DOWN): "y",
+            (_ANGLE_EAST, _ANGLE_DOWN): "y",
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "z",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "z",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "x",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "x",
+            (_ANGLE_SOUTH, _ANGLE_UP): "y",
+            (_ANGLE_WEST, _ANGLE_UP): "y",
+            (_ANGLE_NORTH, _ANGLE_UP): "y",
+            (_ANGLE_EAST, _ANGLE_UP): "y",
+        }
+    ),
+    # TYPE_AXIS_LINES
+    _AngleType(
+        "variant",
+        {
+            (_ANGLE_SOUTH, _ANGLE_DOWN): "lines_y",
+            (_ANGLE_WEST, _ANGLE_DOWN): "lines_y",
+            (_ANGLE_NORTH, _ANGLE_DOWN): "lines_y",
+            (_ANGLE_EAST, _ANGLE_DOWN): "lines_y",
+            (_ANGLE_SOUTH, _ANGLE_MIDDLE): "lines_z",
+            (_ANGLE_NORTH, _ANGLE_MIDDLE): "lines_z",
+            (_ANGLE_WEST, _ANGLE_MIDDLE): "lines_x",
+            (_ANGLE_EAST, _ANGLE_MIDDLE): "lines_x",
+            (_ANGLE_SOUTH, _ANGLE_UP): "lines_y",
+            (_ANGLE_WEST, _ANGLE_UP): "lines_y",
+            (_ANGLE_NORTH, _ANGLE_UP): "lines_y",
+            (_ANGLE_EAST, _ANGLE_UP): "lines_y",
+        }
+    ),
+]
+
+_TYPE_LEVER = 0
+_TYPE_STAIRS = 1
+_TYPE_FACING = 2
+_TYPE_MUSHROOM = 3
+_TYPE_RAIL_UP = 4
+_TYPE_RAIL = 5
+_TYPE_SLAB = 6
+_TYPE_AXIS = 7
+_TYPE_AXIS_LINES = 8
+
+# special cases
+_TYPE_NUMBER = len(_angleTypeList)
+
+
+def _getAngleFromSpecial(properties, allProps):
+    rotation = properties.get("rotation")
+    if rotation is not None:
+        try:
+            return (int(rotation), _ANGLE_MIDDLE), _TYPE_NUMBER
+        except ValueError:
+            return None
+    return None
+
+
+def _hasAllProps(allProps, propName, requiredProps):
+    foundSet = set()
+    for properties in allProps:
+        if not bool(properties):
+            continue
+        # make sure propName exists
+        propValue = properties.get(propName)
+        if propValue is None:
+#            continue
+            return False
+        # make sure all of requiredProps exists
+        if propValue in requiredProps:
+            foundSet.add(propValue)
+        if len(foundSet) >= len(requiredProps):
+            return True
+    return False
+
+
+def _checkRequiredProps(allProps, angleType):
+    requiredProps = angleType.requiredProps
+    if not bool(requiredProps):
+        return True
+    if not bool(allProps):
+        return False
+    for name, required in requiredProps.iteritems():
+        if not _hasAllProps(allProps, name, required):
+            return False
+    return True
+
+
+def _getPropValues(properties, allProps, angleType):
+    propName = angleType.name
+    if propName is None:
+        return None
+    if not _checkRequiredProps(allProps, angleType):
+        return None
+
+    if isinstance(propName, basestring):
+        return properties.get(propName)
+    # multiple names
+    propValues = []
+    for name in propName:
+        value = properties.get(name)
+        if value is None:
+            return None
+        propValues.append(value)
+    return tuple(propValues)
+
+
+def _getAngleFromProps(properties, allProps):
+    angleFull = _getAngleFromSpecial(properties, allProps)
+    if angleFull is not None:
+        return angleFull
+
+    # try to find the angle
+    for angleIndex, angleType in enumerate(_angleTypeList):
+        propValue = _getPropValues(properties, allProps, angleType)
+        if propValue is None:
+            continue
+        angle = angleType.toAngleDict.get(propValue)
+        if angle is not None:
+            return angle, angleIndex
+    return None
+
+
+def _getPropsFromAngle(angle, angleIndex):
+    # handle the special cases
+    if angleIndex == _TYPE_NUMBER:
+        if angle[1] == _ANGLE_MIDDLE:
+            return {"rotation": str(angle[0])}
+        return None
+
+    angleType = _angleTypeList[angleIndex]
+    propValue = angleType.toValueDict.get(angle)
+    if propValue is None:
+        return None
+
+    if isinstance(propValue, basestring):
+        return {angleType.name: propValue}
+    # multiple names
+    return dict(zip(angleType.name, propValue))
+
+
+def _rotateLeftAngle(angle):
+    return ((angle[0] - 4) & 15,) + angle[1:]
+
+
+def _flipEastWestAngle(angle):
+    return (-angle[0] & 15,) + angle[1:]
+
+
+def _flipNorthSouthAngle(angle):
+    return ((8 - angle[0]) & 15,) + angle[1:]
+
+
+def _flipVerticalAngle(angle):
+    return (angle[0], 2 - angle[1]) + angle[2:]
+
+# "0": {"facing": "down",
+# "1": {"facing": "up",
+# "2": {"facing": "north",
+# "3": {"facing": "south",
+# "4": {"facing": "west"
+# "5": {"facing": "east",
+# Down = 0
+# Up = 1
+# East = 2
+# West = 3
+# North = 4
+# South = 5
+# rotation[cls.Up] = cls.North
+# rotation[cls.Down] = cls.South
+# rotation[cls.South] = cls.Up
+# rotation[cls.North] = cls.Down
+# rotation[up] = west
+# rotation[down] = east
+# rotation[east] = up
+# rotation[west] = down
+
+# "0": {"facing": "down_x",
+# "1": {"facing": "east",
+# "2": {"facing": "west",
+# "3": {"facing": "south",
+# "4": {"facing": "north",
+# "5": {"facing": "up_z",
+# "6": {"facing": "up_x",
+# "7": {"facing": "down_z",
+# DownSouth = 0
+# South = 1
+# North = 2
+# West = 3
+# East = 4
+# UpSouth = 5
+# UpWest = 6
+# DownWest = 7
+# Lever.roll[Lever.North] = Lever.DownSouth
+# Lever.roll[Lever.South] = Lever.UpSouth
+# Lever.roll[Lever.DownSouth] = Lever.South
+# Lever.roll[Lever.DownWest] = Lever.South
+# Lever.roll[Lever.UpSouth] = Lever.North
+# Lever.roll[Lever.UpWest] = Lever.North
+# Lever.roll[west] = down_x
+# Lever.roll[east] = up_z
+# Lever.roll[down_x] = east
+# Lever.roll[down_z] = east
+# Lever.roll[up_z] = west
+# Lever.roll[up_x] = west
+
+# "0": {"facing": "east",
+# "1": {"facing": "west",
+# "2": {"facing": "south",
+# "3": {"facing": "north",
+# "4": {"facing": "east_top",
+# "5": {"facing": "west_top",
+# "6": {"facing": "south_top",
+# "7": {"facing": "north_top",
+# South = 0
+# North = 1
+# West = 2
+# East = 3
+# TopSouth = 4
+# TopNorth = 5
+# TopWest = 6
+# TopEast = 7
+# Stair.roll[Stair.North] = Stair.South
+# Stair.roll[Stair.South] = Stair.TopSouth
+# Stair.roll[Stair.TopSouth] = Stair.TopNorth
+# Stair.roll[Stair.TopNorth] = Stair.North
+# Stair.roll[west] = east
+# Stair.roll[east] = east_top
+# Stair.roll[east_top] = west_top
+# Stair.roll[west_top] = west
+_stairsRollMap = {
+    (_ANGLE_WEST, _ANGLE_DOWN): (_ANGLE_EAST, _ANGLE_DOWN),
+    (_ANGLE_EAST, _ANGLE_DOWN): (_ANGLE_EAST, _ANGLE_UP),
+    (_ANGLE_EAST, _ANGLE_UP): (_ANGLE_WEST, _ANGLE_UP),
+    (_ANGLE_WEST, _ANGLE_UP): (_ANGLE_WEST, _ANGLE_DOWN),
+}
+
+# "1": {"variant": "north_west"
+# "2": {"variant": "north"
+# "3": {"variant": "north_east"
+# "4": {"variant": "west"
+# "6": {"variant": "east"
+# "7": {"variant": "south_west"
+# "8": {"variant": "south"
+# "9": {"variant": "south_east"
+# Northeast = 1
+# East = 2
+# Southeast = 3
+# South = 6
+# Southwest = 9
+# West = 8
+# Northwest = 7
+# North = 4
+# HugeMushroom.roll[HugeMushroom.Southeast] = HugeMushroom.Northeast
+# HugeMushroom.roll[HugeMushroom.South] = HugeMushroom.North
+# HugeMushroom.roll[HugeMushroom.Southwest] = HugeMushroom.Northwest
+# HugeMushroom.roll[north_east] = north_west
+# HugeMushroom.roll[east] = west
+# HugeMushroom.roll[south_east] = south_west
+
+
+def _rollAngle(angle, angleIndex):
+    if angleIndex == _TYPE_STAIRS:
+        newAngle = _stairsRollMap.get(angle)
+        if newAngle is not None:
+            return newAngle
+        return angle
+    if angleIndex in (_TYPE_MUSHROOM, _TYPE_RAIL_UP):
+        return _flipEastWestAngle(angle)
+
+    if angle[1] == _ANGLE_DOWN:
+        # down -> east
+        return (_ANGLE_EAST, _ANGLE_MIDDLE) + angle[2:]
+    if angle[1] == _ANGLE_UP:
+        # up -> west
+        return (_ANGLE_WEST, _ANGLE_MIDDLE) + angle[2:]
+    if angle[0] == _ANGLE_EAST:
+        # east -> up
+        # original lever roll code changes east to up_z
+        return (_ANGLE_SOUTH, _ANGLE_UP) + angle[2:]
+    if angle[0] == _ANGLE_WEST:
+        # west -> down
+        # original lever roll code changes west to down_x
+        return (_ANGLE_WEST, _ANGLE_DOWN) + angle[2:]
+    return angle
+
+
+#def _rotateWithFunc(properties, rotateFunc, angle, angleIndex):
+#    if angle is None or angleIndex is None:
+#        return
+#    propsUpdate = _getPropsFromAngle(rotateFunc(angle))
+#    if propsUpdate is not None:
+#        properties.update(propsUpdate)
+
+
+def _rotateLeftBools(properties):
+    north = properties.get("north")
+    if north is None:
+        return False
+    west = properties.get("west")
+    if west is None:
+        return False
+    south = properties.get("south")
+    if south is None:
+        return False
+    east = properties.get("east")
+    if east is None:
+        return False
+    properties["west"] = north
+    properties["south"] = west
+    properties["east"] = south
+    properties["north"] = east
+    return True
+
+
+def _flipBools(properties, name1, name2):
+    value1 = properties.get(name1)
+    if value1 is None:
+        return False
+    value2 = properties.get(name2)
+    if value2 is None:
+        return False
+    properties[value1] = value2
+    properties[value2] = value1
+    return True
+
+
+def _rollBools(properties):
+    west = properties.get("west")
+    if west is None:
+        return False
+    east = properties.get("east")
+    if east is None:
+        return False
+    up = properties.get("up")
+    if up is None:
+        return False
+    down = properties.get("down")
+    if down is None:
+        return False
+    properties["down"] = west
+    properties["up"] = east
+    properties["west"] = up
+    properties["east"] = down
+    return True
+
+
+def _flipDoorHinge(properties):
+    half = properties.get("half")
+    if half != "upper":
+        return False
+    hinge = properties.get("hinge")
+    if hinge is None:
+        return False
+    if hinge == "left":
+        properties["hinge"] = "right"
+    elif hinge == "right":
+        properties["hinge"] = "left"
+    return True
+
+
+def _rotateLeftProps(properties, angle, angleIndex):
+    properties = dict(properties)
+    if angle is not None:
+        propsUpdate = _getPropsFromAngle(_rotateLeftAngle(angle), angleIndex)
+        if propsUpdate is not None:
+            properties.update(propsUpdate)
+            return properties
+#    _rotateWithFunc(properties, _rotateLeftAngle, allProps=allProps)
+    _rotateLeftBools(properties)
+    return properties
+
+
+def _flipEastWestProps(properties, angle, angleIndex):
+    properties = dict(properties)
+    if _flipDoorHinge(properties):
+        return properties
+    if angle is not None:
+        propsUpdate = _getPropsFromAngle(_flipEastWestAngle(angle), angleIndex)
+        if propsUpdate is not None:
+            properties.update(propsUpdate)
+            return properties
+#    _rotateWithFunc(properties, _flipEastWestAngle)
+    _flipBools(properties, "east", "west")
+    return properties
+
+
+def _flipNorthSouthProps(properties, angle, angleIndex):
+    properties = dict(properties)
+    if _flipDoorHinge(properties):
+        return properties
+    if angle is not None:
+        propsUpdate = _getPropsFromAngle(_flipNorthSouthAngle(angle), angleIndex)
+        if propsUpdate is not None:
+            properties.update(propsUpdate)
+            return properties
+#    _rotateWithFunc(properties, _flipNorthSouthAngle)
+    _flipBools(properties, "north", "south")
+    return properties
+
+
+def _flipVerticalProps(properties, angle, angleIndex):
+    properties = dict(properties)
+    if angle is not None:
+        propsUpdate = _getPropsFromAngle(_flipVerticalAngle(angle), angleIndex)
+        if propsUpdate is not None:
+            properties.update(propsUpdate)
+            return properties
+#    _rotateWithFunc(properties, _flipVerticalAngle, allProps=allProps)
+    _flipBools(properties, "up", "down")
+    return properties
+
+
+def _rollProps(properties, angle, angleIndex):
+    properties = dict(properties)
+    if angle is not None:
+        propsUpdate = _getPropsFromAngle(_rollAngle(angle, angleIndex), angleIndex)
+        if propsUpdate is not None:
+            properties.update(propsUpdate)
+            return properties
+#    _rotateWithFunc(properties, _rollAngle, allProps=allProps)
+    _rollBools(properties)
+    return properties
+
+
+class _BlockRotation(object):
+    def __init__(self, materials):
+        blockstateToID = materials.blockstate_api.blockstateToID
+
+        def updateTable(table, block, properties):
+            rotatedID, rotatedData = blockstateToID(block.stringID, properties)
+            if rotatedID != -1 and rotatedData != -1:
+                table[block.ID, block.blockData] = rotatedData
+
+        dataRange = arange(materials.data_limit, dtype="uint8")
+
+        self.rotateLeft = rotateLeft = zeros((materials.id_limit, materials.data_limit), "uint8")
+        rotateLeft[:] = dataRange
+        self.flipEastWest = flipEastWest = zeros((materials.id_limit, materials.data_limit), "uint8")
+        flipEastWest[:] = dataRange
+        self.flipNorthSouth = flipNorthSouth = zeros((materials.id_limit, materials.data_limit), "uint8")
+        flipNorthSouth[:] = dataRange
+        self.flipVertical = flipVertical = zeros((materials.id_limit, materials.data_limit), "uint8")
+        flipVertical[:] = dataRange
+        self.roll = roll = zeros((materials.id_limit, materials.data_limit), "uint8")
+        roll[:] = dataRange
+
+        for block in materials:
+            properties = block.properties
+            if not bool(properties):
+                continue
+            blockID = block.ID
+            blockData = block.blockData
+            stringID = block.stringID
+            allProps = materials.properties[blockID]
+
+            angleFull = _getAngleFromProps(properties, allProps)
+            if angleFull is not None:
+                angle, angleIndex = angleFull
+            else:
+                angle = angleIndex = None
+
+            updateTable(rotateLeft, block, _rotateLeftProps(properties, angle, angleIndex))
+            updateTable(flipEastWest, block, _flipEastWestProps(properties, angle, angleIndex))
+            updateTable(flipNorthSouth, block, _flipNorthSouthProps(properties, angle, angleIndex))
+            updateTable(flipVertical, block, _flipVerticalProps(properties, angle, angleIndex))
+            updateTable(roll, block, _rollProps(properties, angle, angleIndex))
+
+
+# pcm1k TODO - handle the other materials
+_alphaRotation = _BlockRotation(alphaMaterials)
 
 
 def FlipVertical(blocks, data):
-    data[:] = BlockRotation().flipVertical[blocks, data]
+    data[:] = _alphaRotation.flipVertical[blocks, data]
 
 
 def FlipNorthSouth(blocks, data):
-    data[:] = BlockRotation().flipNorthSouth[blocks, data]
+    # This is NOT a mistake. The original code has north/south and east/west swapped
+    data[:] = _alphaRotation.flipEastWest[blocks, data]
 
 
 def FlipEastWest(blocks, data):
-    data[:] = BlockRotation().flipEastWest[blocks, data]
+    # This is NOT a mistake. The original code has north/south and east/west swapped
+    data[:] = _alphaRotation.flipNorthSouth[blocks, data]
 
 
 def RotateLeft(blocks, data):
-    data[:] = BlockRotation().rotateLeft[blocks, data]
+    data[:] = _alphaRotation.rotateLeft[blocks, data]
 
 
 def Roll(blocks, data):
-    data[:] = BlockRotation().roll[blocks, data]
+    data[:] = _alphaRotation.roll[blocks, data]
