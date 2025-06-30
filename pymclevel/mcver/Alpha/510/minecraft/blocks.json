@@ -1000,7 +1000,6 @@
         {
             "data": {
                 "0": {
-                    "axis": "x",
                     "name": "Oak Wood (Upright)",
                     "properties": {
                         "axis": "y",
@@ -1019,8 +1018,7 @@
                             5,
                             1
                         ]
-                    },
-                    "variant": "Oak"
+                    }
                 },
                 "1": {
                     "name": "Spruce Wood (Upright)",
@@ -4406,7 +4404,7 @@
                     ]
                 },
                 "7": {
-                    "name": "Quartz Stone Double Slab (Seamed)",
+                    "name": "Quartz Double Slab (Seamed)",
                     "properties": {
                         "seamless": "false",
                         "variant": "quartz"
@@ -8538,7 +8536,7 @@
         {
             "data": {
                 "0": {
-                    "name": "Wooden Trapdoor (Bottom, False, North)",
+                    "name": "Wooden Trapdoor (Bottom, Unopened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "bottom",
@@ -8546,7 +8544,7 @@
                     }
                 },
                 "1": {
-                    "name": "Wooden Trapdoor (Bottom, False, South)",
+                    "name": "Wooden Trapdoor (Bottom, Unopened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "bottom",
@@ -8554,7 +8552,7 @@
                     }
                 },
                 "10": {
-                    "name": "Wooden Trapdoor (Top, False, West)",
+                    "name": "Wooden Trapdoor (Top, Unopened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "top",
@@ -8562,7 +8560,7 @@
                     }
                 },
                 "11": {
-                    "name": "Wooden Trapdoor (Top, False, East)",
+                    "name": "Wooden Trapdoor (Top, Unopened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "top",
@@ -8570,7 +8568,7 @@
                     }
                 },
                 "12": {
-                    "name": "Wooden Trapdoor (Top, True, North)",
+                    "name": "Wooden Trapdoor (Top, Opened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "top",
@@ -8578,7 +8576,7 @@
                     }
                 },
                 "13": {
-                    "name": "Wooden Trapdoor (Top, True, South)",
+                    "name": "Wooden Trapdoor (Top, Opened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "top",
@@ -8586,7 +8584,7 @@
                     }
                 },
                 "14": {
-                    "name": "Wooden Trapdoor (Top, True, West)",
+                    "name": "Wooden Trapdoor (Top, Opened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "top",
@@ -8594,7 +8592,7 @@
                     }
                 },
                 "15": {
-                    "name": "Wooden Trapdoor (Top, True, East)",
+                    "name": "Wooden Trapdoor (Top, Opened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "top",
@@ -8602,7 +8600,7 @@
                     }
                 },
                 "2": {
-                    "name": "Wooden Trapdoor (Bottom, False, West)",
+                    "name": "Wooden Trapdoor (Bottom, Unopened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "bottom",
@@ -8610,7 +8608,7 @@
                     }
                 },
                 "3": {
-                    "name": "Wooden Trapdoor (Bottom, False, East)",
+                    "name": "Wooden Trapdoor (Bottom, Unopened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "bottom",
@@ -8618,7 +8616,7 @@
                     }
                 },
                 "4": {
-                    "name": "Wooden Trapdoor (Bottom, True, North)",
+                    "name": "Wooden Trapdoor (Bottom, Opened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "bottom",
@@ -8626,7 +8624,7 @@
                     }
                 },
                 "5": {
-                    "name": "Wooden Trapdoor (Bottom, True, South)",
+                    "name": "Wooden Trapdoor (Bottom, Opened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "bottom",
@@ -8634,7 +8632,7 @@
                     }
                 },
                 "6": {
-                    "name": "Wooden Trapdoor (Bottom, True, West)",
+                    "name": "Wooden Trapdoor (Bottom, Opened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "bottom",
@@ -8642,7 +8640,7 @@
                     }
                 },
                 "7": {
-                    "name": "Wooden Trapdoor (Bottom, True, East)",
+                    "name": "Wooden Trapdoor (Bottom, Opened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "bottom",
@@ -8650,7 +8648,7 @@
                     }
                 },
                 "8": {
-                    "name": "Wooden Trapdoor (Top, False, North)",
+                    "name": "Wooden Trapdoor (Top, Unopened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "top",
@@ -8658,7 +8656,7 @@
                     }
                 },
                 "9": {
-                    "name": "Wooden Trapdoor (Top, False, South)",
+                    "name": "Wooden Trapdoor (Top, Unopened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "top",
@@ -16252,7 +16250,7 @@
         {
             "data": {
                 "0": {
-                    "name": "Iron Trapdoor (Bottom, False, North)",
+                    "name": "Iron Trapdoor (Bottom, Unopened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "bottom",
@@ -16260,7 +16258,7 @@
                     }
                 },
                 "1": {
-                    "name": "Iron Trapdoor (Bottom, False, South)",
+                    "name": "Iron Trapdoor (Bottom, Unopened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "bottom",
@@ -16268,7 +16266,7 @@
                     }
                 },
                 "10": {
-                    "name": "Iron Trapdoor (Top, False, West)",
+                    "name": "Iron Trapdoor (Top, Unopened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "top",
@@ -16276,7 +16274,7 @@
                     }
                 },
                 "11": {
-                    "name": "Iron Trapdoor (Top, False, East)",
+                    "name": "Iron Trapdoor (Top, Unopened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "top",
@@ -16284,7 +16282,7 @@
                     }
                 },
                 "12": {
-                    "name": "Iron Trapdoor (Top, True, North)",
+                    "name": "Iron Trapdoor (Top, Opened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "top",
@@ -16292,7 +16290,7 @@
                     }
                 },
                 "13": {
-                    "name": "Iron Trapdoor (Top, True, South)",
+                    "name": "Iron Trapdoor (Top, Opened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "top",
@@ -16300,7 +16298,7 @@
                     }
                 },
                 "14": {
-                    "name": "Iron Trapdoor (Top, True, West)",
+                    "name": "Iron Trapdoor (Top, Opened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "top",
@@ -16308,7 +16306,7 @@
                     }
                 },
                 "15": {
-                    "name": "Iron Trapdoor (Top, True, East)",
+                    "name": "Iron Trapdoor (Top, Opened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "top",
@@ -16316,7 +16314,7 @@
                     }
                 },
                 "2": {
-                    "name": "Iron Trapdoor (Bottom, False, West)",
+                    "name": "Iron Trapdoor (Bottom, Unopened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "bottom",
@@ -16324,7 +16322,7 @@
                     }
                 },
                 "3": {
-                    "name": "Iron Trapdoor (Bottom, False, East)",
+                    "name": "Iron Trapdoor (Bottom, Unopened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "bottom",
@@ -16332,7 +16330,7 @@
                     }
                 },
                 "4": {
-                    "name": "Iron Trapdoor (Bottom, True, North)",
+                    "name": "Iron Trapdoor (Bottom, Opened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "bottom",
@@ -16340,7 +16338,7 @@
                     }
                 },
                 "5": {
-                    "name": "Iron Trapdoor (Bottom, True, South)",
+                    "name": "Iron Trapdoor (Bottom, Opened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "bottom",
@@ -16348,7 +16346,7 @@
                     }
                 },
                 "6": {
-                    "name": "Iron Trapdoor (Bottom, True, West)",
+                    "name": "Iron Trapdoor (Bottom, Opened, West)",
                     "properties": {
                         "facing": "west",
                         "half": "bottom",
@@ -16356,7 +16354,7 @@
                     }
                 },
                 "7": {
-                    "name": "Iron Trapdoor (Bottom, True, East)",
+                    "name": "Iron Trapdoor (Bottom, Opened, East)",
                     "properties": {
                         "facing": "east",
                         "half": "bottom",
@@ -16364,7 +16362,7 @@
                     }
                 },
                 "8": {
-                    "name": "Iron Trapdoor (Top, False, North)",
+                    "name": "Iron Trapdoor (Top, Unopened, North)",
                     "properties": {
                         "facing": "north",
                         "half": "top",
@@ -16372,7 +16370,7 @@
                     }
                 },
                 "9": {
-                    "name": "Iron Trapdoor (Top, False, South)",
+                    "name": "Iron Trapdoor (Top, Unopened, South)",
                     "properties": {
                         "facing": "south",
                         "half": "top",
