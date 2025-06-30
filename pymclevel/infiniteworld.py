@@ -27,7 +27,7 @@ import materials
 from mclevelbase import ChunkMalformed, ChunkNotPresent, ChunkAccessDenied,ChunkConcurrentException,exhaust, PlayerNotFound
 import nbt
 from numpy import array, clip, maximum, zeros, asarray, unpackbits, arange
-from regionfile import MCRegionFile
+from regionfile import MCRegionFile, ChunkTooBig, ExternalChunk
 import logging
 from uuid import UUID
 from id_definitions import PLATFORM_ALPHA
@@ -1079,11 +1079,19 @@ class AnvilWorldFolder(object):
         if not self.containsChunk(cx, cz):
             raise ChunkNotPresent((cx, cz))
 
-        return self.getRegionForChunk(cx, cz).readChunk(cx, cz)
+        try:
+            return self.getRegionForChunk(cx, cz).readChunk(cx, cz)
+        except ExternalChunk:
+            # pcm1k TODO - handle the external chunk thing
+            raise
 
     def saveChunk(self, cx, cz, data):
         regionFile = self.getRegionForChunk(cx, cz)
-        regionFile.saveChunk(cx, cz, data)
+        try:
+            regionFile.saveChunk(cx, cz, data)
+        except ChunkTooBig:
+            # pcm1k TODO - handle the external chunk thing
+            raise
 
     def copyChunkFrom(self, worldFolder, cx, cz):
         fromRF = worldFolder.getRegionForChunk(cx, cz)

@@ -202,6 +202,9 @@ class MCRegionFile(object):
 
     def readChunk(self, cx, cz):
         data, format = self._readChunk(cx, cz)
+        if format & 0x80 != 0:
+            # external chunk, caller has to handle it
+            raise ExternalChunk(format)
         if format == self.VERSION_GZIP:
             return nbt.gunzip(data)
         if format == self.VERSION_DEFLATE:
@@ -221,7 +224,7 @@ class MCRegionFile(object):
         except ChunkNotPresent:
             pass
 
-    def saveChunk(self, cx, cz, uncompressedData):
+    def saveChunk(self, cx, cz, uncompressedData, canExternal=False):
         if self.compressMode == self.VERSION_DEFLATE:
             data = deflate(uncompressedData)
         elif self.compressMode == self.VERSION_UNCOMPRESSED:
@@ -229,11 +232,12 @@ class MCRegionFile(object):
         else:
             raise IOError("Unsupported compress format: {0}".format(self.compressMode))
         try:
-            self._saveChunk(cx, cz, data, self.compressMode)
+            self._saveChunk(cx, cz, data, self.compressMode, canExternal=canExternal)
         except ChunkTooBig as e:
+            # pcm1k TODO - save data in here so the caller can use it
             raise ChunkTooBig(e.message + " (%d uncompressed)" % len(uncompressedData))
 
-    def _saveChunk(self, cx, cz, data, format):
+    def _saveChunk(self, cx, cz, data, format, canExternal=False):
         cx &= 0x1f
         cz &= 0x1f
         offset = self.getOffset(cx, cz)
@@ -243,7 +247,13 @@ class MCRegionFile(object):
         sectorsNeeded = (len(data) + self.CHUNK_HEADER_SIZE) / self.SECTOR_BYTES + 1
 
         if sectorsNeeded >= 256:
-            raise ChunkTooBig("Chunk too big! %d bytes exceeds 1MB" % len(data))
+            tooBig = ChunkTooBig("Chunk too big! %d bytes exceeds 1MB" % len(data))
+            if not canExternal:
+                raise tooBig
+            sectorsNeeded = self.CHUNK_HEADER_SIZE / self.SECTOR_BYTES + 1
+            data = ""
+        else:
+            tooBig = None
 
         if sectorNumber != 0 and sectorsAllocated >= sectorsNeeded:
             log.debug("REGION SAVE {0},{1} rewriting {2}b".format(cx, cz, len(data)))
@@ -307,6 +317,9 @@ class MCRegionFile(object):
 
         self.setTimestamp(cx, cz)
 
+        if tooBig is not None:
+            raise tooBig
+
     def writeSector(self, sectorNumber, data, format):
         with self.file as f:
             log.debug("REGION: Writing sector {0}".format(sectorNumber))
@@ -314,7 +327,8 @@ class MCRegionFile(object):
             f.seek(sectorNumber * self.SECTOR_BYTES)
             f.write(struct.pack(">I", len(data) + 1))  # // chunk length
             f.write(struct.pack("B", format))  # // chunk version number
-            f.write(data)  # // chunk data
+            if bool(data):
+                f.write(data)  # // chunk data
             # f.flush()
 
     def containsChunk(self, cx, cz):
@@ -355,9 +369,15 @@ class MCRegionFile(object):
     VERSION_GZIP = 1
     VERSION_DEFLATE = 2
     VERSION_UNCOMPRESSED = 3
+    VERSION_LZ4 = 4
 
     compressMode = VERSION_DEFLATE
 
 
 class ChunkTooBig(ValueError):
     pass
+
+
+class ExternalChunk(Exception):
+    def __init__(self, format):
+        self.format = format
