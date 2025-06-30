@@ -139,7 +139,7 @@ def _deleteOld(prefix, prefixDict, itemOld):
     prefixDict.pop(namespacedId, None)
 
 def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
-    # pcm1k - this should handle extra item in "data" like how MCMaterials does it
+    # pcm1k TODO - this should handle extra item in "data" like how MCMaterials does it
     if "_name" in item:
         _name = item["_name"]
     elif "idStr" in item:
@@ -181,7 +181,7 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     for a_name, a_value in autobuilds.iteritems():
         try:
             # this uses "data", so don't remove it
-            # pcm1k - I would rather not store code in JSON
+            # pcm1k TODO - I would rather not store code in JSON. This should probably be removed
             v = eval(a_value)
 #                 print "###", a_name, a_value, v
             defs_dict[entry_name][a_name] = eval(a_value)
@@ -252,6 +252,7 @@ def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     # If an element "load" is defined in the JSON data, it must be a string corresponding to another game version.
     # The corresponding file will be loaded before parsing the data.
     log.info("Loading...")
+    # pcm1k TODO - Add a "remove" property? This will let you remove certain properties in the JSON with a path
     prefix = os.path.splitext(jsonName)[0]
     deps = _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix)
     allData = {}
@@ -322,21 +323,34 @@ class _FileFuncsPkg(object):
                 path += "/" + b
         return path
 
+#    def basename(self, p):
+#        i = p.rfind("/") + 1
+#        return p[i:]
+
+    def dirname(self, p):
+        i = p.rfind("/") + 1
+        head = p[:i]
+        if head and head != "/" * len(head):
+            head = head.rstrip("/")
+        return head
+
     def isfile(self, path):
+        path = self.join(self.rootDir, path)
         return pkg_resources.resource_exists(__name__, path) and not self.isdir(path)
 
     def isdir(self, s):
+        s = self.join(self.rootDir, s)
         return pkg_resources.resource_isdir(__name__, s)
 
     def listdir(self, path):
+        path = self.join(self.rootDir, path)
         return pkg_resources.resource_listdir(__name__, path)
 
     def openRead(self, name):
+        name = self.join(self.rootDir, name)
         return pkg_resources.resource_stream(__name__, name)
 
-    def stat(self, path):
-        return None
-
+# pcm1k TODO - how necessary is this?
 class _FileFuncsFs(object):
     def __init__(self, rootDir):
         self.rootDir = rootDir
@@ -344,20 +358,27 @@ class _FileFuncsFs(object):
     def join(self, a, *p):
         return os.path.join(a, *p)
 
+#    def basename(self, p):
+#        return os.path.basename(p)
+
+    def dirname(self, p):
+        return os.path.dirname(p)
+
     def isfile(self, path):
+        path = self.join(self.rootDir, path)
         return os.path.isfile(path)
 
     def isdir(self, s):
+        s = self.join(self.rootDir, s)
         return os.path.isfile(s)
 
     def listdir(self, path):
+        path = self.join(self.rootDir, path)
         return os.listdir(path)
 
     def openRead(self, name):
+        name = self.join(self.rootDir, name)
         return open(name)
-
-    def stat(self, path):
-        return os.stat(path)
 
 _fileFuncs = None
 
@@ -457,15 +478,36 @@ class BaseDefs(object):
 
         return genericDefs
 
+def _followLinkFiles(platformDir, version, fileFuncs):
+    while True:
+        linkFile = fileFuncs.join(platformDir, version)
+        if not fileFuncs.isfile(linkFile):
+            break
+
+        with fileFuncs.openRead(linkFile) as fp:
+            data = fp.read()
+        if data.endswith("\n"):
+            data = data[:-1]
+        if not data:
+            break
+
+        version = data
+    return version
+
 def _findVersionDir(platformDir, platform, version, fileFuncs):
-    verDir = fileFuncs.join(platformDir, version)
+    if not fileFuncs.isdir(platformDir):
+        return None
+
+    linkVer = _followLinkFiles(platformDir, version, fileFuncs)
+    verDir = fileFuncs.join(platformDir, linkVer)
     if fileFuncs.isdir(verDir):
-        return version
+        return linkVer
 
     # If version 1.2.4 files are not found, try to load the one for the closest
     # lower version (like 1.2.3 or 1.2).
     log.info("No definitions found for MC {} {}. Trying to find ones for the closest lower version.".format(platform, version))
     verDirs = [entry for entry in fileFuncs.listdir(platformDir) if fileFuncs.isdir(fileFuncs.join(platformDir, entry))]
+    # pcm1k TODO - use linkVer instead?
     if version == VERSION_UNKNOWN:
         # old versions will likely return an unknown version, so it makes sense just to choose the earliest one
         verDirs.sort(key=LooseVersion)
@@ -479,9 +521,9 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
     if idx < 0:
         # choose the next highest version instead
         idx = 1
-    ver = verDirs[idx]
-    log.info("Closest lower version found is MC {} {}.".format(platform, ver))
-    return ver
+    foundVer = verDirs[idx]
+    log.info("Closest lower version found is MC {} {}.".format(platform, foundVer))
+    return foundVer
 
 VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
 
@@ -492,6 +534,7 @@ def get_defs_ids(platform, version):
     def checkCache(platform, version, fileFuncs):
         if platform not in version_defs_ids or version not in version_defs_ids[platform]:
             return None
+        # pcm1k TODO - use a (platform, version) tuple instead?
         defsIds = version_defs_ids[platform][version]
         while isinstance(defsIds, basestring):
             # resolve pointer to other version
@@ -508,7 +551,7 @@ def get_defs_ids(platform, version):
     if defsIds is not None:
         return defsIds
 
-    platformDir = fileFuncs.join(fileFuncs.rootDir, "mcver", platform)
+    platformDir = fileFuncs.join("mcver", platform)
     realVersion = _findVersionDir(platformDir, platform, version, fileFuncs)
     if realVersion is None:
         # could not find platformDir at all, create an empty MCEditDefsIds
