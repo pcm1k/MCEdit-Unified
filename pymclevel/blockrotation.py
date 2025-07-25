@@ -594,27 +594,43 @@ class _BlockRotation(object):
             updateTable(roll, block, _rollProps(properties, angle, angleIndex))
 
 
-# pcm1k TODO - handle the other materials
-_alphaRotation = _BlockRotation(alphaMaterials)
+def FlipVertical(blocks, data, mats=alphaMaterials):
+    if hasattr(mats, "blockRotation"):
+        blockRotation = mats.blockRotation
+    else:
+        blockRotation = mats.blockRotation = _BlockRotation(mats)
+    data[:] = blockRotation.flipVertical[blocks, data]
 
 
-def FlipVertical(blocks, data):
-    data[:] = _alphaRotation.flipVertical[blocks, data]
-
-
-def FlipNorthSouth(blocks, data):
+def FlipNorthSouth(blocks, data, mats=alphaMaterials):
+    if hasattr(mats, "blockRotation"):
+        blockRotation = mats.blockRotation
+    else:
+        blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    data[:] = _alphaRotation.flipEastWest[blocks, data]
+    data[:] = blockRotation.flipEastWest[blocks, data]
 
 
-def FlipEastWest(blocks, data):
+def FlipEastWest(blocks, data, mats=alphaMaterials):
+    if hasattr(mats, "blockRotation"):
+        blockRotation = mats.blockRotation
+    else:
+        blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    data[:] = _alphaRotation.flipNorthSouth[blocks, data]
+    data[:] = blockRotation.flipNorthSouth[blocks, data]
 
 
-def RotateLeft(blocks, data):
-    data[:] = _alphaRotation.rotateLeft[blocks, data]
+def RotateLeft(blocks, data, mats=alphaMaterials):
+    if hasattr(mats, "blockRotation"):
+        blockRotation = mats.blockRotation
+    else:
+        blockRotation = mats.blockRotation = _BlockRotation(mats)
+    data[:] = blockRotation.rotateLeft[blocks, data]
 
 
-def Roll(blocks, data):
-    data[:] = _alphaRotation.roll[blocks, data]
+def Roll(blocks, data, mats=alphaMaterials):
+    if hasattr(mats, "blockRotation"):
+        blockRotation = mats.blockRotation
+    else:
+        blockRotation = mats.blockRotation = _BlockRotation(mats)
+    data[:] = blockRotation.roll[blocks, data]
