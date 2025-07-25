@@ -258,7 +258,7 @@ class NudgeBlocksOperation(Operation):
             staticCommandsNudge = config.settings.staticCommandsNudge.get()
             moveSpawnerPosNudge = config.settings.moveSpawnerPosNudge.get()
             level.copyBlocksFrom(tempSchematic, tempSchematic.bounds, self.destBox.origin,
-                                 staticCommands=staticCommandsNudge, moveSpawnerPos=moveSpawnerPosNudge)
+                                 staticCommands=staticCommandsNudge, moveSpawnerPos=moveSpawnerPosNudge, first=False)
             self.editor.invalidateBox(dirtyBox)
 
             self.nudgeSelection.perform(recordUndo)
@@ -1208,7 +1208,6 @@ class SelectionTool(EditorTool):
                         self.selectChunks()
                         box = self.selectionBox()
 
-        cancelCommandBlockOffset = config.schematicCopying.cancelCommandBlockOffset.get()
         with setWindowCaption("Copying - "):
             filename = tempfile.mkdtemp(".zip", "mceditcopy")
             os.rmdir(filename)
@@ -1216,10 +1215,10 @@ class SelectionTool(EditorTool):
             status = _("Copying {0:n} blocks...").format(box.volume)
             if fileFormat == "schematic":
                 schematic = showProgress(status,
-                                         self.editor.level.extractSchematicIter(box, cancelCommandBlockOffset=cancelCommandBlockOffset), cancel=True)
+                                         self.editor.level.extractSchematicIter(box), cancel=True)
             else:
                 schematic = showProgress(status,
-                                         self.editor.level.extractZipSchematicIter(box, filename, cancelCommandBlockOffset=cancelCommandBlockOffset), cancel=True)
+                                         self.editor.level.extractZipSchematicIter(box, filename), cancel=True)
             if schematic == "Canceled":
                 return None
 

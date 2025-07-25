@@ -47,7 +47,7 @@ def adjustCopyParameters(destLevel, sourceLevel, sourceBox, destinationPoint):
 
 
 def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, blocksToCopy=None, entities=True,
-                       create=False, biomes=False, tileTicks=True, staticCommands=False, moveSpawnerPos=False, regenerateUUID=False, first=False, cancelCommandBlockOffset=False):
+                       create=False, biomes=False, tileTicks=True, staticCommands=False, moveSpawnerPos=False, regenerateUUID=False, first=None, cancelCommandBlockOffset=False):
     """ copy blocks between two infinite levels by looping through the
     destination's chunks. make a sub-box of the source level for each chunk
     and copy block and entities in the sub box to the dest chunk."""
@@ -135,7 +135,7 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
                 ents = sourceChunk.getEntitiesInBox(destChunkBoxInSourceLevel)
                 e += len(ents)
                 for entityTag in ents:
-                    eTag = Entity.copyWithOffset(entityTag, copyOffset, regenerateUUID)
+                    eTag = destLevel.entityDefs.copyWithOffset(entityTag, copyOffset, regenerateUUID)
                     destLevel.addEntity(eTag)
 
             destChunk.removeTileEntities(copy)
@@ -143,7 +143,11 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
             tileEntities = sourceChunk.getTileEntitiesInBox(destChunkBoxInSourceLevel)
             t += len(tileEntities)
             for tileEntityTag in tileEntities:
-                eTag = TileEntity.copyWithOffset(tileEntityTag, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset)
+                if cancelCommandBlockOffset:
+                    first = None
+                    staticCommands = False
+                    moveSpawnerPos = False
+                eTag = destLevel.tileEntityDefs.copyWithOffset(tileEntityTag, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
                 destLevel.addTileEntity(eTag)
 
             destChunk.removeTileTicks(copy)
@@ -167,11 +171,10 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
 
 
 def copyBlocksFrom(destLevel, sourceLevel, sourceBox, destinationPoint, blocksToCopy=None, entities=True, create=False,
-                   biomes=False, tileTicks=True, staticCommands=False, moveSpawnerPos=False, first=False, cancelCommandBlockOffset=False):
+                   biomes=False, tileTicks=True, staticCommands=False, moveSpawnerPos=False, regenerateUUID=False, first=None, cancelCommandBlockOffset=False):
     return exhaust(
-        copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, blocksToCopy, entities, create, biomes, tileTicks,staticCommands, moveSpawnerPos,first, cancelCommandBlockOffset))
-
-
-
-
-
+        copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint,
+            blocksToCopy=blocksToCopy, entities=entities, create=create,
+            biomes=biomes, tileTicks=tileTicks, staticCommands=staticCommands,
+            moveSpawnerPos=moveSpawnerPos, regenerateUUID=regenerateUUID,
+            first=first, cancelCommandBlockOffset=cancelCommandBlockOffset))

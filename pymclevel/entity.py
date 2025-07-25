@@ -63,10 +63,12 @@ class TileEntityDefs(BaseDefs):
         def parseNbtDict(jsonTag):
             if not isinstance(jsonTag, dict):
                 return None
+
             tagType = getattr(nbt, "TAG_%s" % jsonTag["type"])
             value = jsonTag.get("value")
             if value is None:
                 return tagType()
+
             if tagType is nbt.TAG_Compound:
                 resultTag = tagType()
                 for name, jsonTag2 in value.iteritems():
@@ -77,19 +79,24 @@ class TileEntityDefs(BaseDefs):
                 for jsonTag2 in value:
                     resultTag.append(parseNbtDict(jsonTag2))
                 return resultTag
+
             return tagType(value)
 
         for idStr, defId in defsIds.mcedit_ids["tileentities"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
             item = defsIds.mcedit_defs[defId]
+
             self.knownIDs.append(idStr)
+
             maxItems = item.get("maxItems")
             if maxItems is not None and isinstance(maxItems, int):
                 self.maxItems[idStr] = maxItems
+
             slotNames = item.get("slotNames")
             if slotNames is not None and isinstance(slotNames, dict):
                 self.slotNames[idStr] = {int(slot): slotName for slot, slotName in slotNames.iteritems()}
+
             baseStructure = item.get("baseStructure")
             if baseStructure is not None and isinstance(baseStructure, dict):
                 self.baseStructures[idStr] = parseNbtDict({"type": "Compound", "value": baseStructure})
@@ -97,6 +104,7 @@ class TileEntityDefs(BaseDefs):
             if not isinstance(idStr, basestring):
                 continue
             item = defsIds.mcedit_defs[defId]
+
             tileentity = item.get("tileentity")
             if tileentity is not None and isinstance(tileentity, basestring):
                 defIdTe = MCEditDefsIds.formatDefId("tileentities", tileentity)
@@ -127,7 +135,7 @@ class TileEntityDefs(BaseDefs):
                     entityDefs = getEntityDefs(self.defsIds)
                     spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
                     structTag = nbt.TAG_Compound()
-                    if entity:
+                    if bool(entity):
                         for k, v in entity.iteritems():
                             structTag[k] = deepcopy(v)
                     else:
@@ -162,283 +170,274 @@ class TileEntityDefs(BaseDefs):
         TileEntity.setpos(tileEntityTag, pos)
         return tileEntityTag
 
-    def copyWithOffset(self, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False):
-        # You'll need to use this function twice
-        # The first time with first equals to True
-        # The second time with first equals to False
-        eTag = deepcopy(tileEntity)
-        eTag['x'] = nbt.TAG_Int(tileEntity['x'].value + copyOffset[0])
-        eTag['y'] = nbt.TAG_Int(tileEntity['y'].value + copyOffset[1])
-        eTag['z'] = nbt.TAG_Int(tileEntity['z'].value + copyOffset[2])
-
+    def _adjustCommandTile(self, eTag, copyOffset, toSchematic, movePos):
         def num(x):
             try:
                 return int(x)
             except ValueError:
                 return float(x)
 
-        def coordX(x, argument):
-            if first:
-                x = str(num(x)) + '!' + str(num(x) + copyOffset[0])
-            elif argument and x.find("!") >= 0:
-                x = x[x.index("!") + 1:]
-                x = str(num(x) + copyOffset[0])
-            elif not argument and x.find("!") >= 0:
-                x = x[:x.index("!")]
-            return x
+        # pcm1k TODO - backwards compatibility with the old system
+        def coordAny(c, movePos, offset):
+            return str(num(c) + offset)
 
-        def coordY(y, argument):
-            if first:
-                y = str(num(y)) + '!' + str(num(y) + copyOffset[1])
-            elif argument and y.find("!") >= 0:
-                y = y[y.index("!") + 1:]
-                y = str(num(y) + copyOffset[1])
-            elif not argument and y.find("!") >= 0:
-                y = y[:y.index("!")]
-            return y
+        def coordX(x, movePos):
+            return coordAny(x, movePos, copyOffset[0], toSchematic)
 
-        def coordZ(z, argument):
-            if first:
-                z = str(num(z)) + '!' + str(num(z) + copyOffset[2])
-            elif argument and z.find("!") >= 0:
-                z = z[z.index("!") + 1:]
-                z = str(num(z) + copyOffset[2])
-            elif not argument and z.find("!") >= 0:
-                z = z[:z.index("!")]
-            return z
+        def coordY(y, movePos):
+            return coordAny(y, movePos, copyOffset[1], toSchematic)
 
-        def coords(x, y, z, argument):
+        def coordZ(z, movePos):
+            return coordAny(z, movePos, copyOffset[2], toSchematic)
+
+        def coords(x, y, z, movePos):
             if x[0] != "~":
-                x = coordX(x, argument)
+                x = coordX(x, movePos)
             if y[0] != "~":
-                y = coordY(y, argument)
+                y = coordY(y, movePos)
             if z[0] != "~":
-                z = coordZ(z, argument)
+                z = coordZ(z, movePos)
             return x, y, z
 
-        if self.getDefId(eTag["id"].value) == "DEF_TILEENTITIES_MOB_SPAWNER":
-            mobs = []
-            if 'SpawnData' in eTag:
-                mob = eTag['SpawnData']
-                if mob:
-                    mobs.append(mob)
-            if 'SpawnPotentials' in eTag:
-                potentials = eTag['SpawnPotentials']
-                for p in potentials:
-                    if 'properties' in p:
-                        mobs.extend(p["Properties"])
-                    elif 'Entity' in p:
-                        mobs.extend(p["Entity"])
+        def adjustSelector(selector, moveCommandPos):
+            # @a[<args>]
+            if len(selector) <= 4 or selector[0] != "@" or selector[2] != "[" or selector[-1] != "]":
+                return selector
 
+            if "0" <= selector[3] <= "9":
+                selSplit = selector[3:-1].split(",", 3)
+                if len(selSplit) < 3:
+                    return selector
+                selSplit[0] = coordX(selSplit[0], moveCommandPos)
+                selSplit[1] = coordY(selSplit[1], moveCommandPos)
+                selSplit[2] = coordZ(selSplit[2], moveCommandPos)
+            else:
+                selSplit = selector[3:-1].split(",")
+                for argI, arg in enumerate(selSplit):
+                    if arg.startswith("x="):
+                        selSplit[argI] = arg[:2] + coordX(arg[2:], moveCommandPos)
+                    elif arg.startswith("y="):
+                        selSplit[argI] = arg[:2] + coordY(arg[2:], moveCommandPos)
+                    elif arg.startswith("z="):
+                        selSplit[argI] = arg[:2] + coordZ(arg[2:], moveCommandPos)
+            selector = selector[:3] + ",".join(selSplit) + selector[-1]
+            return selector
+
+        def adjustCommandWords(words, moveCommandPos):
+            if not bool(words):
+                return
+            firstWord = words[0]
+            if firstWord.startswith("/"):
+                firstWord = firstWord[1:]
+
+            if len(words) >= 5 and (
+                # tp <target player> <x> <y> <z> <yaw> <pitch>
+                firstWord == "tp" or
+                # particle <name> <x> <y> <z>
+                firstWord == "particle" or
+                # replaceitem block <x> <y> <z>
+                firstWord == "replaceitem" and words[1] == "block" or
+                # spawnpoint <targets> <x> <y> <z> <angle>
+                firstWord == "spawnpoint" or
+                # stats block <x> <y> <z>
+                firstWord == "stats" and words[1] == "block" or
+                # summon <entity> <x> <y> <z> <nbt>
+                firstWord == "summon"):
+                x, y, z = words[2:5]
+                words[2:5] = coords(x, y, z, moveCommandPos)
+            elif len(words) >= 4 and (
+                # blockdata <x> <y> <z> <dataTag>
+                firstWord == "blockdata" or
+                # setblock <x> <y> <z> <block>
+                firstWord == "setblock" or
+                # setworldspawn <x> <y> <z> <angle>
+                firstWord == "setworldspawn"):
+                x, y, z = words[1:4]
+                words[1:4] = coords(x, y, z, moveCommandPos)
+            # pcm1k TODO - add the rest of these command comments
+            elif len(words) >= 6 and firstWord == "playsound":
+                x, y, z = words[3:6]
+                words[3:6] = coords(x, y, z, moveCommandPos)
+            elif len(words) >= 10 and firstWord == "clone":
+                x1, y1, z1, x2, y2, z2, x, y, z = words[1:10]
+                x1, y1, z1 = coords(x1, y1, z1, moveCommandPos)
+                x2, y2, z2 = coords(x2, y2, z2, moveCommandPos)
+                x, y, z = coords(x, y, z, moveCommandPos)
+
+                words[1:10] = x1, y1, z1, x2, y2, z2, x, y, z
+            elif len(words) >= 7 and firstWord == "fill":
+                x1, y1, z1, x2, y2, z2 = words[1:7]
+                x1, y1, z1 = coords(x1, y1, z1, moveCommandPos)
+                x2, y2, z2 = coords(x2, y2, z2, moveCommandPos)
+
+                words[1:7] = x1, y1, z1, x2, y2, z2
+            elif len(words) >= 3 and firstWord == "spreadplayers":
+                x, z = words[1:3]
+                if x[0] != "~":
+                    x = coordX(x, moveCommandPos)
+                if z[0] != "~":
+                    z = coordZ(z, moveCommandPos)
+
+                words[1:3] = x, z
+            elif len(words) >= 4 and firstWord == "worldborder" and words[1] == "center":
+                x, z = words[2:4]
+                if x[0] != "~":
+                    x = coordX(x, moveCommandPos)
+                if z[0] != "~":
+                    z = coordZ(z, moveCommandPos)
+
+                words[2:4] = x, z
+
+        def adjustExecute(words, moveCommandPos):
+            # execute <entity> <x> <y> <z> <command>
+            while len(words) >= 5:
+                firstWord = words[0]
+                if firstWord.startswith("/"):
+                    firstWord = firstWord[1:]
+                if firstWord != "execute":
+                    break
+
+                x, y, z = words[2:5]
+                words[2:5] = coords(x, y, z, moveCommandPos)
+
+                # execute <entity> <x> <y> <z> detect <x2> <y2> <z2>
+                if len(words) >= 9 and words[5] == "detect":
+                    x2, y2, z2 = words[6:9]
+                    words[6:9] = coords(x2, y2, z2, moveCommandPos)
+                    words = words[9:]
+                else:
+                    words = words[5:]
+            return words
+
+        def adjustCommand(command, moveCommandPos):
+            if not bool(command):
+                return None
+
+            words = command.split(" ")
+
+            for i, word in enumerate(words):
+                words[i] = adjustSelector(word, moveCommandPos)
+
+            shiftedWords = adjustExecute(words, moveCommandPos)
+
+            adjustCommandWords(shiftedWords, moveCommandPos)
+            words[-len(shiftedWords):] = shiftedWords
+            command = " ".join(words)
+            return command
+
+        if toSchematic is None:
+            offsetCommand = eTag.pop("MCEditOffsetCommand", None)
+            if not movePos:
+                # only remove the prefixed tag
+                return
+            if offsetCommand is None:
+                # offset the normal position if the prefixed tag is unavailable
+                offsetCommand = eTag["Command"]
+            command = adjustCommand(offsetCommand.value, movePos)
+            if command is not None:
+                # save it in the normal tag
+                eTag["Command"].value = command
+            return
+
+        if toSchematic:
+            # offset the normal position
+            command = adjustCommand(eTag["Command"].value, movePos)
+            if command is not None:
+                # save it in the prefixed tag
+                eTag["MCEditOffsetCommand"] = nbt.TAG_String(command)
+            return
+
+        offsetCommand = eTag.pop("MCEditOffsetCommand", None)
+        if not movePos or offsetCommand is None:
+            # only remove the prefixed tag
+            return
+        command = adjustCommand(offsetCommand.value, movePos)
+        if command is not None:
+            # save it in the normal tag
+            eTag["Command"].value = command
+
+    def _adjustSpawnerTile(self, eTag, copyOffset, toSchematic, movePos):
+        def adjustMobs(mobs, copyOffset, toSchematic, movePos):
             for mob in mobs:
                 # Why do we get a unicode object as tag 'mob'?
-                if "Pos" in mob and mob != "Pos":
-                    if first:
-                        pos = Entity.pos(mob)
-                        x, y, z = [str(part) for part in pos]
-                        x, y, z = coords(x, y, z, moveSpawnerPos)
-                        mob['Temp1'] = nbt.TAG_String(x)
-                        mob['Temp2'] = nbt.TAG_String(y)
-                        mob['Temp3'] = nbt.TAG_String(z)
-                    elif 'Temp1' in mob and 'Temp2' in mob and 'Temp3' in mob:
-                        x = mob['Temp1']
-                        y = mob['Temp2']
-                        z = mob['Temp3']
-                        del mob['Temp1']
-                        del mob['Temp2']
-                        del mob['Temp3']
-                        parts = []
-                        for part in (x, y, z):
-                            part = str(part)
-                            part = part[13:len(part) - 2]
-                            parts.append(part)
-                        x, y, z = parts
-                        pos = [float(p) for p in coords(x, y, z, moveSpawnerPos)]
-                        Entity.setpos(mob, pos)
+                if isinstance(mob, basestring) or "Pos" not in mob:
+                    continue
 
-        if not cancelCommandBlockOffset and self.getDefId(eTag["id"].value) == "DEF_TILEENTITIES_COMMAND_BLOCK":
-            command = eTag['Command'].value
-            oldCommand = command
-
-            def selectorCoords(selector):
-                old_selector = selector
-                try:
-                    char_num = 0
-                    new_selector = ""
-                    dont_copy = 0
-                    if len(selector) > 4:
-                        if '0' <= selector[3] <= '9':
-                            new_selector = selector[:3]
-                            end_char_x = selector.find(',', 4, len(selector) - 1)
-                            if end_char_x == -1:
-                                end_char_x = len(selector) - 1
-                            x = selector[3:end_char_x]
-                            x = coordX(x, staticCommands)
-                            new_selector += x + ','
-
-                            end_char_y = selector.find(',', end_char_x + 1, len(selector) - 1)
-                            if end_char_y == -1:
-                                end_char_y = len(selector) - 1
-                            y = selector[end_char_x + 1:end_char_y]
-                            y = coordY(y, staticCommands)
-                            new_selector += y + ','
-
-                            end_char_z = selector.find(',', end_char_y + 1, len(selector) - 1)
-                            if end_char_z == -1:
-                                end_char_z = len(selector) - 1
-                            z = selector[end_char_y + 1:end_char_z]
-                            z = coordZ(z, staticCommands)
-                            new_selector += z + ',' + selector[end_char_z + 1:]
-
-                        else:
-                            for char in selector:
-                                if dont_copy != 0:
-                                    dont_copy -= 1
-                                else:
-                                    if (char != 'x' and char != 'y' and char != 'z') or letter:
-                                        new_selector += char
-                                        if char == '[' or char == ',':
-                                            letter = False
-                                        else:
-                                            letter = True
-
-                                    elif char == 'x' and not letter:
-                                        new_selector += selector[char_num:char_num + 2]
-                                        char_x = char_num + 2
-                                        end_char_x = selector.find(',', char_num + 3, len(selector) - 1)
-                                        if end_char_x == -1:
-                                            end_char_x = len(selector) - 1
-                                        x = selector[char_x:end_char_x]
-                                        dont_copy = len(x) + 1
-                                        x = coordX(x, staticCommands)
-                                        new_selector += x
-
-                                    elif char == 'y' and not letter:
-                                        new_selector += selector[char_num:char_num + 2]
-                                        char_y = char_num + 2
-                                        end_char_y = selector.find(',', char_num + 3, len(selector) - 1)
-                                        if end_char_y == -1:
-                                            end_char_y = len(selector) - 1
-                                        y = selector[char_y:end_char_y]
-                                        dont_copy = len(y) + 1
-                                        y = coordY(y, staticCommands)
-                                        new_selector += y
-
-                                    elif char == 'z' and not letter:
-                                        new_selector += selector[char_num:char_num + 2]
-                                        char_z = char_num + 2
-                                        end_char_z = selector.find(',', char_num + 3, len(selector) - 1)
-                                        if end_char_z == -1:
-                                            end_char_z = len(selector) - 1
-                                        z = selector[char_z:end_char_z]
-                                        dont_copy = len(z) + 1
-                                        z = coordZ(z, staticCommands)
-                                        new_selector += z
-                                char_num += 1
+                if toSchematic is None:
+                    offsetPos = eTag.pop("MCEditOffsetPos", None)
+                    if not movePos:
+                        # only remove the prefixed tag
+                        continue
+                    if offsetPos is None:
+                        # offset the normal position if the prefixed tag is unavailable
+                        offsetPos = Entity.pos(mob)
                     else:
-                        new_selector = old_selector
+                        offsetPos = [p.value for p in offsetPos]
+                    pos = [c + o for c, o in zip(offsetPos, copyOffset)]
+                    # save it in the normal tag
+                    Entity.setpos(mob, pos)
+                    continue
 
-                except:
-                    new_selector = old_selector
-                finally:
-                    return new_selector
+                if toSchematic:
+                    # offset the normal position
+                    pos = Entity.pos(mob)
+                    pos = [c + o for c, o in zip(offsetPos, copyOffset)]
+                    # save it in the prefixed tag
+                    eTag["MCEditOffsetPos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
+                    continue
 
-            try:
-                execute = False
-                Slash = False
-                if command[0] == "/":
-                    command = command[1:]
-                    Slash = True
+                offsetPos = eTag.pop("MCEditOffsetPos", None)
+                if not movePos or offsetPos is None:
+                    # only remove the prefixed tag
+                    continue
+                offsetPos = [p.value for p in offsetPos]
+                pos = [c + o for c, o in zip(offsetPos, copyOffset)]
+                # save it in the normal tag
+                Entity.setpos(mob, pos)
 
-                # Adjust command coordinates.
-                words = command.split(' ')
+        def collectMobs(eTag):
+            mobs = []
+            mob = eTag.get("SpawnData")
+            if bool(mob):
+                mobs.append(mob)
+            potentials = eTag.get("SpawnPotentials", ())
+            for p in potentials:
+                if "properties" in p:
+                    mobs.extend(p["Properties"])
+                elif "Entity" in p:
+                    mobs.extend(p["Entity"])
+            return mobs
 
-                i = 0
-                for word in words:
-                    if word[0] == '@':
-                        words[i] = selectorCoords(word)
-                    i += 1
+        mobs = collectMobs(eTag)
+        adjustMobs(mobs, copyOffset, toSchematic, movePos)
 
-                if command.startswith('execute'):
-                    stillExecuting = True
-                    execute = True
-                    saving_command = ""
-                    while stillExecuting:
-                        if Slash:
-                            saving_command += '/'
-                        x, y, z = words[2:5]
-                        words[2:5] = coords(x, y, z, staticCommands)
-                        if words[5] == 'detect':
-                            x, y, z = words[6:9]
-                            words[6:9] = coords(x, y, z, staticCommands)
-                            saving_command += ' '.join(words[:9])
-                            words = words[9:]
-                        else:
-                            saving_command += ' '.join(words[:5])
-                            words = words[5:]
-                        command = ' '.join(words)
-                        saving_command += ' '
-                        Slash = False
-                        if command[0] == "/":
-                            command = command[1:]
-                            Slash = True
-                        words = command.split(' ')
-                        if not command.startswith('execute'):
-                            stillExecuting = False
+    def copyWithOffset(self, tileEntity, copyOffset, toSchematic=None, moveCommandPos=False, moveSpawnerPos=False):
+        # if toSchematic = None:
+        #     if movePos:
+        #         offset and remove the prefixed tag if it exists and save it in the normal tag, otherwise offset the normal position
+        #     else:
+        #         remove the prefixed tag if it exists, otherwise do nothing
+        # if toSchematic = True:
+        #     if movePos:
+        #         offset the normal position and save it in a tag prefixed with "MCEditOffset"
+        #     else:
+        #         offset the normal position and save it in a tag prefixed with "MCEditOffset"
+        # if toSchematic = False:
+        #     if movePos:
+        #         offset and remove the prefixed tag if it exists and save it in the normal tag, otherwise do nothing
+        #     else:
+        #         remove the prefixed tag if it exists, otherwise do nothing
 
-                if (command.startswith('tp') and len(words) == 5) or command.startswith(
-                        'particle') or command.startswith('replaceitem block') or (
-                            command.startswith('spawnpoint') and len(words) == 5) or command.startswith('stats block') or (
-                            command.startswith('summon') and len(words) >= 5):
-                    x, y, z = words[2:5]
-                    words[2:5] = coords(x, y, z, staticCommands)
-                elif command.startswith('blockdata') or command.startswith('setblock') or (
-                            command.startswith('setworldspawn') and len(words) == 4):
-                    x, y, z = words[1:4]
-                    words[1:4] = coords(x, y, z, staticCommands)
-                elif command.startswith('playsound') and len(words) >= 6:
-                    x, y, z = words[3:6]
-                    words[3:6] = coords(x, y, z, staticCommands)
-                elif command.startswith('clone'):
-                    x1, y1, z1, x2, y2, z2, x, y, z = words[1:10]
-                    x1, y1, z1 = coords(x1, y1, z1, staticCommands)
-                    x2, y2, z2 = coords(x2, y2, z2, staticCommands)
-                    x, y, z = coords(x, y, z, staticCommands)
+        eTag = deepcopy(tileEntity)
+        eTag["x"] = nbt.TAG_Int(tileEntity["x"].value + copyOffset[0])
+        eTag["y"] = nbt.TAG_Int(tileEntity["y"].value + copyOffset[1])
+        eTag["z"] = nbt.TAG_Int(tileEntity["z"].value + copyOffset[2])
 
-                    words[1:10] = x1, y1, z1, x2, y2, z2, x, y, z
-                elif command.startswith('fill'):
-                    x1, y1, z1, x2, y2, z2 = words[1:7]
-                    x1, y1, z1 = coords(x1, y1, z1, staticCommands)
-                    x2, y2, z2 = coords(x2, y2, z2, staticCommands)
-
-                    words[1:7] = x1, y1, z1, x2, y2, z2
-                elif command.startswith('spreadplayers'):
-                    x, z = words[1:3]
-                    if x[0] != "~":
-                        x = coordX(x, staticCommands)
-                    if z[0] != "~":
-                        z = coordZ(z, staticCommands)
-
-                    words[1:3] = x, z
-                elif command.startswith('worldborder center') and len(words) == 4:
-                    x, z = words[2:4]
-                    if x[0] != "~":
-                        x = coordX(x, staticCommands)
-                    if z[0] != "~":
-                        z = coordZ(z, staticCommands)
-
-                    words[2:4] = x, z
-                if Slash:
-                    command = '/'
-                else:
-                    command = ""
-                command += ' '.join(words)
-
-                if execute:
-                    command = saving_command + command
-                eTag['Command'].value = command
-            except:
-                eTag['Command'].value = oldCommand
+        defId = self.getDefId(eTag["id"].value)
+        if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
+            self._adjustSpawnerTile(eTag, copyOffset, toSchematic, moveSpawnerPos)
+        elif defId == "DEF_TILEENTITIES_COMMAND_BLOCK":
+            self._adjustCommandTile(eTag, copyOffset, toSchematic, moveCommandPos)
 
         return eTag
 
@@ -581,10 +580,12 @@ class EntityDefs(BaseDefs):
             if not isinstance(idStr, basestring):
                 continue
             item = defsIds.mcedit_defs[defId]
+
             self.entityList[idStr] = item["id"]
             maxItems = item.get("maxItems")
             if maxItems is not None and isinstance(maxItems, int):
                 self.maxItems[idStr] = maxItems
+
         spawnerMonsters = defsIds.get_def("spawner_monsters")
         if spawnerMonsters is not None:
             for mob in spawnerMonsters:
@@ -686,6 +687,7 @@ class EntityDefs(BaseDefs):
 #        return id_
 
 
+# pcm1k TODO - This class should be used to store data about the entity definition. It will also provide an abstraction around certain entity properties, with subclasses for different applicable entity types
 class TileEntity(object):
     # trying to keep backwards compatibility
     globalDefs = TileEntityDefs(None)
@@ -707,15 +709,19 @@ class TileEntity(object):
     def Create(cls, tileEntityID, pos=(0, 0, 0), defsIds=None, **kw):
         if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
             # redirect to the correct TileEntityDefs object
-            cls._updateGlobal(getTileEntityDefs(defsIds))
+            cls.updateGlobal(getTileEntityDefs(defsIds))
         return cls.globalDefs.Create(tileEntityID, pos=pos, convertOld=True, **kw)
 
     @classmethod
     def copyWithOffset(cls, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
         if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
             # redirect to the correct TileEntityDefs object
-            cls._updateGlobal(getTileEntityDefs(defsIds))
-        return cls.globalDefs.copyWithOffset(tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=cancelCommandBlockOffset)
+            cls.updateGlobal(getTileEntityDefs(defsIds))
+        if cancelCommandBlockOffset:
+            first = None
+            staticCommands = False
+            moveSpawnerPos = False
+        return cls.globalDefs.copyWithOffset(tileEntity, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
 
     @classmethod
     def pos(cls, tag):

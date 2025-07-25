@@ -8,21 +8,41 @@ __author__ = 'Rio'
 
 
 class TestEntities(unittest.TestCase):
-    def test_command_block(self):
-        level = TempLevel("AnvilWorld").level
+    def testCommandBlockOffset(self):
+        tileEntityDefs = getTileEntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
+        commandTag = tileEntityDefs.Create("minecraft:command_block")
+        commandTag["Command"].value = originalCommand = "/tp @p 0 10 0"
+        offsetCommand = "/tp @p 100 210 300"
+        importCommand = "/tp @p 200 410 600"
+        copyOffset = (100, 200, 300)
 
-        cmdblock = fromFile("testfiles/Commandblock.schematic")
+        offsetTag = tileEntityDefs.copyWithOffset(commandTag, copyOffset, toSchematic=None, moveCommandPos=False)
+        assert "MCEditOffsetCommand" not in offsetTag
+        assert offsetTag["Command"].value == originalCommand
 
-        point = level.bounds.origin + [p / 2 for p in level.bounds.size]
-        level.copyBlocksFrom(cmdblock, cmdblock.bounds, point)
+        offsetTag = tileEntityDefs.copyWithOffset(commandTag, copyOffset, toSchematic=None, moveCommandPos=True)
+        assert "MCEditOffsetCommand" not in offsetTag
+        assert offsetTag["Command"].value == offsetCommand
 
-        te = level.tileEntityAt(*point)
-        command = te['Command'].value
-        words = command.split(' ')
-        x, y, z = words[2:5]
-        assert x == str(point[0])
-        assert y == str(point[1] + 10)
-        assert z == str(point[2])
+        offsetTag = tileEntityDefs.copyWithOffset(commandTag, copyOffset, toSchematic=True, moveCommandPos=True)
+        assert offsetTag["MCEditOffsetCommand"].value == offsetCommand
+        assert offsetTag["Command"].value == originalCommand
+
+        importTag = tileEntityDefs.copyWithOffset(offsetTag, copyOffset, toSchematic=False, moveCommandPos=False)
+        assert "MCEditOffsetCommand" not in importTag
+        assert importTag["Command"].value == originalCommand
+
+        importTag = tileEntityDefs.copyWithOffset(offsetTag, copyOffset, toSchematic=False, moveCommandPos=True)
+        assert "MCEditOffsetCommand" not in importTag
+        assert importTag["Command"].value == importCommand
+
+        importTag = tileEntityDefs.copyWithOffset(offsetTag, copyOffset, toSchematic=None, moveCommandPos=False)
+        assert "MCEditOffsetCommand" not in importTag
+        assert importTag["Command"].value == originalCommand
+
+        importTag = tileEntityDefs.copyWithOffset(offsetTag, copyOffset, toSchematic=None, moveCommandPos=True)
+        assert "MCEditOffsetCommand" not in importTag
+        assert importTag["Command"].value == importCommand
 
     def testTileEntityBaseNbt(self):
         tileEntityDefs = getTileEntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))

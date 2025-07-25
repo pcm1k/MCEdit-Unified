@@ -49,8 +49,7 @@ class OptionsPanel(Dialog):
             config.settings.compassToggle:                    config.settings.compassToggle.get(),
             config.settings.compassSize:                      config.settings.compassSize.get(),
             config.settings.fontProportion:                   config.settings.fontProportion.get(),
-            config.settings.fogIntensity:                     config.settings.fogIntensity.get(),
-            config.schematicCopying.cancelCommandBlockOffset: config.schematicCopying.cancelCommandBlockOffset.get()
+            config.settings.fogIntensity:                     config.settings.fogIntensity.get()
         }
         global old_lang
         if old_lang == None:
@@ -147,10 +146,6 @@ class OptionsPanel(Dialog):
                                               ref=config.settings.showQuickBlockInfo,
                                               tooltipText="Shows summarized info of some Blocks when hovering over it.")
 
-        cancelCommandBlockOffset = albow.CheckBoxLabel("Cancel Command Block Offset",
-                                                       ref=config.schematicCopying.cancelCommandBlockOffset,
-                                                       tooltipText="Cancels the command blocks coords changed when copied.")
-
         lng = config.settings.langCode.get()
 
         langs = sorted(self.getLanguageChoices().items())
@@ -200,7 +195,6 @@ class OptionsPanel(Dialog):
                     rotateBlockBrushRow,
                     compassToggleRow,
                     showCommandsRow,
-                    cancelCommandBlockOffset,
                     langButtonRow,
                     ) + (
                         ((sys.platform == "win32" and pygame.version.vernum == (1, 9, 1)) and (windowSizeRow,) or ())
