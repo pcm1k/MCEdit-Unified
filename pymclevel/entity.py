@@ -182,13 +182,13 @@ class TileEntityDefs(BaseDefs):
             return str(num(c) + offset)
 
         def coordX(x, movePos):
-            return coordAny(x, movePos, copyOffset[0], toSchematic)
+            return coordAny(x, movePos, copyOffset[0])
 
         def coordY(y, movePos):
-            return coordAny(y, movePos, copyOffset[1], toSchematic)
+            return coordAny(y, movePos, copyOffset[1])
 
         def coordZ(z, movePos):
-            return coordAny(z, movePos, copyOffset[2], toSchematic)
+            return coordAny(z, movePos, copyOffset[2])
 
         def coords(x, y, z, movePos):
             if x[0] != "~":
@@ -364,7 +364,7 @@ class TileEntityDefs(BaseDefs):
                     continue
 
                 if toSchematic is None:
-                    offsetPos = eTag.pop("MCEditOffsetPos", None)
+                    offsetPos = mob.pop("MCEditOffsetPos", None)
                     if not movePos:
                         # only remove the prefixed tag
                         continue
@@ -381,12 +381,12 @@ class TileEntityDefs(BaseDefs):
                 if toSchematic:
                     # offset the normal position
                     pos = Entity.pos(mob)
-                    pos = [c + o for c, o in zip(offsetPos, copyOffset)]
+                    pos = [c + o for c, o in zip(pos, copyOffset)]
                     # save it in the prefixed tag
-                    eTag["MCEditOffsetPos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
+                    mob["MCEditOffsetPos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
                     continue
 
-                offsetPos = eTag.pop("MCEditOffsetPos", None)
+                offsetPos = mob.pop("MCEditOffsetPos", None)
                 if not movePos or offsetPos is None:
                     # only remove the prefixed tag
                     continue
@@ -402,10 +402,13 @@ class TileEntityDefs(BaseDefs):
                 mobs.append(mob)
             potentials = eTag.get("SpawnPotentials", ())
             for p in potentials:
-                if "properties" in p:
-                    mobs.extend(p["Properties"])
-                elif "Entity" in p:
-                    mobs.extend(p["Entity"])
+                properties = p.get("Properties")
+                if bool(properties):
+                    mobs.extend(properties)
+                    continue
+                entity = p.get("Entity")
+                if bool(entity):
+                    mobs.extend(entity)
             return mobs
 
         mobs = collectMobs(eTag)
