@@ -1668,6 +1668,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             if destChunk:
                 log.debug("Both chunks loaded. Using block copy.")
                 # Both chunks loaded. Use block copy.
+                self.removeEntitiesInBox(destChunk.bounds)
                 self.copyBlocksFrom(world, destChunk.bounds, destChunk.bounds.origin)
                 return
             else:
@@ -1681,6 +1682,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             if destChunk:
                 log.debug("Destination chunk loaded. Using block copy.")
                 # Only destination chunk loaded. Use block copy.
+                self.removeEntitiesInBox(destChunk.bounds)
                 self.copyBlocksFrom(world, destChunk.bounds, destChunk.bounds.origin)
             else:
                 log.debug("No chunk loaded. Using world folder.copyChunkFrom")

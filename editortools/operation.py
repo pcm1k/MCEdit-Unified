@@ -106,6 +106,7 @@ class Operation(object):
                         self.level.copyChunkFrom(self.undoLevel, cx, cz)
                         yield i, self.undoLevel.chunkCount, "Copying chunk %s..." % ((cx, cz),)
                 else:
+                    self.level.removeEntitiesInBox(BoundingBox(self.undoLevel.sourcePoint, self.undoLevel.size))
                     for i in self.level.copyBlocksFromIter(self.undoLevel, self.undoLevel.bounds,
                                                            self.undoLevel.sourcePoint, biomes=True):
                         yield i, self.undoLevel.chunkCount, "Copying..."
@@ -126,6 +127,7 @@ class Operation(object):
                         self.level.copyChunkFrom(self.redoLevel, cx, cz)
                         yield i, self.redoLevel.chunkCount, "Copying chunk %s..." % ((cx, cz),)
                 else:
+                    self.level.removeEntitiesInBox(BoundingBox(self.redoLevel.sourcePoint, self.redoLevel.size))
                     for i in self.level.copyBlocksFromIter(self.redoLevel, self.redoLevel.bounds,
                                                            self.redoLevel.sourcePoint, biomes=True):
                         yield i, self.undoLevel.chunkCount, "Copying..."
