@@ -8,7 +8,7 @@ from math import isnan
 import random
 import nbt
 from copy import deepcopy
-from id_definitions import BaseDefs, MCEditDefsIds
+from id_definitions import get_defs_ids, BaseDefs, MCEditDefsIds, PLATFORM_ALPHA, VERSION_LATEST
 
 __all__ = ["Entity", "TileEntity", "TileTick"]
 
@@ -693,7 +693,7 @@ class EntityDefs(BaseDefs):
 # pcm1k TODO - This class should be used to store data about the entity definition. It will also provide an abstraction around certain entity properties, with subclasses for different applicable entity types
 class TileEntity(object):
     # trying to keep backwards compatibility
-    globalDefs = TileEntityDefs(None)
+    globalDefs = TileEntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
 
     stringNames = {}
     knownIDs = []
@@ -738,7 +738,7 @@ class TileEntity(object):
 
 class Entity(object):
     # trying to keep backwards compatibility
-    globalDefs = EntityDefs(None)
+    globalDefs = EntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
 
     entityList = {}
     monsters = []
