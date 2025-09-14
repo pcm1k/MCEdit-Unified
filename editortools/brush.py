@@ -1134,9 +1134,9 @@ def createBrushMask(shape, style="Round", offset=(0, 0, 0), box=None, chance=100
         for dim in (0, 1, 2):
             slices = [slice(1, -1), slice(1, -1), slice(1, -1)]
             slices[dim] = slice(None, -2)
-            exposedBlockSubMask |= (submask & (mask[slices] != submask))
+            exposedBlockSubMask |= (submask & (mask[tuple(slices)] != submask))
             slices[dim] = slice(2, None)
-            exposedBlockSubMask |= (submask & (mask[slices] != submask))
+            exposedBlockSubMask |= (submask & (mask[tuple(slices)] != submask))
 
         if hollow:
             mask[~exposedBlockMask] = False

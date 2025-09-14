@@ -590,8 +590,8 @@ class CloneTool(EditorTool):
         srcgrid = numpy.mgrid[0:roundedShape[0]:1.0 / factor, 0:roundedShape[1]:1.0 / factor,
                   0:roundedShape[2]:1.0 / factor].astype('uint')
         dstgrid = numpy.mgrid[0:newshape[0], 0:newshape[1], 0:newshape[2]].astype('uint')
-        srcgrid = srcgrid[map(slice, dstgrid.shape)]
-        dstgrid = dstgrid[map(slice, srcgrid.shape)]
+        srcgrid = srcgrid[tuple(map(slice, dstgrid.shape))]
+        dstgrid = dstgrid[tuple(map(slice, srcgrid.shape))]
 
         def copyArray(dest, src):
             dest[dstgrid[0], dstgrid[1], dstgrid[2]] = src[srcgrid[0], srcgrid[1], srcgrid[2]]
