@@ -223,6 +223,7 @@ import logging
 import numpy
 from OpenGL import GL
 import pymclevel
+from pymclevel.entity import TileTick
 import sys
 from config import config
 # import time
@@ -1384,7 +1385,7 @@ class TileTicksRenderer(EntityRendererGeneric):
 
     def makeChunkVertices(self, chunk):
         if hasattr(chunk, "TileTicks"):
-            self.vertexArrays.append(self._computeVertices([[tick[j].value for j in "xyz"] for i, tick in enumerate(chunk.TileTicks)],
+            self.vertexArrays.append(self._computeVertices([TileTick.pos(tick) for i, tick in enumerate(chunk.TileTicks)],
                                                            (0xff, 0xff, 0xff, 0x44),
                                                            chunkPosition=chunk.chunkPosition))
         yield
