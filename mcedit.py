@@ -830,12 +830,12 @@ class MCEdit(GLViewport):
         rootwidget.add(mcedit)
         rootwidget.focus_switch = mcedit
 
-        if mcedit.droppedLevel:
-            mcedit.loadFile(mcedit.droppedLevel)
-
         cls.version_lock = threading.Lock()
         cls.version_info = None
         cls.version_checked = False
+
+        if mcedit.droppedLevel:
+            mcedit.loadFile(mcedit.droppedLevel)
 
         fetch_version_thread = threading.Thread(target=cls.fetch_version)
         fetch_version_thread.start()
