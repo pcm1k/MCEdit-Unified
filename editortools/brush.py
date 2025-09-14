@@ -846,10 +846,11 @@ class BrushTool(CloneTool):
                 self.chunkCache = {}
 
             Width, Height, Length = brushSize
-            if self.editor.level.gamePlatform == GAME_PLATFORM_POCKET and self.editor.level.world_version == "1.plus":
-                Height = 16
-            else:
-                Height = self.editor.level.Height
+            # pcm1k TODO - Why is this needed? Commit be21c22cb mentions a "warning", but I can't find or reproduce it. Also this is a fake level used for rendering, the height should have nothing to do with the "parent" level
+#            if self.editor.level.gamePlatform == GAME_PLATFORM_POCKET and self.editor.level.world_version == "1.plus":
+#                Height = 16
+#            else:
+#                Height = self.editor.level.Height
             zerolight = numpy.zeros((16, 16, Height), dtype='uint8')
             zerolight[:] = 15
 
