@@ -259,8 +259,10 @@ class PocketLeveldbDatabase(object):
             yield self._world_db
         else:
             db = self.__open_db()
-            yield db
-            del db
+            try:
+                yield db
+            finally:
+                del db
 
     def __init__(self, path, level, create=False, world_version=None, dat_world_version=None, compressors=None):
         """

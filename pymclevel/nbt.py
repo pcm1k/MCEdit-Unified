@@ -650,19 +650,21 @@ def littleEndianNBT():
     global write_string
     write_string = override_write_string
     TAG_Byte_Array.write_value = override_byte_array_write_value
-    yield
-    string_len_fmt = struct.Struct(">H")
-    TAG_Byte.fmt = struct.Struct(">b")
-    TAG_Short.fmt = struct.Struct(">h")
-    TAG_Int.fmt = struct.Struct(">i")
-    TAG_Long.fmt = struct.Struct(">q")
-    TAG_Float.fmt = struct.Struct(">f")
-    TAG_Double.fmt = struct.Struct(">d")
-    TAG_Int_Array.dtype = numpy.dtype(">u4")
-    TAG_Long_Array.dtype = numpy.dtype(">q")
-    TAG_Short_Array.dtype = numpy.dtype(">u2")
-    write_string = reset_write_string
-    TAG_Byte_Array.write_value = reset_byte_array_write_value
+    try:
+        yield
+    finally:
+        string_len_fmt = struct.Struct(">H")
+        TAG_Byte.fmt = struct.Struct(">b")
+        TAG_Short.fmt = struct.Struct(">h")
+        TAG_Int.fmt = struct.Struct(">i")
+        TAG_Long.fmt = struct.Struct(">q")
+        TAG_Float.fmt = struct.Struct(">f")
+        TAG_Double.fmt = struct.Struct(">d")
+        TAG_Int_Array.dtype = numpy.dtype(">u4")
+        TAG_Long_Array.dtype = numpy.dtype(">q")
+        TAG_Short_Array.dtype = numpy.dtype(">u2")
+        write_string = reset_write_string
+        TAG_Byte_Array.write_value = reset_byte_array_write_value
 
 
 def nested_string(tag, indent_string="  ", indent=0):

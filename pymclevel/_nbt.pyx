@@ -566,8 +566,10 @@ def littleEndianNBT():
     """
     global _BIG_ENDIAN
     _BIG_ENDIAN = 0
-    yield
-    _BIG_ENDIAN = 1
+    try:
+        yield
+    finally:
+        _BIG_ENDIAN = 1
 
 cdef void swab(void * vbuf, int nbytes):
     """
