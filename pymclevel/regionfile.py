@@ -234,8 +234,7 @@ class MCRegionFile(object):
         try:
             self._saveChunk(cx, cz, data, self.compressMode, canExternal=canExternal)
         except ChunkTooBig as e:
-            # pcm1k TODO - save data in here so the caller can use it
-            raise ChunkTooBig(e.message + " (%d uncompressed)" % len(uncompressedData))
+            raise ChunkTooBig(e.message + " (%d uncompressed)" % len(uncompressedData), data=data)
 
     def _saveChunk(self, cx, cz, data, format, canExternal=False):
         cx &= 0x1f
@@ -375,7 +374,9 @@ class MCRegionFile(object):
 
 
 class ChunkTooBig(ValueError):
-    pass
+    def __init__(self, message, data=None):
+        super(ChunkTooBig, self).__init__(message)
+        self.data = data
 
 
 class ExternalChunk(Exception):
