@@ -150,14 +150,15 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
 
             destChunk.removeTileTicks(copy)
 
-            tileTicksList = sourceChunk.getTileTicksInBox(destChunkBoxInSourceLevel)
-            tt += len(tileTicksList)
-            for tileTick in tileTicksList:
-                eTag = deepcopy(tileTick)
-                eTag['x'].value = tileTick['x'].value + copyOffset[0]
-                eTag['y'].value = tileTick['y'].value + copyOffset[1]
-                eTag['z'].value = tileTick['z'].value + copyOffset[2]
-                destLevel.addTileTick(eTag)
+            if tileTicks:
+                tileTicksList = sourceChunk.getTileTicksInBox(destChunkBoxInSourceLevel)
+                tt += len(tileTicksList)
+                for tileTick in tileTicksList:
+                    eTag = deepcopy(tileTick)
+                    eTag['x'].value = tileTick['x'].value + copyOffset[0]
+                    eTag['y'].value = tileTick['y'].value + copyOffset[1]
+                    eTag['z'].value = tileTick['z'].value + copyOffset[2]
+                    destLevel.addTileTick(eTag)
 
             if biomes and hasattr(destChunk, 'Biomes') and hasattr(sourceChunk, 'Biomes'):
                 destChunk.Biomes[destSlices[:2]] = sourceChunk.Biomes[sourceSlices[:2]]
