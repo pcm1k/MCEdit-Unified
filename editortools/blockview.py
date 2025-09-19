@@ -191,4 +191,5 @@ class BlockButton(ButtonBase, Panel):
 
     def draw_all(self, s):
         #-# Looks like a bad stuf... Be aware of the 'spacing' member of the widgets parent.
-        Panel.gl_draw_all(self, self.get_root(), (self.local_to_global_offset()[0], self.local_to_global_offset()[1] - self.height + self.parent.spacing))
+        x, y = self.local_to_global_offset()
+        Panel.gl_draw_all(self, self.get_root(), (x, y - self.height + self.parent.spacing))
