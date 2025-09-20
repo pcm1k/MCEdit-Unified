@@ -58,6 +58,9 @@ import sys
 from distutils.version import LooseVersion
 import pkg_resources
 
+log = getLogger(__name__)
+
+
 PLATFORM_UNKNOWN = "Unknown"
 PLATFORM_ALPHA = "Alpha"
 PLATFORM_CLASSIC = "Classic"
@@ -67,7 +70,6 @@ PLATFORM_POCKET = "Pocket"
 VERSION_UNKNOWN = "Unknown"
 VERSION_LATEST = "Latest"
 
-log = getLogger(__name__)
 
 def updateRecursive(orig_dict, new_dict):
     for key, val in new_dict.iteritems():
@@ -86,11 +88,12 @@ def updateRecursive(orig_dict, new_dict):
             orig_dict[key] = new_dict[key]
     return orig_dict
 
+
 def _parseAutobuilds(data, prefix):
     autobuilds = data.get("autobuild", {})
     for a_name, a_value in autobuilds.iteritems():
         p = re.findall(r"(^|[ ])%s\['(\w+)'" % prefix, a_value)
-        if p:
+        if bool(p):
             for a in p[0][1:]:
                 if a not in data:
                     log.error("Found wrong reference while parsing autobuilds for %s: %s" % (prefix, a))
@@ -101,6 +104,7 @@ def _parseAutobuilds(data, prefix):
             # Just remove stuff which is not related to data internal stuff
             autobuilds.pop(a_name)
     return autobuilds
+
 
 def _resolveType(actorTypes, name, actorType, visited):
     if name in visited:
@@ -119,6 +123,7 @@ def _resolveType(actorTypes, name, actorType, visited):
         result |= _resolveType(actorTypes, name, num, visited)
     return result
 
+
 def _resolveTypes(actorTypes):
     result = {}
     for name, actorType in actorTypes.iteritems():
@@ -126,17 +131,22 @@ def _resolveTypes(actorTypes):
         result[name] = actorTypeNew
     return result
 
-# We wouldn't need this if different entries could overwrite each other while loading each dependency. Since it is a list, rather than a dict, they currently can not
+
+# We wouldn't need this if different entries could overwrite each other while
+# loading each dependency. Since it is a list, rather than a dict, they
+# currently can not
 def _deleteOld(prefix, prefixDict, itemOld):
     id_ = itemOld.get("id")
     prefixDict.pop(id_, None)
     idStr = itemOld.get("idStr")
     prefixDict.pop(idStr, None)
+
     namespace = itemOld.get("namespace")
-    if not namespace:
+    if not bool(namespace):
         return
     namespacedId = "%s:%s" % (namespace, idStr)
     prefixDict.pop(namespacedId, None)
+
 
 def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     # pcm1k TODO - this should handle extra item in "data" like how MCMaterials does it
@@ -149,30 +159,28 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     entry_name = MCEditDefsIds.formatDefId(prefix, _name)
 
     itemOld = defs_dict.get(entry_name)
-    if itemOld:
+    if bool(itemOld):
         _deleteOld(prefix, ids_dict[prefix], itemOld)
 
     defs_dict[entry_name] = item
     if prefix not in ids_dict:
         ids_dict[prefix] = {}
     id_ = item.get("id")
-    if id_:
+    if id_ is not None:
         ids_dict[prefix][id_] = entry_name
     idStr = item.get("idStr")
-    if idStr:
-        if namespace:
+    if bool(idStr):
+        if bool(namespace):
             namespacedId = "%s:%s" % (namespace, idStr)
             ids_dict[prefix][namespacedId] = entry_name
             item["namespace"] = namespace
-        if not namespace or namespace == "minecraft":
+        if not bool(namespace) or namespace == "minecraft":
             ids_dict[prefix][idStr] = entry_name
 
     if "_name" not in item:
         item["_name"] = _name
-#    if "idStr" not in item:
-#        item["idStr"] = _name
 
-    if id_:
+    if id_ is not None:
         fullid = id_
         if "actorType" in item and "actorTypesRes" in defs_dict:
             fullid |= _resolveType(defs_dict["actorTypesRes"], "", item["actorType"], set())
@@ -188,6 +196,7 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
             ids_dict[v] = entry_name
         except Exception as e:
             log.error('An error occurred while autobuilding definitions %s (value: "%s": %s' % (a_name, a_value, e))
+
 
 def _parseData(data, prefix, namespace, defs_dict, ids_dict):
     """Parse the JSON data and build objects accordingly.
@@ -210,6 +219,7 @@ def _parseData(data, prefix, namespace, defs_dict, ids_dict):
             if definition == "actorTypes":
                 defs_dict["actorTypesRes"] = _resolveTypes(value)
 
+
 def _loadJsonData(jsonPath, fileFuncs):
     data = None
     try:
@@ -221,6 +231,7 @@ def _loadJsonData(jsonPath, fileFuncs):
         raise
     return data
 
+
 def _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix):
     deps = [data]
     depData = data
@@ -228,7 +239,7 @@ def _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix
     while True:
         # don't actually include the "load"
         loadVer = depData.pop("load", None)
-        if not loadVer:
+        if not bool(loadVer):
             break
         log.info('Found dependency for %s %s "%s"' % (defsIds.platform, ver, prefix))
         ver = loadVer
@@ -240,6 +251,7 @@ def _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix
         depData = _loadJsonData(jsonPath2, fileFuncs)
         deps.append(depData)
     return deps
+
 
 def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     log.info("Found %s" % jsonName)
@@ -256,7 +268,7 @@ def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     prefix = os.path.splitext(jsonName)[0]
     deps = _loadDeps(jsonName, namespace, platformDir, defsIds, fileFuncs, data, prefix)
     allData = {}
-    if len(deps) > 0:
+    if bool(deps):
         log.info("Loading definitions dependencies")
     for depData in reversed(deps):
         updateRecursive(allData, depData)
@@ -266,7 +278,9 @@ def _handleJson(jsonName, namespace, platformDir, defsIds, fileFuncs):
     defsIds.jsonDict.update(allData)
     log.info("Done")
 
+
 NAMESPACE_FILTER = re.compile("[^-.0-9_a-z]")
+
 
 def _loadDefsIds(platformDir, platform, version, fileFuncs):
     """Load the whole files from mcver directory.
@@ -308,6 +322,7 @@ def _loadDefsIds(platformDir, platform, version, fileFuncs):
 
     return defsIds
 
+
 class _FileFuncsPkg(object):
     def __init__(self, rootDir):
         self.rootDir = rootDir
@@ -330,7 +345,7 @@ class _FileFuncsPkg(object):
     def dirname(self, p):
         i = p.rfind("/") + 1
         head = p[:i]
-        if head and head != "/" * len(head):
+        if bool(head) and head != "/" * len(head):
             head = head.rstrip("/")
         return head
 
@@ -349,6 +364,7 @@ class _FileFuncsPkg(object):
     def openRead(self, name):
         name = self.join(self.rootDir, name)
         return pkg_resources.resource_stream(__name__, name)
+
 
 # pcm1k TODO - how necessary is this?
 class _FileFuncsFs(object):
@@ -380,7 +396,9 @@ class _FileFuncsFs(object):
         name = self.join(self.rootDir, name)
         return open(name)
 
+
 _fileFuncs = None
+
 
 def _getFileFuncs():
     global _fileFuncs
@@ -394,7 +412,9 @@ def _getFileFuncs():
         _fileFuncs = _FileFuncsFs(os.environ.get("PYMCLEVEL_YAML_ROOT", "pymclevel"))
     return _fileFuncs
 
+
 version_defs_ids = {}
+
 
 class MCEditDefsIds(object):
     """Class to handle MCEDIT_DEFS and MCEDIT_IDS dicts."""
@@ -441,13 +461,15 @@ class MCEditDefsIds(object):
     def formatDefId(prefix, defName):
         return "DEF_%s_%s" % (prefix.upper(), defName.upper())
 
-class BaseDefs(object):
+
+class BaseTypeSet(object):
     def __init__(self, defsIds):
         self.defsIds = defsIds
+        self.locked = False
 
     @classmethod
-    def _getBaseDefs(cls, defsIds, cache, forceNew=False, globalDefs=None, **kwargs):
-        """Retrieves a BaseDefs instance from a cache or creates a new one"""
+    def _getTypeSet(cls, defsIds, cache, forceNew=False, globalTypes=None, **kwargs):
+        """Retrieves a BaseTypeSet instance from a cache or creates a new one"""
         def checkCache(cache, platform, version, defsIds):
             if platform not in cache or version not in cache[platform]:
                 return None
@@ -457,8 +479,8 @@ class BaseDefs(object):
                 return None
             return genericDefs
 
-        if (defsIds is None or defsIds.isEmpty) and globalDefs is not None:
-            return globalDefs
+        if (defsIds is None or defsIds.isEmpty) and globalTypes is not None:
+            return globalTypes
 
         platform = defsIds.platform
         version = defsIds.version
@@ -478,6 +500,7 @@ class BaseDefs(object):
 
         return genericDefs
 
+
 def _followLinkFiles(platformDir, version, fileFuncs):
     while True:
         linkFile = fileFuncs.join(platformDir, version)
@@ -488,11 +511,12 @@ def _followLinkFiles(platformDir, version, fileFuncs):
             data = fp.read()
         if data.endswith("\n"):
             data = data[:-1]
-        if not data:
+        if not bool(data):
             break
 
         version = data
     return version
+
 
 def _findVersionDir(platformDir, platform, version, fileFuncs):
     if not fileFuncs.isdir(platformDir):
@@ -525,7 +549,9 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
     log.info("Closest lower version found is MC {} {}.".format(platform, foundVer))
     return foundVer
 
+
 VERSION_STR_FILTER = re.compile("[^- .0-9A-Za-z]")
+
 
 def get_defs_ids(platform, version):
     """Create a MCEditDefsIds instance only if one for the game version does not already exists.

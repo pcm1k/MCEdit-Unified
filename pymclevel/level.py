@@ -6,18 +6,9 @@ Created on Jul 22, 2011
 
 from box import BoundingBox
 from collections import defaultdict
-from entity import Entity, TileEntity, TileTick, getEntityDefs, getTileEntityDefs
+from entity import Entity, TileEntity, TileTick, getEntityTypes, getTileEntityTypes
 import itertools
 from logging import getLogger
-
-GAME_PLATFORM_UNKNOWN = "Unknown"
-GAME_PLATFORM_JAVA = "Java"
-GAME_PLATFORM_CLASSIC = "javalevel"
-GAME_PLATFORM_INDEV = "indev"
-GAME_PLATFORM_POCKET = "PE"
-GAME_PLATFORM_OLD_POCKET = "old pocket"
-GAME_PLATFORM_SCHEMATIC = "Schematic"
-
 import materials
 from math import floor
 from mclevelbase import ChunkMalformed, ChunkNotPresent
@@ -25,7 +16,7 @@ import nbt
 from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
 from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN, VERSION_STR_FILTER
-from items import items as globalItems, getItemDefs
+from items import items as globalItems, getItemTypes
 import re
 
 log = getLogger(__name__)
@@ -126,6 +117,15 @@ def getSlices(box, height):
             yield (cx, cz), slices, point
 
 
+GAME_PLATFORM_UNKNOWN = "Unknown"
+GAME_PLATFORM_JAVA = "Java"
+GAME_PLATFORM_CLASSIC = "javalevel"
+GAME_PLATFORM_INDEV = "indev"
+GAME_PLATFORM_POCKET = "PE"
+GAME_PLATFORM_OLD_POCKET = "old pocket"
+GAME_PLATFORM_SCHEMATIC = "Schematic"
+
+
 class MCLevel(object):
     """ MCLevel is an abstract class providing many routines to the different level types,
     including a common copyEntitiesFrom built on class-specific routines, and
@@ -215,9 +215,10 @@ class MCLevel(object):
         return self._defsVersion
 
     def loadVersionData(self):
-        Entity.updateGlobal(self.entityDefs)
-        TileEntity.updateGlobal(self.tileEntityDefs)
-        globalItems.updateGlobal(self.itemDefs)
+        # pcm1k TODO - is this really worth having?
+        Entity.updateGlobal(self.entityTypes)
+        TileEntity.updateGlobal(self.tileEntityTypes)
+        globalItems.updateGlobal(self.itemTypes)
 
     def _loadMaterials(self):
         if self.defsPlatform == PLATFORM_UNKNOWN:
@@ -251,25 +252,25 @@ class MCLevel(object):
         self._materials = value
 
     @property
-    def entityDefs(self):
-        if hasattr(self, "_entityDefs"):
-            return self._entityDefs
-        self._entityDefs = getEntityDefs(self.defsIds)
-        return self._entityDefs
+    def entityTypes(self):
+        if hasattr(self, "_entityTypes"):
+            return self._entityTypes
+        self._entityTypes = getEntityTypes(self.defsIds)
+        return self._entityTypes
 
     @property
-    def tileEntityDefs(self):
-        if hasattr(self, "_tileEntityDefs"):
-            return self._tileEntityDefs
-        self._tileEntityDefs = getTileEntityDefs(self.defsIds)
-        return self._tileEntityDefs
+    def tileEntityTypes(self):
+        if hasattr(self, "_tileEntityTypes"):
+            return self._tileEntityTypes
+        self._tileEntityTypes = getTileEntityTypes(self.defsIds)
+        return self._tileEntityTypes
 
     @property
-    def itemDefs(self):
-        if hasattr(self, "_itemDefs"):
-            return self._itemDefs
-        self._itemDefs = getItemDefs(self.defsIds)
-        return self._itemDefs
+    def itemTypes(self):
+        if hasattr(self, "_itemTypes"):
+            return self._itemTypes
+        self._itemTypes = getItemTypes(self.defsIds)
+        return self._itemTypes
 
     @classmethod
     def isLevel(cls, filename):

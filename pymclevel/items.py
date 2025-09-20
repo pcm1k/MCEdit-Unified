@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import types
-from id_definitions import get_defs_ids, BaseDefs, PLATFORM_ALPHA, VERSION_LATEST
+from id_definitions import get_defs_ids, BaseTypeSet, PLATFORM_ALPHA, VERSION_LATEST
 
 logger = getLogger(__name__)
 
@@ -23,8 +23,8 @@ class ItemType(object):
         return "ItemType {0}: {1}".format(self.id, self.name)
 
 
-class Items(BaseDefs):
-    _defsCache = {}
+class Items(BaseTypeSet):
+    _typeSetCache = {}
 
     def __init__(self, defsIds):
         super(Items, self).__init__(defsIds)
@@ -56,10 +56,10 @@ class Items(BaseDefs):
             addItem(idStr, defsIds.mcedit_defs[defId])
 
     @classmethod
-    def getDefs(cls, defsIds, forceNew=False):
-        itemDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=items.globalDefs)
-        items.updateGlobal(itemDefs)
-        return itemDefs
+    def getTypeSet(cls, defsIds, forceNew=False):
+        itemTypes = cls._getTypeSet(defsIds, cls._typeSetCache, forceNew=forceNew, globalTypes=items.globalTypes)
+        items.updateGlobal(itemTypes)
+        return itemTypes
 
     def findItem(self, id=0, damage=0):
         try:
@@ -92,14 +92,14 @@ class ItemNotFound(KeyError):
 
 
 class _Items(object):
-    def __init__(self, itemDefs=None):
-        self.globalDefs = itemDefs
+    def __init__(self, itemTypes=None):
+        self.globalTypes = itemTypes
 
     def __getattr__(self, name):
-        return getattr(self.globalDefs, name)
+        return getattr(self.globalTypes, name)
 
-    def updateGlobal(self, itemDefs):
-        self.globalDefs = itemDefs
+    def updateGlobal(self, itemTypes):
+        self.globalTypes = itemTypes
 
 # trying to keep backwards compatibility
 items = _Items(Items(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST)))
@@ -107,4 +107,4 @@ items = _Items(Items(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST)))
 del _Items
 
 
-getItemDefs = Items.getDefs
+getItemTypes = Items.getTypeSet

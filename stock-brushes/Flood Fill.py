@@ -63,9 +63,7 @@ def apply(self, op, point):
     if doomedBlock == op.options['Block'].ID and (doomedBlockData == op.options['Block'].blockData or not checkData):
         return
 
-    tileEntity = None
-    if op.options['Block'].stringID in op.level.tileEntityDefs.stringNames:
-        tileEntity = op.level.tileEntityDefs.stringNames[op.options['Block'].stringID]
+    tileEntity = op.level.tileEntityTypes.stringNames.get(op.options['Block'].stringID)
 
     x, y, z = point
     saveUndoChunk(x // 16, z // 16)
@@ -74,7 +72,7 @@ def apply(self, op, point):
     if tileEntity:
         if op.level.tileEntityAt(x, y, z):
             op.level.removeTileEntitiesInBox(BoundingBox((x, y, z), (1, 1, 1)))
-        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (x, y, z))
+        tileEntityObject = op.level.tileEntityTypes.Create(tileEntity, (x, y, z))
         createTileEntities(tileEntityObject, op.level)
 
     def processCoords(coords):
@@ -101,7 +99,7 @@ def apply(self, op, point):
                     if tileEntity:
                         if op.level.tileEntityAt(nx, ny, nz):
                             op.level.removeTileEntitiesInBox(BoundingBox((nx, ny, nz), (1, 1, 1)))
-                        tileEntityObject = op.level.tileEntityDefs.Create(tileEntity, (nx, ny, nz))
+                        tileEntityObject = op.level.tileEntityTypes.Create(tileEntity, (nx, ny, nz))
                         createTileEntities(tileEntityObject, op.level)
                     newcoords.append(p)
 

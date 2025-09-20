@@ -49,9 +49,7 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
             if a != newEmission:
                 changesLighting = True
 
-    tileEntity = None
-    if blockInfo.stringID in level.tileEntityDefs.stringNames:
-        tileEntity = level.tileEntityDefs.stringNames[blockInfo.stringID]
+    tileEntity = level.tileEntityTypes.stringNames.get(blockInfo.stringID)
 
     blocksIdToReplace = [block.ID for block in blocksToReplace]
 
@@ -60,7 +58,7 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
     if tileEntity and box is not None:
         for (boxX, boxY, boxZ) in box.positions:
             if blocktable is None or level.blockAt(boxX, boxY, boxZ) in blocksIdToReplace:
-                tileEntityObject = level.tileEntityDefs.Create(tileEntity)
+                tileEntityObject = level.tileEntityTypes.Create(tileEntity)
                 TileEntity.setpos(tileEntityObject, (boxX, boxY, boxZ))
                 append(tileEntityObject)
 

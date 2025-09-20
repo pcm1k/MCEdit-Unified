@@ -38,7 +38,7 @@ def perform(level, box, options):
                 level.setBlockAt(x, y, z, 52)
                 level.setBlockDataAt(x, y, z, 0)
 
-                spawner = level.tileEntityDefs.Create("MobSpawner", entity=entity)
+                spawner = level.tileEntityTypes.Create("MobSpawner", entity=entity)
                 TileEntity.setpos(spawner, (x, y, z))
                 spawner["Delay"] = TAG_Short(120)
                 if not includePos:

@@ -8,7 +8,7 @@ from math import isnan
 import random
 import nbt
 from copy import deepcopy
-from id_definitions import get_defs_ids, BaseDefs, MCEditDefsIds, PLATFORM_ALPHA, VERSION_LATEST
+from id_definitions import get_defs_ids, BaseTypeSet, MCEditDefsIds, PLATFORM_ALPHA, VERSION_LATEST
 
 __all__ = ["Entity", "TileEntity", "TileTick"]
 
@@ -17,7 +17,7 @@ __all__ = ["Entity", "TileEntity", "TileTick"]
 logger = getLogger(__name__)
 
 
-class TileEntityDefs(BaseDefs):
+class TileEntityTypeSet(BaseTypeSet):
     _oldToDefIds = {
         "Airportal": "DEF_TILEENTITIES_END_PORTAL",
         "Banner": "DEF_TILEENTITIES_BANNER",
@@ -46,10 +46,10 @@ class TileEntityDefs(BaseDefs):
 
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
-    _defsCache = {}
+    _typeSetCache = {}
 
     def __init__(self, defsIds):
-        super(TileEntityDefs, self).__init__(defsIds)
+        super(TileEntityTypeSet, self).__init__(defsIds)
 
         self.baseStructures = {}
         self.stringNames = {}
@@ -115,10 +115,10 @@ class TileEntityDefs(BaseDefs):
                 self.stringNames[idStr] = idStrTe
 
     @classmethod
-    def getDefs(cls, defsIds, forceNew=False):
-        entityDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=TileEntity.globalDefs)
-        TileEntity.updateGlobal(entityDefs)
-        return entityDefs
+    def getTypeSet(cls, defsIds, forceNew=False):
+        entityTypes = cls._getTypeSet(defsIds, cls._typeSetCache, forceNew=forceNew, globalTypes=TileEntity.globalTypes)
+        TileEntity.updateGlobal(entityTypes)
+        return entityTypes
 
     def Create(self, tileEntityID, pos=(0, 0, 0), convertOld=True, **kw):
         def handleSpecialStruct(defId, name, **kw):
@@ -128,12 +128,12 @@ class TileEntityDefs(BaseDefs):
 
                 entity = kw.get("entity")
                 if name == "EntityId":
-                    entityDefs = getEntityDefs(self.defsIds)
-                    structTag = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"))
+                    entityTypes = getEntityTypes(self.defsIds)
+                    structTag = nbt.TAG_String(entityTypes.getStrId("DEF_ENTITIES_PIG"))
                     return structTag
                 if name == "SpawnData":
-                    entityDefs = getEntityDefs(self.defsIds)
-                    spawn_id = nbt.TAG_String(entityDefs.getStrId("DEF_ENTITIES_PIG"), "id")
+                    entityTypes = getEntityTypes(self.defsIds)
+                    spawn_id = nbt.TAG_String(entityTypes.getStrId("DEF_ENTITIES_PIG"), "id")
                     structTag = nbt.TAG_Compound()
                     if bool(entity):
                         for k, v in entity.iteritems():
@@ -493,7 +493,7 @@ class TileEntityDefs(BaseDefs):
         return self._getName(self.defsIds, "tileentities", entityId, default)
 
 
-class EntityDefs(BaseDefs):
+class EntityTypeSet(BaseTypeSet):
     _oldToDefIds = {
         "AreaEffectCloud": "DEF_ENTITIES_AREA_EFFECT_CLOUD",
         "ArmorStand": "DEF_ENTITIES_ARMOR_STAND",
@@ -567,10 +567,10 @@ class EntityDefs(BaseDefs):
 
     _defToOldIds = {newId: oldId for oldId, newId in _oldToDefIds.iteritems()}
 
-    _defsCache = {}
+    _typeSetCache = {}
 
     def __init__(self, defsIds):
-        super(EntityDefs, self).__init__(defsIds)
+        super(EntityTypeSet, self).__init__(defsIds)
 
         self.entityList = {}
         self.monsters = []
@@ -602,10 +602,10 @@ class EntityDefs(BaseDefs):
             self.monsters.extend(self.entityList.iterkeys())
 
     @classmethod
-    def getDefs(cls, defsIds, forceNew=False):
-        entityDefs = cls._getBaseDefs(defsIds, cls._defsCache, forceNew=forceNew, globalDefs=Entity.globalDefs)
-        Entity.updateGlobal(entityDefs)
-        return entityDefs
+    def getTypeSet(cls, defsIds, forceNew=False):
+        entityTypes = cls._getTypeSet(defsIds, cls._typeSetCache, forceNew=forceNew, globalTypes=Entity.globalTypes)
+        Entity.updateGlobal(entityTypes)
+        return entityTypes
 
     def Create(self, entityID, pos=(0, 0, 0), convertOld=True, **kw):
         def getNewId(oldId):
@@ -656,7 +656,7 @@ class EntityDefs(BaseDefs):
         return eTag
 
     def getDefId(self, entityId, default=None, fallbackOld=True):
-        return TileEntityDefs._getDefId(self.defsIds, self._oldToDefIds, "entities", entityId, default, fallbackOld)
+        return TileEntityTypeSet._getDefId(self.defsIds, self._oldToDefIds, "entities", entityId, default, fallbackOld)
 
     def getId(self, v, default="No ID"):
         if self.defsIds is None:
@@ -667,13 +667,13 @@ class EntityDefs(BaseDefs):
         return item.get("id", default)
 
     def getStrId(self, entityId, default=None, fallbackOld=True):
-        return TileEntityDefs._getStrId(self.defsIds, self._defToOldIds, "entities", entityId, default, fallbackOld)
+        return TileEntityTypeSet._getStrId(self.defsIds, self._defToOldIds, "entities", entityId, default, fallbackOld)
 
     def getName(self, entityId, default=None):
-        return TileEntityDefs._getName(self.defsIds, "entities", entityId, default)
+        return TileEntityTypeSet._getName(self.defsIds, "entities", entityId, default)
 
 
-#class PocketEntityDefs(EntityDefs):
+#class PocketEntityDefs(EntityTypeSet):
 #    unknown_entity_top = UNKNOWN_ENTITY_MASK + 0
 #    entityList = {}
 
@@ -693,7 +693,7 @@ class EntityDefs(BaseDefs):
 # pcm1k TODO - This class should be used to store data about the entity definition. It will also provide an abstraction around certain entity properties, with subclasses for different applicable entity types
 class TileEntity(object):
     # trying to keep backwards compatibility
-    globalDefs = TileEntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
+    globalTypes = TileEntityTypeSet(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
 
     stringNames = {}
     knownIDs = []
@@ -701,30 +701,30 @@ class TileEntity(object):
     slotNames = {}
 
     @classmethod
-    def updateGlobal(cls, entityDefs):
-        cls.globalDefs = entityDefs
-        cls.stringNames = entityDefs.stringNames
-        cls.knownIDs = entityDefs.knownIDs
-        cls.maxItems = entityDefs.maxItems
-        cls.slotNames = entityDefs.slotNames
+    def updateGlobal(cls, entityTypes):
+        cls.globalTypes = entityTypes
+        cls.stringNames = entityTypes.stringNames
+        cls.knownIDs = entityTypes.knownIDs
+        cls.maxItems = entityTypes.maxItems
+        cls.slotNames = entityTypes.slotNames
 
     @classmethod
     def Create(cls, tileEntityID, pos=(0, 0, 0), defsIds=None, **kw):
-        if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
-            # redirect to the correct TileEntityDefs object
-            cls.updateGlobal(getTileEntityDefs(defsIds))
-        return cls.globalDefs.Create(tileEntityID, pos=pos, convertOld=True, **kw)
+        if defsIds is not None and defsIds is not cls.globalTypes.defsIds:
+            # redirect to the correct TileEntityTypeSet object
+            cls.updateGlobal(getTileEntityTypes(defsIds))
+        return cls.globalTypes.Create(tileEntityID, pos=pos, convertOld=True, **kw)
 
     @classmethod
     def copyWithOffset(cls, tileEntity, copyOffset, staticCommands, moveSpawnerPos, first, cancelCommandBlockOffset=False, defsIds=None):
-        if defsIds is not None and defsIds is not cls.globalDefs.defsIds:
-            # redirect to the correct TileEntityDefs object
-            cls.updateGlobal(getTileEntityDefs(defsIds))
+        if defsIds is not None and defsIds is not cls.globalTypes.defsIds:
+            # redirect to the correct TileEntityTypeSet object
+            cls.updateGlobal(getTileEntityTypes(defsIds))
         if cancelCommandBlockOffset:
             first = None
             staticCommands = False
             moveSpawnerPos = False
-        return cls.globalDefs.copyWithOffset(tileEntity, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
+        return cls.globalTypes.copyWithOffset(tileEntity, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
 
     @classmethod
     def pos(cls, tag):
@@ -738,30 +738,30 @@ class TileEntity(object):
 
 class Entity(object):
     # trying to keep backwards compatibility
-    globalDefs = EntityDefs(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
+    globalTypes = EntityTypeSet(get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST))
 
     entityList = {}
     monsters = []
     maxItems = {}
 
     @classmethod
-    def updateGlobal(cls, entityDefs):
-        cls.globalDefs = entityDefs
-        cls.entityList = entityDefs.entityList
-        cls.monsters = entityDefs.monsters
-        cls.maxItems = entityDefs.maxItems
+    def updateGlobal(cls, entityTypes):
+        cls.globalTypes = entityTypes
+        cls.entityList = entityTypes.entityList
+        cls.monsters = entityTypes.monsters
+        cls.maxItems = entityTypes.maxItems
 
     @classmethod
     def Create(cls, entityID, pos=(0, 0, 0), **kw):
-        return cls.globalDefs.Create(entityID, pos=pos, convertOld=True, **kw)
+        return cls.globalTypes.Create(entityID, pos=pos, convertOld=True, **kw)
 
     @classmethod
     def copyWithOffset(cls, entity, copyOffset, regenerateUUID=False):
-        return cls.globalDefs.copyWithOffset(entity, copyOffset, regenerateUUID=regenerateUUID)
+        return cls.globalTypes.copyWithOffset(entity, copyOffset, regenerateUUID=regenerateUUID)
 
     @classmethod
     def getId(cls, v, default="No ID"):
-        return cls.globalDefs.getId(v, default=default)
+        return cls.globalTypes.getId(v, default=default)
 
     @classmethod
     def pos(cls, tag):
@@ -784,8 +784,8 @@ class Entity(object):
         tag["Pos"] = nbt.TAG_List([nbt.TAG_Double(p) for p in pos])
 
 
-getTileEntityDefs = TileEntityDefs.getDefs
-getEntityDefs = EntityDefs.getDefs
+getTileEntityTypes = TileEntityTypeSet.getTypeSet
+getEntityTypes = EntityTypeSet.getTypeSet
 
 
 class TileTick(object):

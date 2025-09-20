@@ -98,22 +98,22 @@ def perform(level, box, options):
                     if hurtTime != noop:
                         e["HurtTime"] = TAG_Short(hurtTime)
 
-                    if powered != "N/A" and level.entityDefs.getDefId(e["id"].value) == "DEF_ENTITIES_CREEPER":
+                    if powered != "N/A" and level.entityTypes.getDefId(e["id"].value) == "DEF_ENTITIES_CREEPER":
                         if powered == "Lightning":
                             e["powered"] = TAG_Byte(1)
                         if powered == "No Lightning":
                             e["powered"] = TAG_Byte(0)
 
-                    if level.entityDefs.getDefId(e["id"].value) == "DEF_ENTITIES_ENDERMAN":
+                    if level.entityTypes.getDefId(e["id"].value) == "DEF_ENTITIES_ENDERMAN":
                         if blockId != noop:
                             e["carried"] = TAG_Short(blockId)
                         if blockData != noop:
                             e["carriedData"] = TAG_Short(blockData)
 
-                    if profession != "N/A" and level.entityDefs.getDefId(e["id"].value) == "DEF_ENTITIES_VILLAGER":
+                    if profession != "N/A" and level.entityTypes.getDefId(e["id"].value) == "DEF_ENTITIES_VILLAGER":
                         e["Profession"] = TAG_Int(Professions[profession])
 
-                    if size != noop and level.entityDefs.getDefId(e["id"].value) == "DEF_ENTITIES_SLIME":
+                    if size != noop and level.entityTypes.getDefId(e["id"].value) == "DEF_ENTITIES_SLIME":
                         e["Size"] = TAG_Int(size)
 
                     if breedTicks != noop:

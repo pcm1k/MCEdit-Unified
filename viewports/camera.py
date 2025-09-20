@@ -364,7 +364,7 @@ class CameraViewport(GLViewport):
                     changed = False
                     te = self.editor.level.tileEntityAt(*focusPair[0])
                     backupTE = copy.deepcopy(te)
-                    if self.editor.level.tileEntityDefs.getDefId(te["id"].value) == "DEF_TILEENTITIES_SIGN":
+                    if self.editor.level.tileEntityTypes.getDefId(te["id"].value) == "DEF_TILEENTITIES_SIGN":
                         if "Text1" in te and "Text2" in te and "Text3" in te and "Text4" in te:
                             for i in xrange(1,5):
                                 if len(te["Text"+str(i)].value) > 32767:
@@ -502,7 +502,7 @@ class CameraViewport(GLViewport):
         undoBackupEntityTag = copy.deepcopy(tileEntity)
 
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("MobSpawner")
+            tileEntity = self.editor.level.tileEntityTypes.Create("MobSpawner")
             pymclevel.TileEntity.setpos(tileEntity, point)
 #            tileEntity["EntityId"] = pymclevel.TAG_String(mcedit_defs.get(mobs[0], mobs[0]))
             self.editor.level.addTileEntity(tileEntity)
@@ -654,7 +654,7 @@ class CameraViewport(GLViewport):
         undoBackupEntityTag = copy.deepcopy(tileEntity)
 
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("RecordPlayer")
+            tileEntity = self.editor.level.tileEntityTypes.Create("RecordPlayer")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 
@@ -769,7 +769,7 @@ class CameraViewport(GLViewport):
         undoBackupEntityTag = copy.deepcopy(tileEntity)
 
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("Music")
+            tileEntity = self.editor.level.tileEntityTypes.Create("Music")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 
@@ -860,7 +860,7 @@ class CameraViewport(GLViewport):
         if not tileEntity:
             # Don't know how to handle the difference between wall and standing signs for now...
             # Just let this like it is until we can find the way!
-            tileEntity = self.editor.level.tileEntityDefs.Create("Sign")
+            tileEntity = self.editor.level.tileEntityTypes.Create("Sign")
             pymclevel.TileEntity.setpos(tileEntity, point)
             for l in linekeys:
                 tileEntity[l] = pymclevel.TAG_String(fmt)
@@ -976,7 +976,7 @@ class CameraViewport(GLViewport):
         if not tileEntity:
             # Don't know how to handle the difference between skulls in this context for now...
             # Tests nedded!
-            tileEntity = self.editor.level.tileEntityDefs.Create("Skull")
+            tileEntity = self.editor.level.tileEntityTypes.Create("Skull")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 
@@ -1051,7 +1051,7 @@ class CameraViewport(GLViewport):
         undoBackupEntityTag = copy.deepcopy(tileEntity)
 
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("Control")
+            tileEntity = self.editor.level.tileEntityTypes.Create("Control")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 
@@ -1129,7 +1129,7 @@ class CameraViewport(GLViewport):
     def editContainer(self, point, containerID):
         tileEntityTag = self.editor.level.tileEntityAt(*point)
         if tileEntityTag is None:
-            tileEntityTag = self.editor.level.tileEntityDefs.Create(containerID)
+            tileEntityTag = self.editor.level.tileEntityTypes.Create(containerID)
             pymclevel.TileEntity.setpos(tileEntityTag, point)
             self.editor.level.addTileEntity(tileEntityTag)
 
@@ -1159,10 +1159,10 @@ class CameraViewport(GLViewport):
             id = itemProp("id")
             Damage = itemProp("Damage")
             Count = itemProp("Count")
-            itemLimit = self.editor.level.tileEntityDefs.maxItems.get(containerID, 26)
+            itemLimit = self.editor.level.tileEntityTypes.maxItems.get(containerID, 26)
 
         def slotFormat(slot):
-            slotNames = self.editor.level.tileEntityDefs.slotNames.get(containerID)
+            slotNames = self.editor.level.tileEntityTypes.slotNames.get(containerID)
             if slotNames:
                 return slotNames.get(slot, slot)
             return slot
@@ -1216,7 +1216,7 @@ class CameraViewport(GLViewport):
                        (chestWidget.Slot, chestWidget.id or u"", chestWidget.Count, chestWidget.Damage)
                        ).present()
 
-        maxSlot = self.editor.level.tileEntityDefs.maxItems.get(tileEntityTag["id"].value, 27) - 1
+        maxSlot = self.editor.level.tileEntityTypes.maxItems.get(tileEntityTag["id"].value, 27) - 1
         fieldRow = (
             IntInputRow("Slot: ", ref=AttrRef(chestWidget, 'Slot'), min=0, max=maxSlot),
             BasicTextInputRow("ID / ID Name: ", ref=AttrRef(chestWidget, 'id'), width=300),
@@ -1382,7 +1382,7 @@ class CameraViewport(GLViewport):
         tileEntity = self.editor.level.tileEntityAt(*point)
         undoBackupEntityTag = copy.deepcopy(tileEntity)
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("FlowerPot")
+            tileEntity = self.editor.level.tileEntityTypes.Create("FlowerPot")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 
@@ -1441,7 +1441,7 @@ class CameraViewport(GLViewport):
         tileEntity = self.editor.level.tileEntityAt(*point)
         undoBackupEntityTag = copy.deepcopy(tileEntity)
         if not tileEntity:
-            tileEntity = self.editor.level.tileEntityDefs.Create("EnchantTable")
+            tileEntity = self.editor.level.tileEntityTypes.Create("EnchantTable")
             pymclevel.TileEntity.setpos(tileEntity, point)
             self.editor.level.addTileEntity(tileEntity)
 

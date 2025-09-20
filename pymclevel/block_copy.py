@@ -126,7 +126,7 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
                 ents = sourceChunk.getEntitiesInBox(destChunkBoxInSourceLevel)
                 e += len(ents)
                 for entityTag in ents:
-                    eTag = destLevel.entityDefs.copyWithOffset(entityTag, copyOffset, regenerateUUID)
+                    eTag = destLevel.entityTypes.copyWithOffset(entityTag, copyOffset, regenerateUUID)
                     destLevel.addEntity(eTag)
 
             def copy(p):
@@ -145,7 +145,7 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
                     first = None
                     staticCommands = False
                     moveSpawnerPos = False
-                eTag = destLevel.tileEntityDefs.copyWithOffset(tileEntityTag, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
+                eTag = destLevel.tileEntityTypes.copyWithOffset(tileEntityTag, copyOffset, toSchematic=first, moveCommandPos=staticCommands, moveSpawnerPos=moveSpawnerPos)
                 destLevel.addTileEntity(eTag)
 
             destChunk.removeTileTicks(copy)
