@@ -866,7 +866,7 @@ class BrushTool(CloneTool):
                 f.world = self
                 f.chunkPosition = (cx, cz)
 
-                mask = createBrushMask(brushSize, brushStyle, (0, 0, 0), BoundingBox((cx << 4, 0, cz << 4), (16, self.Height, 16)))
+                mask = createBrushMask(brushSize, brushStyle, (0, 0, 0), BoundingBox((cx << 4, self.minY, cz << 4), (16, self.Height, 16)))
                 f.Blocks = numpy.zeros(mask.shape, dtype='uint8')
                 f.Data = numpy.zeros(mask.shape, dtype='uint8')
                 f.BlockLight = self.zerolight

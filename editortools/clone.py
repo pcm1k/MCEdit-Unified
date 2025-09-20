@@ -165,7 +165,7 @@ class CloneOperation(Operation):
             dirty = op.dirtyBox()
 
             # bounds check - xxx move to BoundingBox
-            if dirty.miny >= destLevel.Height or dirty.maxy < 0:
+            if dirty.miny >= destLevel.maxY or dirty.maxy < destLevel.minY:
                 continue
             if destLevel.Width != 0:
                 if dirty.minx >= destLevel.Width or dirty.maxx < 0:
@@ -661,7 +661,8 @@ class CloneTool(EditorTool):
         size = self.rotatedSelectionSize()
         if not size:
             return
-        if size[1] >= self.editor.level.Height:
+        # pcm1k TODO - height changes
+        if size[1] >= lev.Height:
             direction = (
             0, 1, 0)  # always use the upward face whenever we're splicing full-height pieces, to avoid "jitter"
 
@@ -676,13 +677,14 @@ class CloneTool(EditorTool):
             z &= ~0xf
 
         sy = size[1]
+        # pcm1k TODO - height changes
         if sy > lev.Height:  # don't snap really tall stuff to the height
             return Vector(x, y, z)
 
-        if y + sy > lev.Height:
-            y = lev.Height - sy
-        if y < 0:
-            y = 0
+        if y + sy > lev.maxY:
+            y = lev.maxY - sy
+        if y < lev.minY:
+            y = lev.minY
 
         if not lev.Width == 0 and lev.Length == 0:
             sx = size[0]

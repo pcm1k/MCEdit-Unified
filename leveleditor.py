@@ -1373,7 +1373,7 @@ class LevelEditor(GLViewport):
             try:
                 self.currentViewport.cameraPosition = level.playerSpawnPosition()
             except KeyError:  # TagNotFound
-                self.currentViewport.cameraPosition = numpy.array((0, level.Height * 0.75, 0))
+                self.currentViewport.cameraPosition = numpy.array((0, level.minY + level.Height * 0.75, 0))
                 self.mainViewport.yaw = -45.
                 self.mainViewport.pitch = 0.0
 
@@ -1483,11 +1483,11 @@ class LevelEditor(GLViewport):
                 responses=["Create Chunks", "Cancel"])
             if resp == "Create Chunks":
                 x, y, z = self.mainViewport.cameraPosition
-                box = pymclevel.BoundingBox((x - 128, 0, z - 128), (256, self.level.Height, 256))
+                box = pymclevel.BoundingBox((x - 128, self.level.minY, z - 128), (256, self.level.Height, 256))
                 self.selectionTool.setSelection(box)
                 self.toolbar.selectTool(8)
                 self.toolbar.tools[8].createChunks()
-                self.mainViewport.cameraPosition = (x, self.level.Height, z)
+                self.mainViewport.cameraPosition = (x, self.level.maxY, z)
 
     def removeNetherPanel(self):
         if self.netherPanel:
@@ -2809,7 +2809,7 @@ class LevelEditor(GLViewport):
             newlevel.GameType = gametypeButton.gametype
             newlevel.GeneratorName = worldtypes[worldtypeButton.get_value()][1]
             newlevel.saveInPlace()
-            worker = generatorPanel.generate(newlevel, pymclevel.BoundingBox((x - w * 8, 0, z - h * 8),
+            worker = generatorPanel.generate(newlevel, pymclevel.BoundingBox((x - w * 8, newlevel.minY, z - h * 8),
                                                                              (w * 16, newlevel.Height, h * 16)),
                                              useWorldType=generationtype)
 
@@ -2860,9 +2860,16 @@ class LevelEditor(GLViewport):
         if len(self.selectedChunks) == 0:
             return
         starting_chunk = self.selectedChunks.pop()
-        box = self.selectionTool.selectionBoxForCorners((starting_chunk[0] << 4, 0, starting_chunk[1] << 4), ((starting_chunk[0] << 4) + 15, 256, (starting_chunk[1] << 4) + 15))
+        level = self.level
+        minY = level.minY
+        maxY = level.maxY - 1
+        box = self.selectionTool.selectionBoxForCorners(
+            (starting_chunk[0] << 4, minY, starting_chunk[1] << 4),
+            ((starting_chunk[0] << 4) + 15, maxY, (starting_chunk[1] << 4) + 15))
         for c in self.selectedChunks:
-            box = box.union(self.selectionTool.selectionBoxForCorners((c[0] << 4, 0, c[1] << 4), ((c[0] << 4) + 15, 256, (c[1] << 4) + 15)))
+            box = box.union(self.selectionTool.selectionBoxForCorners(
+                (c[0] << 4, minY, c[1] << 4),
+                ((c[0] << 4) + 15, maxY, (c[1] << 4) + 15)))
         self.selectedChunks = set([])
         self.selectionTool.selectNone()
         self.selectionTool.setSelection(box)

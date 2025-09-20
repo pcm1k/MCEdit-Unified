@@ -157,8 +157,8 @@ class ChunkTool(EditorTool):
                 chunkPosition[..., (0, 2)] = numpy.array(((0, 0), (0, 1), (1, 1), (1, 0)), dtype='float32')
                 chunkPosition[..., (0, 2)] *= size
                 chunkPosition[..., (0, 2)] += chunks[:, newaxis, :]
-                chunkPosition *= 16
-                chunkPosition[..., 1] = self.editor.level.Height
+                chunkPosition[..., (0, 2)] *= 16
+                chunkPosition[..., 1] = self.editor.level.maxY
                 GL.glVertexPointer(3, GL.GL_FLOAT, 0, chunkPosition.ravel())
                 # chunkPosition *= 8
                 GL.glDrawArrays(GL.GL_QUADS, 0, len(chunkPosition) * 4)
@@ -181,7 +181,8 @@ class ChunkTool(EditorTool):
 
             vertexArray *= 16
 
-            vertexArray[..., 1, :, 1] = self.editor.level.Height
+            vertexArray[..., 0, :, 1] = self.editor.level.minY
+            vertexArray[..., 1, :, 1] = self.editor.level.maxY
 
             GL.glVertexPointer(3, GL.GL_FLOAT, 0, vertexArray)
             GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
@@ -370,6 +371,7 @@ def GeneratorPanel():
     noVersionsRow = Label("Will automatically download and use the latest version")
     versionContainer = Widget()
 
+    # pcm1k TODO - height changes
     heightinput = IntInputRow("Height: ", ref=AttrRef(panel, "chunkHeight"), min=0, max=255)
     grassinput = CheckBoxLabel("Grass", ref=AttrRef(panel, "grass"))
     flatPanel = Column([heightinput, grassinput], align="l")

@@ -27,7 +27,7 @@ from mceutils import loadPNGTexture, alertException, drawTerrainCuttingWire, dra
 from operation import Operation
 import pymclevel
 from pymclevel.box import BoundingBox, FloatBox
-from pymclevel import nbt
+from pymclevel import nbt, Entity
 import logging
 from player_cache import PlayerCache, ThreadRS
 from nbtexplorer import loadFile, saveFile, NBTExplorerToolPanel
@@ -221,15 +221,12 @@ class PlayerAddOperation(Operation):
         spawn = self.level.playerSpawnPosition()
         spawnX = spawn[0]
         spawnZ = spawn[2]
-        blocks = [self.level.blockAt(spawnX, i, spawnZ) for i in xrange(self.level.Height)]
-        i = self.level.Height
-        done = False
-        for index, b in enumerate(reversed(blocks)):
-            if b != 0 and not done:
-                i = index
-                done = True
-        spawnY = self.level.Height - i
-        playerTag['Pos'] = nbt.TAG_List([nbt.TAG_Double([spawnX, spawnY, spawnZ][i]) for i in xrange(3)])
+        for spawnY in xrange(self.level.maxY - 1, self.level.minY - 1, -1):
+            b = self.level.blockAt(spawnX, spawnY, spawnZ)
+            if b != 0:
+                break
+        spawnY += 1
+        Entity.setpos(playerTag, (spawnX, spawnY, spawnZ))
         playerTag['Rotation'] = nbt.TAG_List([nbt.TAG_Float(0), nbt.TAG_Float(0)])
 
         return playerTag

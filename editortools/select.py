@@ -358,9 +358,10 @@ class SelectionTool(EditorTool):
     @alertException
     def selectChunks(self):
         box = self.selectionBox()
-        newBox = BoundingBox((box.mincx << 4, 0, box.mincz << 4),
-                             (box.maxcx - box.mincx << 4, self.editor.level.Height, box.maxcz - box.mincz << 4))
-        self.editor.selectionTool.setSelection(newBox)
+        level = self.editor.level
+        newBox = BoundingBox((box.mincx << 4, level.minY, box.mincz << 4),
+                             (box.maxcx - box.mincx << 4, level.Height, box.maxcz - box.mincz << 4))
+        self.setSelection(newBox)
 
     def updateSelectionColor(self):
         self.selectionColor = GetSelectionColor()
@@ -532,7 +533,11 @@ class SelectionTool(EditorTool):
 
     def clampPos(self, pos):
         x, y, z = pos
-        w, h, l = self.editor.level.Width, self.editor.level.Height, self.editor.level.Length
+        level = self.editor.level
+        w = level.Width
+        h = level.maxY
+        l = level.Length
+        minY = level.minY
 
         if w > 0:
             if x >= w:
@@ -547,8 +552,8 @@ class SelectionTool(EditorTool):
 
         if y >= h:
             y = h - 1
-        if y < 0:
-            y = 0
+        if y < minY:
+            y = minY
 
         pos = [x, y, z]
         return pos
@@ -1030,7 +1035,7 @@ class SelectionTool(EditorTool):
 
     def setSelectionPoints(self, points, changeSelection=True):
         if points:
-            if all(points) and (points[0][1] < 0 or points[1][1] >= self.editor.level.Height):
+            if all(points) and (points[0][1] < self.editor.level.minY or points[1][1] >= self.editor.level.maxY):
                 return
             self.bottomLeftPoint, self.topRightPoint = [Vector(*p) if p else None for p in points]
         else:

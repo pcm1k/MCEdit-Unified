@@ -1109,7 +1109,7 @@ class ChunkCalculator(object):
             asy = slice(y, y + 18)
 
             for _ in self.computeCubeGeometry(
-                    y,
+                    chunk.world.minY + y,
                     blockRenderers,
                     blocks[sx, sz, sy],
                     blockData[sx, sz, sy],
@@ -1395,6 +1395,7 @@ class TerrainPopulatedRenderer(EntityRendererGeneric):
     layer = Layer.TerrainPopulated
     vertexTemplate = numpy.zeros((6, 4, 6), 'float32')
     vertexTemplate[_XYZ] = faceVertexTemplates[_XYZ]
+    # pcm1k TODO - height changes
     vertexTemplate[_XYZ] *= (16, 256, 16)
     color = (255, 200, 155)
     vertexTemplate.view('uint8')[_RGBA] = color + (72,)
@@ -1579,6 +1580,7 @@ class LowDetailBlockRenderer(BlockRenderer):
             flatcolors[overmask] = level.materials.flatColors[:, 0][overblocks[overmask]][:, numpy.newaxis]
 
             if self.detailLevel == 2:
+                # pcm1k TODO - height changes
                 heightfactor = (y / float(2.0 * ch.world.Height)) + 0.5
                 flatcolors[..., :3] = flatcolors[..., :3].astype(float) * heightfactor[:, numpy.newaxis, numpy.newaxis]
 
@@ -3266,8 +3268,8 @@ class MCRenderer(object):
         h = self.position[1]
         if self.level.dimNo == pymclevel.infiniteworld.DIM_END:
             _2478aq_heot(h)
-        return ((h > self.level.Height + self.spaceHeight) or
-                (h <= -self.spaceHeight))
+        return ((h > self.level.maxY + self.spaceHeight) or
+                (h <= self.level.minY - self.spaceHeight))
 
     def chunkDistance(self, cpos):
         camx, camy, camz = self.position
@@ -3647,7 +3649,8 @@ class MCRenderer(object):
                 chunkPosition[:, :, (0, 2)] = numpy.array(((0, 0), (0, 1), (1, 1), (1, 0)), dtype='float32')
                 chunkPosition[:, :, (0, 2)] *= size
                 chunkPosition[:, :, (0, 2)] += chunks[:, numpy.newaxis, :]
-                chunkPosition *= 16
+                chunkPosition[:, :, (0, 2)] *= 16
+                chunkPosition[:, :, 1] = self.level.minY
                 GL.glVertexPointer(3, GL.GL_FLOAT, 0, chunkPosition.ravel())
                 GL.glTexCoordPointer(2, GL.GL_FLOAT, 0, (chunkPosition[..., (0, 2)] * 16).ravel())
                 GL.glDrawArrays(GL.GL_QUADS, 0, len(chunkPosition) * 4)
@@ -3862,7 +3865,7 @@ class MCRenderer(object):
         if self.level.containsChunk(*c):
             cr = self.getChunkRenderer(c)
             if self.viewingFrustum:
-                if not self.viewingFrustum.visible1([c[0] * 16 + 8, self.level.Height / 2, c[1] * 16 + 8, 1.0],
+                if not self.viewingFrustum.visible1([c[0] * 16 + 8, self.level.minY + self.level.Height / 2, c[1] * 16 + 8, 1.0],
                                                     self.level.Height / 2):
                     raise StopIteration
 

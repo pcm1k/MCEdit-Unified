@@ -79,7 +79,7 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
     for destCpos in destBox.chunkPositions:
         cx, cz = destCpos
 
-        destChunkBox = BoundingBox((cx << 4, 0, cz << 4), (16, destLevel.Height, 16)).intersect(destBox)
+        destChunkBox = BoundingBox((cx << 4, destLevel.minY, cz << 4), (16, destLevel.Height, 16)).intersect(destBox)
         destChunkBoxInSourceLevel = BoundingBox([d - o for o, d in zip(copyOffset, destChunkBox.origin)],
                                                 destChunkBox.size)
 

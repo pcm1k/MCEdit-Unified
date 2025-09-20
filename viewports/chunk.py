@@ -35,7 +35,7 @@ class ChunkViewport(CameraViewport):
             self.defaultScale = s
             f = 1.0 - f
 
-            self.cameraPosition = x + dx * f, self.editor.level.Height, z + dz * f
+            self.cameraPosition = x + dx * f, self.editor.level.maxY, z + dz * f
             self.editor.renderer.loadNearbyChunks()
 
     incrementFactor = 1.4

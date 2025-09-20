@@ -93,7 +93,7 @@ def firstBlock(origin, direction, level, radius, viewMode=None):
         block = level.blockAt(*i[0])
         if callback.check(i[0], block):
             return i[0],i[1]
-        if _tooFar(origin, i[0], radius) or _tooHighOrLow(i[0]):
+        if _tooFar(origin, i[0], radius) or _tooHighOrLow(i[0], level.minY, level.maxY):
             raise TooFarException("There are no valid blocks within range")
         if tooMuch >= 720:
             return i[0], i[1]
@@ -108,8 +108,8 @@ def _tooFar(origin, position, radius):
     return result
 
 
-def _tooHighOrLow(position):
-    return position[1] > 255 or position[1] < 0
+def _tooHighOrLow(position, minY, maxY):
+    return position[1] >= maxY or position[1] < minY
 
 
 class TooFarException(Exception):

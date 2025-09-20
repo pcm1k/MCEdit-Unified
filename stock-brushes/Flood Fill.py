@@ -38,6 +38,7 @@ def apply(self, op, point):
     undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
     undoLevel.materials = op.level.materials
     undoLevel.Height = op.level.Height
+    undoLevel.minY = op.level.minY
     dirtyChunks = set()
 
     def saveUndoChunk(cx, cz):

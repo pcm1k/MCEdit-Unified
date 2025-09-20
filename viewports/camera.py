@@ -250,10 +250,11 @@ class CameraViewport(GLViewport):
             self.updateFloorQuad()
 
         self.cameraPosition = map(lambda p, d: p + d * timeDelta, self.cameraPosition, velocity)
-        if self.cameraPosition[1] > 3800.:
-            self.cameraPosition[1] = 3800.
-        elif self.cameraPosition[1] < -1000.:
-            self.cameraPosition[1] = -1000.
+        level = self.editor.level
+        if self.cameraPosition[1] > level.maxY + 3800.:
+            self.cameraPosition[1] = level.maxY + 3800.
+        elif self.cameraPosition[1] < level.minY - 1000.:
+            self.cameraPosition[1] = level.minY - 1000.
 
         self.velocity = velocity
         self.cameraVector = self._cameraVector()
@@ -393,7 +394,8 @@ class CameraViewport(GLViewport):
             intProjectedPoint = map(int, map(numpy.floor, projectedPoint))
         except ValueError:
             return None  # catch NaNs
-        intProjectedPoint[1] = max(-1, intProjectedPoint[1])
+        # pcm1k TODO - should the -1 exist?
+        intProjectedPoint[1] = max(self.editor.level.minY - 1, intProjectedPoint[1])
 
         # find out which face is under the cursor.  xxx do it more precisely
         faceVector = ((projectedPoint[0] - (intProjectedPoint[0] + 0.5)),
@@ -1677,7 +1679,10 @@ class CameraViewport(GLViewport):
         self.floorQuadList.invalidate()
 
     def drawFloorQuad(self):
+        y = self.editor.level.minY
+        GL.glTranslate(0, y, 0)
         self.floorQuadList.call(self._drawFloorQuad)
+        GL.glTranslate(0, -y, 0)
 
     @staticmethod
     def _drawCeiling():
@@ -1707,7 +1712,7 @@ class CameraViewport(GLViewport):
         x, y, z = self.cameraPosition
         x -= x % 16
         z -= z % 16
-        y = self.editor.level.Height
+        y = self.editor.level.maxY
         GL.glTranslate(x, y, z)
         self.ceilingList.call(self._drawCeiling)
         GL.glTranslate(-x, -y, -z)

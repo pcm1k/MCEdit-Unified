@@ -603,6 +603,7 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
                 shutil.move(tempRegionPath, os.path.join(tempdir, "region"))
 
         super(ZipSchematic, self).__init__(tempdir, create)
+        self.minY = 0
         atexit.register(shutil.rmtree, self.worldFolder.filename, True)
 
         try:
@@ -652,7 +653,7 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
                     z.write(absfn, zfn)
 
     def getWorldBounds(self):
-        return BoundingBox((0, 0, 0), (self.Width, self.Height, self.Length))
+        return BoundingBox((0, self.minY, 0), (self.Width, self.Height, self.Length))
 
     @classmethod
     def _isLevel(cls, filename):
@@ -925,17 +926,16 @@ def adjustExtractionParameters(self, box):
     w, h, l = box.size
     destX = destY = destZ = 0
 
-    if y < 0:
-        destY -= y
-        h += y
-        y = 0
+    if y < self.minY:
+        destY += self.minY - y
+        h -= self.minY - y
+        y = self.minY
 
-    if y >= self.Height:
+    if y >= self.maxY:
         return
 
-    if y + h >= self.Height:
-        h -= y + h - self.Height
-        y = self.Height - h
+    if y + h >= self.maxY:
+        h = self.maxY - y
 
     if h <= 0:
         return

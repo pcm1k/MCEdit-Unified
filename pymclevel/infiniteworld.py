@@ -437,7 +437,7 @@ class ChunkedLevelMixin(MCLevel):
         :return: The light value or 0 if the Y coordinate is above the maximum height limit or below 0
         :rtype: int
         '''
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
@@ -446,7 +446,7 @@ class ChunkedLevelMixin(MCLevel):
         zInChunk = z & 0xf
         ch = self.getChunk(xc, zc)
 
-        return ch.BlockLight[xInChunk, zInChunk, y]
+        return ch.BlockLight[xInChunk, zInChunk, y - self.minY]
 
     def setBlockLightAt(self, x, y, z, newLight):
         '''
@@ -463,7 +463,7 @@ class ChunkedLevelMixin(MCLevel):
         :return: Returns 0 if the Y coordinate is above the maximum height limit or below 0. Doesn't return anything otherwise
         :rtype: int
         '''
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
@@ -472,7 +472,7 @@ class ChunkedLevelMixin(MCLevel):
         zInChunk = z & 0xf
 
         ch = self.getChunk(xc, zc)
-        ch.BlockLight[xInChunk, zInChunk, y] = newLight
+        ch.BlockLight[xInChunk, zInChunk, y - self.minY] = newLight
         ch.chunkChanged(False)
 
     def blockDataAt(self, x, y, z):
@@ -488,7 +488,7 @@ class ChunkedLevelMixin(MCLevel):
         :return: The data value of the block or 0 if the Y coordinate is above the maximum height limit or below 0
         :rtype: int
         '''
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
@@ -501,7 +501,7 @@ class ChunkedLevelMixin(MCLevel):
         except ChunkNotPresent:
             return 0
 
-        return ch.Data[xInChunk, zInChunk, y]
+        return ch.Data[xInChunk, zInChunk, y - self.minY]
 
     def setBlockDataAt(self, x, y, z, newdata):
         '''
@@ -518,7 +518,7 @@ class ChunkedLevelMixin(MCLevel):
         :return: Returns 0 if the Y coordinate is above the maximum height limit or below 0 or the chunk doesn't exist. Doesn't return anything otherwise
         :rtype: int
         '''
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
@@ -531,13 +531,13 @@ class ChunkedLevelMixin(MCLevel):
         except ChunkNotPresent:
             return 0
 
-        ch.Data[xInChunk, zInChunk, y] = newdata
+        ch.Data[xInChunk, zInChunk, y - self.minY] = newdata
         ch.dirty = True
         ch.needsLighting = True
 
     def blockAt(self, x, y, z):
         """returns 0 for blocks outside the loadable chunks.  automatically loads chunks."""
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
 
         zc = z >> 4
@@ -549,13 +549,11 @@ class ChunkedLevelMixin(MCLevel):
             ch = self.getChunk(xc, zc)
         except ChunkNotPresent:
             return 0
-        if y >= ch.Height:
-            return 0
-        return ch.Blocks[xInChunk, zInChunk, y]
+        return ch.Blocks[xInChunk, zInChunk, y - self.minY]
 
     def setBlockAt(self, x, y, z, blockID):
         """returns 0 for blocks outside the loadable chunks.  automatically loads chunks."""
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
 
         zc = z >> 4
@@ -568,13 +566,13 @@ class ChunkedLevelMixin(MCLevel):
         except ChunkNotPresent:
             return 0
 
-        ch.Blocks[xInChunk, zInChunk, y] = blockID
+        ch.Blocks[xInChunk, zInChunk, y - self.minY] = blockID
         ch.dirty = True
         ch.needsLighting = True
 
     def skylightAt(self, x, y, z):
 
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
@@ -584,25 +582,26 @@ class ChunkedLevelMixin(MCLevel):
 
         ch = self.getChunk(xc, zc)
 
-        return ch.SkyLight[xInChunk, zInChunk, y]
+        return ch.SkyLight[xInChunk, zInChunk, y - self.minY]
 
     def setSkylightAt(self, x, y, z, lightValue):
-        if y < 0 or y >= self.Height:
+        if y < self.minY or y >= self.maxY:
             return 0
         zc = z >> 4
         xc = x >> 4
 
         xInChunk = x & 0xf
         zInChunk = z & 0xf
+        yInChunk = y - self.minY
 
         ch = self.getChunk(xc, zc)
         skyLight = ch.SkyLight
 
-        oldValue = skyLight[xInChunk, zInChunk, y]
+        oldValue = skyLight[xInChunk, zInChunk, yInChunk]
 
         ch.chunkChanged(False)
         if oldValue < lightValue:
-            skyLight[xInChunk, zInChunk, y] = lightValue
+            skyLight[xInChunk, zInChunk, yInChunk] = lightValue
         return oldValue < lightValue
 
     createChunk = NotImplemented
@@ -800,6 +799,7 @@ class ChunkedLevelMixin(MCLevel):
 
                     nc = neighboringChunks[FaceXDecreasing]
                     ncLight = getattr(nc, light)
+                    # pcm1k TODO - all these self.Height references are probably redundant
                     oldLeftEdge[:] = ncLight[15:16, :, 0:self.Height]  # save the old left edge
 
                     # left edge
@@ -1121,10 +1121,6 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
         self.dat_name = dat_name
 
-        self.Length = 0
-        self.Width = 0
-        self.Height = 256
-
         self.playerTagCache = {}
         self.players = []
         assert not (create and readonly)
@@ -1378,6 +1374,8 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     parentWorld = None
     dimNo = DIM_OVERWORLD
     Height = 256
+    Length = 0
+    Width = 0
     _bounds = None
     _gamePlatform = GAME_PLATFORM_JAVA
     _defsPlatform = PLATFORM_ALPHA
@@ -1502,7 +1500,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         mincz = (allChunks[:, 1]).min()
         maxcz = (allChunks[:, 1]).max()
 
-        origin = (mincx << 4, 0, mincz << 4)
+        origin = (mincx << 4, self.minY, mincz << 4)
         size = ((maxcx - mincx + 1) << 4, self.Height, (maxcz - mincz + 1) << 4)
 
         return BoundingBox(origin, size)
@@ -1665,7 +1663,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         if not isinstance(world, MCInfdevOldLevel):
             log.debug("Incompatible world. Using block copy.")
             # Incompatible world. Use block copy.
-            destChunkBox = BoundingBox((cx << 4, 0, cz << 4), (16, self.Height, 16))
+            destChunkBox = BoundingBox((cx << 4, self.minY, cz << 4), (16, self.Height, 16))
             self.removeEntitiesInBox(destChunkBox)
             self.copyBlocksFrom(world, destChunkBox, destChunkBox.origin, create=True)
             return
@@ -2039,7 +2037,8 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :return: True if the point exists/has been generated, False otherwise
         :rtype: bool
         '''
-        if y < 0 or y > self.Height:
+        # pcm1k TODO - should this be y >= self.maxY instead?
+        if y < self.minY or y > self.maxY:
             return False
         return self.containsChunk(x >> 4, z >> 4)
 

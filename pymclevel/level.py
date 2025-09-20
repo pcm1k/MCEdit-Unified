@@ -66,7 +66,7 @@ def extractHeights(array):
     return heightMap
 
 
-def getSlices(box, height):
+def getSlices(box, height, levelMinY=0):
     """ call this method to iterate through a large slice of the world by
         visiting each chunk and indexing its data with a subslice.
 
@@ -86,11 +86,15 @@ def getSlices(box, height):
     minxoff, minzoff = box.minx - (box.mincx << 4), box.minz - (box.mincz << 4)
     maxxoff, maxzoff = box.maxx - (box.maxcx << 4) + 16, box.maxz - (box.maxcz << 4) + 16
 
-    newMinY = 0
-    if box.miny < 0:
-        newMinY = -box.miny
-    miny = max(0, box.miny)
-    maxy = min(height, box.maxy)
+    # pcm1k TODO - I'm not totally sure what this is used for, but I think it is probably correct
+#    newMinY = 0
+#    if box.miny < 0:
+#        newMinY = -box.miny
+    newMinY = levelMinY
+    if box.miny < levelMinY:
+        newMinY = levelMinY - box.miny
+    miny = max(0, box.miny - levelMinY)
+    maxy = min(height, box.maxy - levelMinY)
 
     for cx in xrange(box.mincx, box.maxcx):
         localMinX = 0
@@ -110,10 +114,8 @@ def getSlices(box, height):
             if cz == box.maxcz - 1:
                 localMaxZ = maxzoff
             newMinZ = localMinZ + (cz << 4) - box.minz
-            slices, point = (
-                (slice(localMinX, localMaxX), slice(localMinZ, localMaxZ), slice(miny, maxy)),
-                (newMinX, newMinY, newMinZ)
-            )
+            slices = (slice(localMinX, localMaxX), slice(localMinZ, localMaxZ), slice(miny, maxy))
+            point = (newMinX, newMinY, newMinZ)
 
             yield (cx, cz), slices, point
 
@@ -151,6 +153,8 @@ class MCLevel(object):
     Height = None
     Length = None
     Width = None
+
+    minY = 0
 
     players = ["Player"]
     # pcm1k TODO - can't really use the constants here because of circular import issues
@@ -302,7 +306,7 @@ class MCLevel(object):
         return False
 
     def getWorldBounds(self):
-        return BoundingBox((0, 0, 0), self.size)
+        return BoundingBox((0, self.minY, 0), self.size)
 
     @property
     def displayName(self):
@@ -315,7 +319,11 @@ class MCLevel(object):
 
     @property
     def bounds(self):
-        return BoundingBox((0, 0, 0), self.size)
+        return BoundingBox((0, self.minY, 0), self.size)
+
+    @property
+    def maxY(self):
+        return self.minY + self.Height
 
     def close(self):
         pass
@@ -422,7 +430,7 @@ class MCLevel(object):
         if box == self.bounds:
             log.info("All chunks selected! Selecting %s chunks instead of %s", self.chunkCount, box.chunkCount)
             y = box.miny
-            slices = slice(0, 16), slice(0, 16), slice(0, box.maxy)
+            slices = slice(0, 16), slice(0, 16), slice(0, box.height)
 
             def getAllSlices():
                 for cPos in self.allChunks:
@@ -435,7 +443,7 @@ class MCLevel(object):
 
             return getAllSlices()
         else:
-            return getSlices(box, self.Height)
+            return getSlices(box, self.Height, levelMinY=self.minY)
 
     def getChunkSlices(self, box):
         return ((self.getChunk(*cPos), slices, point)
@@ -543,7 +551,7 @@ class MCLevel(object):
         pass
 
     def getPlayerPosition(self, player="Player"):
-        return 8, self.Height * 0.75, 8
+        return 8, self.minY + self.Height * 0.75, 8
 
     def getPlayerDimension(self, player="Player"):
         return 0
@@ -728,9 +736,13 @@ class ChunkBase(EntityLevel):
         return self.world.Height
 
     @property
+    def minY(self):
+        return self.world.minY
+
+    @property
     def bounds(self):
         cx, cz = self.chunkPosition
-        return BoundingBox((cx << 4, 0, cz << 4), self.size)
+        return BoundingBox((cx << 4, self.minY, cz << 4), self.size)
 
     def chunkChanged(self, needsLighting=True):
         self.dirty = True

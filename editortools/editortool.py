@@ -285,11 +285,12 @@ class EditorTool(object):
 
         size = map(lambda a, b: a - b, p2, p1)
 
-        if p1[1] < 0:
-            size[1] += p1[1]
-            p1[1] = 0
+        minY = self.editor.level.minY
+        if p1[1] < minY:
+            size[1] -= minY - p1[1]
+            p1[1] = minY
 
-        h = self.editor.level.Height
+        h = self.editor.level.maxY
         if p1[1] >= h:
             p1[1] = h - 1
             size[1] = 1
