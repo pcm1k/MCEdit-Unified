@@ -105,7 +105,7 @@ from pymclevel.minecraft_server import alphanum_key  # ?????
 from renderer import MCRenderer
 #from pymclevel.entity import Entity
 from pymclevel.infiniteworld import AnvilWorldFolder, SessionLockLost, MCAlphaDimension,\
-    MCInfdevOldLevel
+    MCInfdevOldLevel, DIM_NETHER, DIM_OVERWORLD, DIM_END
 from pymclevel.level import GAME_PLATFORM_POCKET, GAME_PLATFORM_SCHEMATIC
 from pymclevel.id_definitions import VERSION_UNKNOWN
 # Block and item translation
@@ -1516,14 +1516,14 @@ class LevelEditor(GLViewport):
         else:
             # Record the new dimension
             self.new_dimension = dimNo
-        if dimNo == -1 and self.level.dimNo == 0:
+        if dimNo == DIM_NETHER and self.level.dimNo == DIM_OVERWORLD:
             self.gotoNether()
-        elif dimNo == 0 and self.level.dimNo == -1:
+        elif dimNo == DIM_OVERWORLD and self.level.dimNo == DIM_NETHER:
             self.gotoEarth()
         else:
             self.removeNetherPanel()
             if dimNo:
-                if dimNo == 1:
+                if dimNo == DIM_END:
                     self.mainViewport.cameraPosition = (0, 96, 0)
                 self.loadLevel(self.level.getDimension(dimNo), True)
 

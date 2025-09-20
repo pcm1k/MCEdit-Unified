@@ -35,6 +35,7 @@ from id_definitions import PLATFORM_ALPHA
 log = getLogger(__name__)
 
 DIM_NETHER = -1
+DIM_OVERWORLD = 0
 DIM_END = 1
 
 __all__ = ["ZeroChunk", "AnvilChunk", "ChunkedLevelMixin", "MCInfdevOldLevel", "MCAlphaDimension"]
@@ -730,7 +731,7 @@ class ChunkedLevelMixin(MCLevel):
         oldLeftEdge = zeros((1, 16, self.Height), 'uint8')
         oldBottomEdge = zeros((16, 1, self.Height), 'uint8')
         oldChunk = zeros((16, 16, self.Height), 'uint8')
-        if self.dimNo in (-1, 1):
+        if self.dimNo in (DIM_NETHER, DIM_END):
             lights = ("BlockLight",)
         else:
             lights = ("BlockLight", "SkyLight")
@@ -1375,7 +1376,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     materialsName = "Alpha"
     isInfinite = True
     parentWorld = None
-    dimNo = 0
+    dimNo = DIM_OVERWORLD
     Height = 256
     _bounds = None
     _gamePlatform = GAME_PLATFORM_JAVA
@@ -1575,7 +1576,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                     log.error(u"Error loading dimension {0}: {1}".format(dirname, e))
 
     def getDimension(self, dimNo):
-        if self.dimNo != 0:
+        if self.dimNo != DIM_OVERWORLD:
             return self.parentWorld.getDimension(dimNo)
 
         if dimNo in self.dimensions:

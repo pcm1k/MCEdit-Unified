@@ -480,7 +480,7 @@ def GeneratorPanel():
                 else:
                     chunks = arg
 
-                if level.dimNo in (-1, 1):
+                if level.dimNo in (pymclevel.infiniteworld.DIM_NETHER, pymclevel.infiniteworld.DIM_END):
                     maxskylight = 0
                 else:
                     maxskylight = 15

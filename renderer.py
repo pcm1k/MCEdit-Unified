@@ -3264,7 +3264,7 @@ class MCRenderer(object):
         if self.level is None:
             return True
         h = self.position[1]
-        if self.level.dimNo == 1:
+        if self.level.dimNo == pymclevel.infiniteworld.DIM_END:
             _2478aq_heot(h)
         return ((h > self.level.Height + self.spaceHeight) or
                 (h <= -self.spaceHeight))

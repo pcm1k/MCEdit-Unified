@@ -1,8 +1,8 @@
 # !/usr/bin/env python
-import pymclevel.mclevelbase
-import pymclevel.mclevel
-import pymclevel.materials
-import pymclevel.infiniteworld
+from pymclevel import mclevelbase
+from pymclevel import mclevel
+from pymclevel import materials
+from pymclevel import infiniteworld
 import sys
 import os
 from pymclevel.box import BoundingBox, Vector
@@ -16,11 +16,6 @@ import operator
 import codecs
 
 from math import floor
-
-mclevelbase = pymclevel.mclevelbase
-mclevel = pymclevel.mclevel
-materials = pymclevel.materials
-infiniteworld = pymclevel.infiniteworld
 
 try:
     import readline  # if available, used by raw_input()
@@ -1301,9 +1296,9 @@ class mce(object):
                     return
 
             elif command[0].lower() in ("hell", "nether", "slip"):
-                dimNo = -1
+                dimNo = infiniteworld.DIM_NETHER
             elif command[0].lower() == "end":
-                dimNo = 1
+                dimNo = infiniteworld.DIM_END
             else:
                 dimNo = self.readInt(command)
 

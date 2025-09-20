@@ -17,6 +17,7 @@ from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
 from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN, VERSION_STR_FILTER
 from items import items as globalItems, getItemTypes
+#from infiniteworld import DIM_NETHER, DIM_OVERWORLD, DIM_END
 import re
 
 log = getLogger(__name__)
@@ -152,6 +153,8 @@ class MCLevel(object):
     Width = None
 
     players = ["Player"]
+    # pcm1k TODO - can't really use the constants here because of circular import issues
+#    dimNo = DIM_OVERWORLD
     dimNo = 0
     parentWorld = None
     world = None
@@ -780,6 +783,8 @@ class LightedChunk(ChunkBase):
 
     def genFastLights(self):
         self.SkyLight[:] = 0
+        # pcm1k TODO - can't really use the constants here because of circular import issues
+#        if self.world.dimNo in (DIM_NETHER, DIM_END):
         if self.world.dimNo in (-1, 1):
             return  # no light in nether or the end
 

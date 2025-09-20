@@ -363,7 +363,7 @@ class MCServerChunkGenerator(object):
 
             self._tempWorldCache[self.serverVersion, level.RandomSeed] = tempWorldRO
 
-        if level.dimNo == 0:
+        if level.dimNo == infiniteworld.DIM_OVERWORLD:
             properties["allow-nether"] = "false"
         else:
             tempWorld = tempWorld.getDimension(level.dimNo)

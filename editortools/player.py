@@ -1021,7 +1021,7 @@ class PlayerSpawnPositionTool(PlayerPositionTool):
         self.optionsPanel = PlayerSpawnPositionOptions(self)
 
     def toolEnabled(self):
-        return self.editor.level.dimNo == 0
+        return self.editor.level.dimNo == pymclevel.infiniteworld.DIM_OVERWORLD
 
     def showPanel(self):
         self.panel = Panel(name='Panel.PlayerSpawnPositionTool')
