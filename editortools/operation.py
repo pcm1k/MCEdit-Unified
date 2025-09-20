@@ -49,7 +49,10 @@ class Operation(object):
 
             return self.extractUndoSchematic(level, box)
 
+        # pcm1k TODO - maybe use ZipSchematic instead?
         undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
+        undoLevel.materials = level.materials
+        undoLevel.Height = level.Height
         if not chunkCount:
             try:
                 chunkCount = len(chunks)
@@ -60,7 +63,7 @@ class Operation(object):
             yield 0, 0, "Recording undo..."
             for i, (cx, cz) in enumerate(chunks):
                 undoLevel.copyChunkFrom(level, cx, cz)
-                yield i, chunkCount, _("Copying chunk %s...") % ((cx, cz),)
+                yield i, chunkCount if chunkCount >= 0 else i, _("Copying chunk %s...") % ((cx, cz),)
             undoLevel.saveInPlace()
 
         if chunkCount > 25 or chunkCount < 1:
@@ -97,7 +100,7 @@ class Operation(object):
             should override this."""
 
         if self.undoLevel:
-            self.redoLevel = self.extractUndo(self.level, self.dirtyBox())
+            self.redoLevel = self.extractUndoChunks(self.level, self.undoLevel.allChunks)
 
             def _undo():
                 yield 0, 0, "Undoing..."
@@ -116,6 +119,7 @@ class Operation(object):
             else:
                 exhaust(_undo())
 
+            # pcm1k TODO - probably needed because Flood Fill does undo stuff weirdly and dirtyBox will not be correct
             self.editor.invalidateChunks(self.undoLevel.allChunks)
 
     def redo(self):
@@ -136,6 +140,9 @@ class Operation(object):
                 showProgress("Redoing...", _redo())
             else:
                 exhaust(_redo())
+
+            # pcm1k TODO - probably needed because Flood Fill does undo stuff weirdly and dirtyBox will not be correct
+            self.editor.invalidateChunks(self.undoLevel.allChunks)
 
     def dirtyBox(self):
         """ The region modified by the operation.

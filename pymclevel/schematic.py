@@ -1019,12 +1019,12 @@ def extractZipSchematicFromIter(sourceLevel, box, zipfilename=None, entities=Tru
 
     tempSchematic = ZipSchematic(zipfilename, create=True)
     tempSchematic.materials = sourceLevel.materials
+    tempSchematic.Width, tempSchematic.Height, tempSchematic.Length = sourceBox.size
 
     for i in tempSchematic.copyBlocksFromIter(sourceLevel, sourceBox, destPoint, entities=entities, create=True,
                                               biomes=True, first=True, cancelCommandBlockOffset=cancelCommandBlockOffset):
         yield i
 
-    tempSchematic.Width, tempSchematic.Height, tempSchematic.Length = sourceBox.size
     tempSchematic.saveInPlace()  # lights not needed for this format - crashes minecraft though
     yield tempSchematic
 

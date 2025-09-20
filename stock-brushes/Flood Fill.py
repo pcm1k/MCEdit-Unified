@@ -1,6 +1,5 @@
 from pymclevel.materials import Block
 from pymclevel.entity import TileEntity
-from pymclevel.level import GAME_PLATFORM_POCKET
 from editortools.brush import createBrushMask
 import numpy
 from editortools.operation import mkundotemp
@@ -35,14 +34,10 @@ def createTileEntities(tileEntityTag, level):
 
 
 def apply(self, op, point):
-    # undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
-    # Use the same world as the one loaded.
-    create = True
-    if op.level.gamePlatform == GAME_PLATFORM_POCKET:
-        create = op.level.world_version
-    undoLevel = type(op.level)(mkundotemp(), create=create)
-    if op.level.gamePlatform == GAME_PLATFORM_POCKET:
-        undoLevel.Height = op.level.Height
+    # pcm1k TODO - maybe use ZipSchematic instead?
+    undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
+    undoLevel.materials = op.level.materials
+    undoLevel.Height = op.level.Height
     dirtyChunks = set()
 
     def saveUndoChunk(cx, cz):

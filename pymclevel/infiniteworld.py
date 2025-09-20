@@ -1655,12 +1655,20 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         """
         Copy a chunk from world into the same chunk position in self.
         """
-        assert isinstance(world, MCInfdevOldLevel)
+#        assert isinstance(world, MCInfdevOldLevel)
         if self.readonly:
             raise IOError("World is opened read only.")
         if world.saving | self.saving:
             raise ChunkAccessDenied
         self.checkSessionLock()
+
+        if not isinstance(world, MCInfdevOldLevel):
+            log.debug("Incompatible world. Using block copy.")
+            # Incompatible world. Use block copy.
+            destChunkBox = BoundingBox((cx << 4, 0, cz << 4), (16, self.Height, 16))
+            self.removeEntitiesInBox(destChunkBox)
+            self.copyBlocksFrom(world, destChunkBox, destChunkBox.origin, create=True)
+            return
 
         destChunk = self._loadedChunks.get((cx, cz))
         sourceChunk = world._loadedChunks.get((cx, cz))
