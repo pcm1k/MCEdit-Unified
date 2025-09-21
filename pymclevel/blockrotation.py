@@ -559,17 +559,17 @@ class _BlockRotation(object):
             if rotatedID != -1 and rotatedData != -1:
                 table[block.ID, block.blockData] = rotatedData
 
-        dataRange = arange(materials.data_limit, dtype="uint8")
+        dataRange = arange(data_limit, dtype="uint8")
 
-        self.rotateLeft = rotateLeft = zeros((materials.id_limit, materials.data_limit), "uint8")
+        self.rotateLeft = rotateLeft = zeros((id_limit, data_limit), "uint8")
         rotateLeft[:] = dataRange
-        self.flipEastWest = flipEastWest = zeros((materials.id_limit, materials.data_limit), "uint8")
+        self.flipEastWest = flipEastWest = zeros((id_limit, data_limit), "uint8")
         flipEastWest[:] = dataRange
-        self.flipNorthSouth = flipNorthSouth = zeros((materials.id_limit, materials.data_limit), "uint8")
+        self.flipNorthSouth = flipNorthSouth = zeros((id_limit, data_limit), "uint8")
         flipNorthSouth[:] = dataRange
-        self.flipVertical = flipVertical = zeros((materials.id_limit, materials.data_limit), "uint8")
+        self.flipVertical = flipVertical = zeros((id_limit, data_limit), "uint8")
         flipVertical[:] = dataRange
-        self.roll = roll = zeros((materials.id_limit, materials.data_limit), "uint8")
+        self.roll = roll = zeros((id_limit, data_limit), "uint8")
         roll[:] = dataRange
 
         for block in materials:
@@ -599,7 +599,10 @@ def FlipVertical(blocks, data, mats=alphaMaterials):
         blockRotation = mats.blockRotation
     else:
         blockRotation = mats.blockRotation = _BlockRotation(mats)
-    data[:] = blockRotation.flipVertical[blocks, data]
+    # pcm1k TODO - ignore blocks that are above the limit for now
+#    data[:] = blockRotation.flipVertical[blocks, data]
+    belowLimit = (blocks < id_limit) & (data < data_limit)
+    data[belowLimit] = blockRotation.flipVertical[blocks[belowLimit], data[belowLimit]]
 
 
 def FlipNorthSouth(blocks, data, mats=alphaMaterials):
@@ -608,7 +611,10 @@ def FlipNorthSouth(blocks, data, mats=alphaMaterials):
     else:
         blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    data[:] = blockRotation.flipEastWest[blocks, data]
+    # pcm1k TODO - ignore blocks that are above the limit for now
+#    data[:] = blockRotation.flipEastWest[blocks, data]
+    belowLimit = (blocks < id_limit) & (data < data_limit)
+    data[belowLimit] = blockRotation.flipEastWest[blocks[belowLimit], data[belowLimit]]
 
 
 def FlipEastWest(blocks, data, mats=alphaMaterials):
@@ -617,7 +623,10 @@ def FlipEastWest(blocks, data, mats=alphaMaterials):
     else:
         blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    data[:] = blockRotation.flipNorthSouth[blocks, data]
+    # pcm1k TODO - ignore blocks that are above the limit for now
+#    data[:] = blockRotation.flipNorthSouth[blocks, data]
+    belowLimit = (blocks < id_limit) & (data < data_limit)
+    data[belowLimit] = blockRotation.flipNorthSouth[blocks[belowLimit], data[belowLimit]]
 
 
 def RotateLeft(blocks, data, mats=alphaMaterials):
@@ -625,7 +634,10 @@ def RotateLeft(blocks, data, mats=alphaMaterials):
         blockRotation = mats.blockRotation
     else:
         blockRotation = mats.blockRotation = _BlockRotation(mats)
-    data[:] = blockRotation.rotateLeft[blocks, data]
+    # pcm1k TODO - ignore blocks that are above the limit for now
+#    data[:] = blockRotation.rotateLeft[blocks, data]
+    belowLimit = (blocks < id_limit) & (data < data_limit)
+    data[belowLimit] = blockRotation.rotateLeft[blocks[belowLimit], data[belowLimit]]
 
 
 def Roll(blocks, data, mats=alphaMaterials):
@@ -633,4 +645,7 @@ def Roll(blocks, data, mats=alphaMaterials):
         blockRotation = mats.blockRotation
     else:
         blockRotation = mats.blockRotation = _BlockRotation(mats)
-    data[:] = blockRotation.roll[blocks, data]
+    # pcm1k TODO - ignore blocks that are above the limit for now
+#    data[:] = blockRotation.roll[blocks, data]
+    belowLimit = (blocks < id_limit) & (data < data_limit)
+    data[belowLimit] = blockRotation.roll[blocks[belowLimit], data[belowLimit]]

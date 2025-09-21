@@ -9,6 +9,7 @@ import os
 import mcplatform
 import numpy
 import pymclevel
+from pymclevel.id_definitions import PLATFORM_ALPHA
 from resource_packs import ResourcePackHandler
 import glutils
 import mceutils
@@ -189,7 +190,7 @@ class GLDisplayContext(object):
 
         for mats, matFile in textures:
             try:
-                if mats.name == 'Alpha':
+                if mats.defsIds.platform == PLATFORM_ALPHA:
                     tex = mceutils.loadAlphaTerrainTexture()
                 else:
                     tex = mceutils.loadPNGTexture(matFile)

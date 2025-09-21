@@ -108,6 +108,7 @@ from pymclevel.infiniteworld import AnvilWorldFolder, SessionLockLost, MCAlphaDi
     MCInfdevOldLevel, DIM_NETHER, DIM_OVERWORLD, DIM_END
 from pymclevel.level import GAME_PLATFORM_POCKET, GAME_PLATFORM_SCHEMATIC
 from pymclevel.id_definitions import VERSION_UNKNOWN
+from pymclevel.materials import BlockstateAPI
 # Block and item translation
 from mclangres import translate as trn
 from mclangres import buildResources
@@ -821,6 +822,7 @@ class LevelEditor(GLViewport):
     def analyzeBox(self, level, box):
         entityCounts = defaultdict(int)
         tileEntityCounts = defaultdict(int)
+        # pcm1k TODO - id limit
         types = numpy.zeros(65536, dtype='uint32')
 
         def _analyzeBox():
@@ -2291,7 +2293,7 @@ class LevelEditor(GLViewport):
         items = []
 
         #t = functools.partial(isinstance, self.level)
-        # pcm1k - this should be in the class itself
+        # pcm1k TODO - this should probably be in the class itself
         if isinstance(self.level, pymclevel.MCInfdevOldLevel):
             if self.level.version == pymclevel.MCInfdevOldLevel.VERSION_ANVIL:
                 levelFormat = "Minecraft Infinite World (Anvil Format)"
@@ -3083,14 +3085,19 @@ class LevelEditor(GLViewport):
                     bl = self.level.blockLightAt(*blockPosition)
                     bdata = self.level.blockDataAt(*blockPosition)
                     blockID = self.level.blockAt(*blockPosition)
+                    block = self.level.materials.blockWithID(blockID, bdata)
                     self.inspectionString += _("ID: %d:%d (%s), ") % (
-                        blockID, bdata, self.level.materials.names[blockID][bdata])
+                        blockID, bdata, block.name)
 
                     try:
                         path = self.level.getChunk(cx, cz).filename
                     except:
                         path = "chunks.dat"
 
+                    # pcm1k TODO - too long
+#                    blockstate = BlockstateAPI.stringifyBlockstate(*block.Blockstate)
+#                    self.inspectionString += _("Data: %d, Str: %s, L: %d, SL: %d") % (
+#                        bdata, blockstate, bl, sl)
                     self.inspectionString += _("Data: %d, L: %d, SL: %d") % (
                         bdata, bl, sl)
 

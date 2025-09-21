@@ -6,9 +6,8 @@ import itertools
 import time
 from math import floor, ceil, log
 from level import FakeChunk, GAME_PLATFORM_POCKET
-from id_definitions import PLATFORM_POCKET
+from id_definitions import PLATFORM_POCKET, VERSION_UNKNOWN
 import logging
-from materials import getMaterials
 
 import os
 
@@ -781,7 +780,6 @@ class PocketLeveldbWorld(PocketWorldBase):
     Length = 0
 
     isInfinite = True
-    materialsName = "Pocket"
     noTileTicks = True
     _bounds = None
     oldPlayerFolderFormat = False
@@ -1105,23 +1103,19 @@ class PocketLeveldbWorld(PocketWorldBase):
 
         return BoundingBox(origin, size)
 
-    def _findGameVersionNumber(self):
-        version = self._findGameVersionId()
-        if not version:
-            return None
-        return ".".join([str(num) for num in version])
+    @property
+    def gameVersionNumber(self):
+        gameVersionId = self.gameVersionId
+        if bool(gameVersionId):
+            return ".".join([str(num) for num in gameVersionId])
+        return VERSION_UNKNOWN
 
-    def _findGameVersionId(self):
-        data = self.root_tag.get("Data")
-        if data is None or not isinstance(data, nbt.TAG_Compound):
-            return None
-        lastVersion = data.get("lastOpenedWithVersion")
+    @property
+    def gameVersionId(self):
+        lastVersion = self.root_tag["Data"].get("lastOpenedWithVersion")
         if lastVersion is None or not isinstance(lastVersion, nbt.TAG_List) or lastVersion.list_type != nbt.TAG_INT:
             return None
         return [num.value for num in lastVersion]
-
-    def _loadMaterials(self):
-        return getMaterials(self.defsIds, forceNew=True, name="Pocket", defaultName="Future Block!")
 
     @classmethod
     def _isLevel(cls, filename):
@@ -1936,7 +1930,7 @@ class PocketLeveldbChunk1Plus(LightedChunk):
                 idStr = 'air'
                 item["val"] = nbt.TAG_Short(0)
             if idStr != 'air' and idStr not in self.world.materials.idStr:
-                # pcm1k - how would adding these fake ids work if the materials object is not global?
+                # pcm1k TODO - use the new system
                 self.world.materials.addJSONBlock({"id": self.world.materials.tempBlockID, "name": idStr, "idStr": idStr, "mapcolor": [214, 127, 255], "data": {n: {"name": idStr} for n in range(16)}})
                 self.world.materials.tempBlockID += 1
             if idStr == 'air':

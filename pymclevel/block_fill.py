@@ -14,8 +14,27 @@ from entity import TileEntity
 def blockReplaceTable(blocksToReplace):
     blocktable = numpy.zeros((materials.id_limit, materials.data_limit), dtype='bool')
     for b in blocksToReplace:
+        if b.ID < materials.id_limit and b.blockData < materials.data_limit:
             blocktable[b.ID, b.blockData] = True
     return blocktable
+
+
+def blockReplaceFunc(blocksToReplace):
+    blocktable = blockReplaceTable(blocksToReplace)
+    toReplaceSet = {(b.ID, b.blockData) for b in blocksToReplace}
+
+    def replaceFunc(blocks, data):
+        # pcm1k TODO - this will probably be replaced with a more proper solution later
+        mask = numpy.zeros(blocks.shape, dtype="bool")
+        belowLimit = (blocks < materials.id_limit) & (data < materials.data_limit)
+        mask[belowLimit] = blocktable[blocks[belowLimit], data[belowLimit]]
+
+        # handle blocks that are above the limit
+        for pos in zip(*(~belowLimit).nonzero()):
+            mask[pos] = (blocks[pos], data[pos]) in toReplaceSet
+        return mask
+
+    return replaceFunc
 
 
 def fillBlocks(level, box, blockInfo, blocksToReplace=(), noData=False):
@@ -32,9 +51,9 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
     log.info("Replacing {0} with {1}".format(blocksToReplace, blockInfo))
 
     changesLighting = True
-    blocktable = None
+    replaceFunc = None
     if len(blocksToReplace):
-        blocktable = blockReplaceTable(blocksToReplace)
+        replaceFunc = blockReplaceFunc(blocksToReplace)
 
         newAbsorption = level.materials.lightAbsorption[blockInfo.ID]
         oldAbsorptions = [level.materials.lightAbsorption[b.ID] for b in blocksToReplace]
@@ -57,7 +76,7 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
     append = blocksList.append
     if tileEntity and box is not None:
         for (boxX, boxY, boxZ) in box.positions:
-            if blocktable is None or level.blockAt(boxX, boxY, boxZ) in blocksIdToReplace:
+            if replaceFunc is None or level.blockAt(boxX, boxY, boxZ) in blocksIdToReplace:
                 tileEntityObject = level.tileEntityTypes.Create(tileEntity)
                 TileEntity.setpos(tileEntityObject, (boxX, boxY, boxZ))
                 append(tileEntityObject)
@@ -78,8 +97,8 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
 
         needsLighting = changesLighting
 
-        if blocktable is not None:
-            mask = blocktable[blocks, data]
+        if replaceFunc is not None:
+            mask = replaceFunc(blocks, data)
 
             blockCount = mask.sum()
             replaced += blockCount

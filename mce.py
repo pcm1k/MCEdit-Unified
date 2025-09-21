@@ -274,6 +274,7 @@ class mce(object):
 
     @staticmethod
     def readBlocksToCopy(command):
+        # pcm1k TODO - id limit
         blocksToCopy = range(materials.id_limit)
         while len(command):
             word = command.pop()
@@ -449,6 +450,7 @@ class mce(object):
 
         Counts all of the block types in every chunk of the world.
         """
+        # pcm1k TODO - id limit
         blockCounts = zeros((65536,), 'uint64')
 
         print "Analyzing {0} chunks...".format(self.level.chunkCount)

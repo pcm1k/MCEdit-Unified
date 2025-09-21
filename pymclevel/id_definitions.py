@@ -71,6 +71,20 @@ VERSION_UNKNOWN = "Unknown"
 VERSION_LATEST = "Latest"
 
 
+class DefsIdsVersion(LooseVersion):
+    def __cmp__(self, other):
+        selfStr = str(self)
+        otherStr = str(other)
+        if selfStr == otherStr:
+            return 0
+        if selfStr == VERSION_UNKNOWN or otherStr == VERSION_LATEST:
+            # old versions will likely return an unknown version, so it makes sense just to choose the earliest one
+            return -1
+        if selfStr == VERSION_LATEST or otherStr == VERSION_UNKNOWN:
+            return 1
+        return LooseVersion.__cmp__(self, other)
+
+
 def updateRecursive(orig_dict, new_dict):
     for key, val in new_dict.iteritems():
         if isinstance(val, collections.Mapping):
@@ -150,41 +164,53 @@ def _deleteOld(prefix, prefixDict, itemOld):
 
 def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
     # pcm1k TODO - this should handle extra item in "data" like how MCMaterials does it
-    if "_name" in item:
-        _name = item["_name"]
-    elif "idStr" in item:
-        _name = item["idStr"]
-    else:
-        _name = str(item["id"])
+    def getEntryName(item):
+        entryName = item.get("_name")
+        if bool(entryName):
+            return entryName
+        entryName = item.get("idStr")
+        if entryName is not None:
+            return entryName
+        return str(item["id"])
+
+    _name = getEntryName(item)
     entry_name = MCEditDefsIds.formatDefId(prefix, _name)
+    prefixDict = ids_dict.get(prefix)
+    if prefixDict is None:
+        ids_dict[prefix] = prefixDict = {}
 
     itemOld = defs_dict.get(entry_name)
     if bool(itemOld):
-        _deleteOld(prefix, ids_dict[prefix], itemOld)
+        # pcm1k TODO - also remove the entry in "data"?
+        _deleteOld(prefix, prefixDict, itemOld)
 
     defs_dict[entry_name] = item
-    if prefix not in ids_dict:
-        ids_dict[prefix] = {}
     id_ = item.get("id")
     if id_ is not None:
-        ids_dict[prefix][id_] = entry_name
+        prefixDict[id_] = entry_name
     idStr = item.get("idStr")
     if bool(idStr):
         if bool(namespace):
             namespacedId = "%s:%s" % (namespace, idStr)
-            ids_dict[prefix][namespacedId] = entry_name
+            prefixDict[namespacedId] = entry_name
             item["namespace"] = namespace
         if not bool(namespace) or namespace == "minecraft":
-            ids_dict[prefix][idStr] = entry_name
+            prefixDict[idStr] = entry_name
 
     if "_name" not in item:
         item["_name"] = _name
 
+    def getFullId(item, defs_dict):
+        actorType = item.get("actorType")
+        if actorType is None:
+            return 0
+        actorTypesRes = defs_dict.get("actorTypesRes")
+        if actorTypesRes is None:
+            return 0
+        return _resolveType(actorTypesRes, "", actorType, set())
+
     if id_ is not None:
-        fullid = id_
-        if "actorType" in item and "actorTypesRes" in defs_dict:
-            fullid |= _resolveType(defs_dict["actorTypesRes"], "", item["actorType"], set())
-        item["fullid"] = fullid
+        item["fullid"] = id_ | getFullId(item, defs_dict)
 
     for a_name, a_value in autobuilds.iteritems():
         try:
@@ -532,15 +558,15 @@ def _findVersionDir(platformDir, platform, version, fileFuncs):
     log.info("No definitions found for MC {} {}. Trying to find ones for the closest lower version.".format(platform, version))
     verDirs = [entry for entry in fileFuncs.listdir(platformDir) if fileFuncs.isdir(fileFuncs.join(platformDir, entry))]
     # pcm1k TODO - use linkVer instead?
-    if version == VERSION_UNKNOWN:
-        # old versions will likely return an unknown version, so it makes sense just to choose the earliest one
-        verDirs.sort(key=LooseVersion)
-        return verDirs[0]
-    elif version == VERSION_LATEST:
-        verDirs.sort(key=LooseVersion)
-        return verDirs[-1]
+#    if version == VERSION_UNKNOWN:
+#        # old versions will likely return an unknown version, so it makes sense just to choose the earliest one
+#        verDirs.sort(key=LooseVersion)
+#        return verDirs[0]
+#    elif version == VERSION_LATEST:
+#        verDirs.sort(key=LooseVersion)
+#        return verDirs[-1]
     verDirs.append(version)
-    verDirs.sort(key=LooseVersion)
+    verDirs.sort(key=DefsIdsVersion)
     idx = verDirs.index(version) - 1
     if idx < 0:
         # choose the next highest version instead

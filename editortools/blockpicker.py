@@ -3,9 +3,8 @@ from albow.dialogs import Dialog
 from editortools import thumbview
 from editortools import blockview
 from glbackground import GLBackground
-from pymclevel import materials
 from albow.root import get_root
-from pymclevel.materials import Block
+from pymclevel.materials import Block, BlockstateAPI, id_limit, data_limit, id_limit_mask, data_limit_mask, getMaterials
 from albow.translate import getLang
 
 #&# Prototype for blocks/items names
@@ -34,11 +33,17 @@ class BlockPicker(Dialog):
 
         self.click_outside_response = 0
         self.materials = materials
+        if materials.locked:
+            self.previewMaterials = materials
+        else:
+            # pcm1k TODO - maybe have a "real" way to copy an MCMaterials?
+            self.previewMaterials = getMaterials(materials.defsIds, forceNew=True)
         self.anySubtype = blockInfo.wildcard
 
-        self.matchingBlocks = sorted(list(set(materials.allBlocks)))
+        allBlocks = materials.allBlocks
+        self.matchingBlocks = sorted(list(set(allBlocks)))
         #&#
-        self.searchNames = [mclangres.translate(a.name).lower() for a in self.matchingBlocks]
+        self.searchNames = [mclangres.translate(a.name).lower() for a in allBlocks]
         #&#
 
         try:
@@ -73,7 +78,7 @@ class BlockPicker(Dialog):
             #r = "{name}".format(name=block.name)
             r = u"{name}".format(name=mclangres.translate(block.name))
             #&#
-            if block.aka:
+            if bool(block.aka):
                 #&#
                 #r += " [{0}]".format(block.aka)
                 r += u" [{0}]".format(mclangres.translate(block.aka))
@@ -83,9 +88,12 @@ class BlockPicker(Dialog):
 
         def formatBlockID(x):
             block = self.matchingBlocks[x]
-            ident = "({id}:{data})".format(id=block.ID, data=block.blockData)
+            ident = "({id}:{data})".format(
+                id=block.ID if block.ID < id_limit else "?",
+                data=block.blockData if block.blockData < data_limit else "?")
             return ident
 
+        # pcm1k TODO - this should have the stringID
         tableview = TableView(columns=[TableColumn(" ", 24, "l", lambda x: ""),
                                        TableColumn("Name", 415, "l", formatBlockName),
                                        TableColumn("ID", 45, "l", formatBlockID)
@@ -169,7 +177,7 @@ class BlockPicker(Dialog):
 
     @property
     def blockInfo(self):
-        if len(self.matchingBlocks):
+        if bool(self.matchingBlocks):
             bl = self.matchingBlocks[self.selectedBlockIndex]
             if self.anySubtype:
                 return bl.anySubtype()
@@ -189,17 +197,18 @@ class BlockPicker(Dialog):
 
     def textEntered(self):
         text = self.awesomeField.text
-        blockData = 0
+        blockData = None
+        materials = self.materials
         try:
-            if ":" in text:
-                text, num = text.split(":", 1)
-                # pcm1k - data limit
-                blockData = int(num) & 0xf
-                blockID = int(text) % materials.id_limit
-            else:
-                blockID = int(text) % materials.id_limit
+            textSplit = text.rsplit(":", 1)
+            if len(textSplit) == 2:
+                text2, num = textSplit
+                blockData = int(num) & data_limit_mask
+                # only actually set the text if the above succeeds
+                text = text2
+            blockID = int(text) & id_limit_mask
 
-            block = self.materials.blockWithID(blockID, blockData)
+            block = materials.blockWithID(blockID, blockData)
 
             self.matchingBlocks = [block]
             self.selectedBlockIndex = 0
@@ -212,22 +221,31 @@ class BlockPicker(Dialog):
         except Exception as e:
             print repr(e)
 
-        blocks = self.materials.allBlocks
-
-        if len(text):
+        if bool(text):
+            previewMaterials = self.previewMaterials
             if getLang() == 'en_US':
-                matches = self.materials.blocksMatching(text)
+                matches = materials.blocksMatching(text)
             else:
-                matches = self.materials.blocksMatching(text, self.searchNames)
-            if blockData:
+                matches = materials.blocksMatching(text, self.searchNames)
+
+#            matches = (materials if blockData is None else previewMaterials).blocksMatching(text,
+#                names=self.searchNames if getLang() != "en_US" else None)
+            matches = materials.blocksMatching(text,
+                names=self.searchNames if getLang() != "en_US" else None)
+
+            stringID, properties = BlockstateAPI.deStringifyBlockstate(text)
+            with previewMaterials.tempBlocks():
+                stateID, stateData = previewMaterials.blockstate_api.blockstateToID(stringID, properties, create=True)
+            if stateID != -1 and stateData != -1:
+                matches.append(previewMaterials.blockWithID(stateID, stateData))
+
+            if blockData is not None:
                 ids = set(b.ID for b in matches)
-                matches = sorted([self.materials.blockWithID(id, blockData) for id in ids])
-
-            self.matchingBlocks = matches
+                matches = [previewMaterials.blockWithID(id, blockData) for id in ids]
         else:
-            self.matchingBlocks = blocks
+            matches = materials.allBlocks
 
-        self.matchingBlocks = sorted(list(set(self.matchingBlocks)))
+        self.matchingBlocks = sorted(list(set(matches)))
         self.selectedBlockIndex = 0
 
         self.tableview.rows.scroll_to_item(self.selectedBlockIndex)
@@ -255,3 +273,15 @@ class BlockPicker(Dialog):
                 self.blockButton.blockInfo = self.blockInfo
             if self.tableview.rows.cell_to_item_no(0, 0) != None and (self.tableview.rows.cell_to_item_no(0, 0) + self.tableview.rows.num_rows() -1 > self.selectedBlockIndex or self.tableview.rows.cell_to_item_no(0, 0) + self.tableview.rows.num_rows() -1 < self.selectedBlockIndex):
                 self.tableview.rows.scroll_to_item(self.selectedBlockIndex)
+
+    def ok(self):
+        blockInfo = self.blockInfo
+        materials = self.materials
+        if blockInfo.materials is not materials:
+            stateID, stateData = materials.blockstate_api.blockstateToID(*blockInfo.Blockstate, create=True)
+            if stateID != -1 and stateData != -1:
+                self.matchingBlocks = [materials.blockWithID(stateID, stateData)]
+            else:
+                self.matchingBlocks = []
+            self.selectedBlockIndex = 0
+        super(BlockPicker, self).ok()

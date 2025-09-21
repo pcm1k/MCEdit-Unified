@@ -1,6 +1,5 @@
 from level import FakeChunk
 import logging
-from materials import getMaterials
 from mclevelbase import ChunkNotPresent, notclosing
 from nbt import TAG_List
 from numpy import array, fromstring, zeros
@@ -311,7 +310,6 @@ class PocketWorld(PocketWorldBase):
     _defsPlatform = PLATFORM_POCKET
 
     isInfinite = True  # Wrong. isInfinite actually means 'isChunked' and should be changed
-    materialsName = "Pocket"
 
     @property
     def allChunks(self):
@@ -336,9 +334,6 @@ class PocketWorld(PocketWorldBase):
             c = self.chunkFile.loadChunk(cx, cz, self)
             self._loadedChunks[cx, cz] = c
         return c
-
-    def _loadMaterials(self):
-        return getMaterials(self.defsIds, forceNew=True, name="Pocket", defaultName="Future Block!")
 
     @classmethod
     def _isLevel(cls, filename):

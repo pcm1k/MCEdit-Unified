@@ -23,14 +23,13 @@ from box import BoundingBox
 from entity import Entity, TileEntity, TileTick
 from faces import FaceXDecreasing, FaceXIncreasing, FaceZDecreasing, FaceZIncreasing
 from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase, GAME_PLATFORM_JAVA
-import materials
 from mclevelbase import ChunkMalformed, ChunkNotPresent, ChunkAccessDenied,ChunkConcurrentException,exhaust, PlayerNotFound
 import nbt
 from numpy import array, clip, maximum, zeros, asarray, unpackbits, arange
 from regionfile import MCRegionFile, ChunkTooBig, ExternalChunk
 import logging
 from uuid import UUID
-from id_definitions import PLATFORM_ALPHA
+from id_definitions import PLATFORM_ALPHA, VERSION_UNKNOWN
 
 log = getLogger(__name__)
 
@@ -251,6 +250,8 @@ class AnvilChunk(LightedChunk):
     arrays are automatically unpacked from nibble arrays into byte arrays
     for better handling.
     """
+
+    _defsPlatform = PLATFORM_ALPHA
 
     def __init__(self, chunkData):
         self.world = chunkData.world
@@ -1369,7 +1370,6 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
     # --- Instance variables  ---
 
-    materialsName = "Alpha"
     isInfinite = True
     parentWorld = None
     dimNo = DIM_OVERWORLD
@@ -1531,32 +1531,32 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
         return False
 
-    def _findGameVersionNumber(self):
-        data = self.root_tag.get("Data")
-        if data is None or not isinstance(data, nbt.TAG_Compound):
-            return None
-        version = data.get("Version")
-        if version is None or not isinstance(version, nbt.TAG_Compound):
-            return None
-        name = version.get("Name")
-        if name is None or not isinstance(name, nbt.TAG_String):
-            return None
-        return name.value
-
-    def _findGameVersionId(self):
-        data = self.root_tag.get("Data")
-        if data is None or not isinstance(data, nbt.TAG_Compound):
-            return None
-        version = data.get("Version")
-        if version is None or not isinstance(version, nbt.TAG_Compound):
+    @property
+    def dataVersion(self):
+        version = self.root_tag["Data"].get("Version")
+        if version is None:
             return None
         id_ = version.get("Id")
-        if id_ is None or not isinstance(id_, nbt.TAG_Int):
+        if id_ is None:
             return None
-        return [id_.value]
+        return id_.value
 
-    def _loadMaterials(self):
-        return materials.getMaterials(self.defsIds, forceNew=True, name="Alpha", defaultName="Future Block!")
+    @property
+    def gameVersionNumber(self):
+        version = self.root_tag["Data"].get("Version")
+        if version is None:
+            return VERSION_UNKNOWN
+        name = version.get("Name")
+        if name is None:
+            return VERSION_UNKNOWN
+        return name.value
+
+    @property
+    def gameVersionId(self):
+        dataVersion = self.dataVersion
+        if dataVersion is None:
+            return None
+        return [dataVersion]
 
     # --- Dimensions ---
 

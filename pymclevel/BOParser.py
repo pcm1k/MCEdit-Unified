@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 # Load the bo3.def file (internal BO3 block names).
 bo3_blocks = {}
 #if not os.path.exists(os.path.join(getDataDir(), 'bo3.def')):
-# pcm1k - this is outside the pymclevel directory
+# pcm1k TODO - this is outside the pymclevel directory
 if not os.path.exists(getDataFile('bo3.def')):
     log.warning('The `bo3.def` file is missing in `%s`. The BO3 support will not be complete...'%getDataFile())
 else:

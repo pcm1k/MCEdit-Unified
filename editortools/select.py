@@ -35,7 +35,7 @@ from mceutils import alertException, drawCube, drawFace, drawTerrainCuttingWire,
 from operation import Operation
 import pymclevel
 from pymclevel.box import Vector, BoundingBox, FloatBox
-from pymclevel.materials import BlockstateAPI
+from pymclevel.materials import BlockstateAPI, id_limit, data_limit
 from fill import BlockFillOperation
 import tempfile
 from pymclevel import nbt
@@ -315,7 +315,9 @@ class SelectionTool(EditorTool):
         text = "X: {pos[0]}\nY: {pos[1]}\nZ: {pos[2]}\n".format(pos=pos)
         text += "Light: {0} Sky: {1}\n".format(level.blockLightAt(*pos), level.skylightAt(*pos))
         text += "{name} ({bid}:{bdata}) ({state})\n".format(name=block.name,
-                                                  bid=blockID, pos=pos, bdata=blockdata, state=blockstate)
+                                                  bid=blockID if blockID < id_limit else "?",
+                                                  bdata=blockdata if blockdata < data_limit else "?",
+                                                  state=blockstate)
         t = level.tileEntityAt(*pos)
         if t:
             text += "TileEntity:\n"

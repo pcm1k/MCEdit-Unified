@@ -129,7 +129,7 @@ class BlockCopyOperation(Operation):
 
         blocksToCopy = None
         if not (self.copyAir and self.copyWater):
-            blocksToCopy = range(pymclevel.materials.id_limit)
+            blocksToCopy = range(max(self.sourceLevel.materials.topBlockID + 1, pymclevel.materials.id_limit))
             if not self.copyAir:
                 blocksToCopy.remove(0)
             if not self.copyWater:
@@ -1140,6 +1140,7 @@ class ConstructionTool(CloneTool):
 
     def createTestBoard(self, anyBlock=True):
         if anyBlock:
+            # pcm1k TODO - does this need to be changed?
             allBlocks = [self.editor.level.materials[a, b] for a in xrange(256) for b in xrange(16)]
             blockWidth = 64
         else:

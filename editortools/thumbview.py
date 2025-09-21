@@ -91,14 +91,14 @@ class BlockThumbView(Widget):
 
     @blockInfo.setter
     def blockInfo(self, b):
-        if self._blockInfo != b:
+        if self._blockInfo is not b:
             if self.thumb:
                 self.thumb.set_parent(None)
             self._blockInfo = b
             if b is None:
                 return
 
-            sch = pymclevel.MCSchematic(shape=(1, 1, 1), mats=self.materials)
+            sch = pymclevel.MCSchematic(shape=(1, 1, 1), mats=b.materials)
             if b:
                 sch.Blocks[:] = b.ID
                 sch.Data[:] = b.blockData

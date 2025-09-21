@@ -1,4 +1,7 @@
 {
+    "blockDefaults": {
+        "name": "Not present in Indev"
+    },
     "blocks": [
         {
             "id": 1,

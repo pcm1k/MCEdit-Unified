@@ -1,4 +1,7 @@
 {
+    "blockDefaults": {
+        "name": "Not present in Classic"
+    },
     "blocks": [
         {
             "id": 1,

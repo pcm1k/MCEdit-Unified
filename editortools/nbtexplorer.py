@@ -975,7 +975,7 @@ class NBTExplorerToolPanel(Panel):
         slots_set = []
         for item, i in zip(items, xrange(len(items))):
             # &# Prototype for blocks/items names
-            # pcm1k - this should use whatever function in items itself
+            # pcm1k TODO - this should use whatever function in items itself
 #            try:
 #                item = mcitems.findItem(item["id"].value, item["Damage"].value)
 #                item_name = item.name

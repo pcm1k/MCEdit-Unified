@@ -1,4 +1,7 @@
 {
+    "blockDefaults": {
+        "name": "Future Block!"
+    },
     "blocks": [
         {
             "data": {
@@ -19476,6 +19479,10 @@
             "name": "End Rod",
             "tex": [
                 16,
+                20
+            ],
+            "tex2d": [
+                17,
                 20
             ]
         },

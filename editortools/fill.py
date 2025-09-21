@@ -26,6 +26,7 @@ from glutils import Texture
 from mceutils import alertException, setWindowCaption
 from operation import Operation
 from pymclevel.blockrotation import Roll, RotateLeft, FlipVertical, FlipEastWest, FlipNorthSouth
+from pymclevel.id_definitions import PLATFORM_ALPHA, PLATFORM_POCKET
 
 from config import config
 from albow.root import get_root
@@ -253,7 +254,7 @@ class FillTool(EditorTool):
                 if self.blockInfo.wildcard:
                     print "Wildcard replace"
                     blocksToReplace = []
-                    for i in xrange(16):
+                    for i in xrange(pymclevel.materials.data_limit):
                         blocksToReplace.append(self.editor.level.materials.blockWithID(self.blockInfo.ID, i))
                 else:
                     blocksToReplace = [self.blockInfo]
@@ -335,7 +336,7 @@ class FillTool(EditorTool):
             if not hasattr(terrainTexture, "data"):
                 return
             w, h = terrainTexture.data.shape[:2]
-            pixelWidth = 512 if self.editor.level.materials.name in ("Pocket", "Alpha") else 256
+            pixelWidth = 512 if self.editor.level.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET) else 256
             s = s * w / pixelWidth
             t = t * h / pixelWidth
             texData = numpy.array(terrainTexture.data[t:t + h / 32, s:s + w / 32])
@@ -361,7 +362,7 @@ class FillTool(EditorTool):
         color = 1.0, 1.0, 1.0, 0.35
         if blockInfo:
             terrainTexture = self.editor.level.materials.terrainTexture
-            tex = self.editor.level.materials.blockTextures[blockInfo.ID, blockInfo.blockData, 0]  # xxx
+            tex = self.editor.level.materials.blockTextures[blockInfo.ID, blockInfo.blockData & pymclevel.materials.data_limit_mask, 0]  # xxx
             tex = Texture(self.blockTexFunc(terrainTexture, tex))
 
             # color = (1.5 - alpha, 1.0, 1.5 - alpha, alpha - 0.35)

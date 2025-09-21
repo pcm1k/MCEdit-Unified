@@ -52,6 +52,7 @@ class Items(BaseTypeSet):
 
         for idStr, defId in defsIds.mcedit_ids["items"].iteritems():
             addItem(idStr, defsIds.mcedit_defs[defId])
+        # pcm1k TODO - this should use materials instead of directly using the JSON
         for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
             addItem(idStr, defsIds.mcedit_defs[defId])
 
@@ -67,7 +68,7 @@ class Items(BaseTypeSet):
         except:
             item = self.findItemID(id)
         if damage <= item["maxdamage"]:
-            # pcm1k - this should use the new "data" field
+            # pcm1k TODO - this should use the new "data" field
             if isinstance(item["name"], basestring):
                 return ItemType(id, item["name"], item["maxdamage"], damage, item["stacksize"])
             else:

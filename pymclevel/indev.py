@@ -62,7 +62,6 @@ TAG_Compound "MinecraftLevel"
 from entity import TileEntity
 from level import MCLevel
 from logging import getLogger
-from materials import getMaterials
 from numpy import array, swapaxes
 import nbt
 import os
@@ -98,7 +97,6 @@ class MCIndevLevel(EntityLevel):
     """ IMPORTANT: self.Blocks and self.Data are indexed with [x,z,y] via axis
     swapping to be consistent with infinite levels."""
 
-    materialsName = "Indev"
     _gamePlatform = GAME_PLATFORM_INDEV
     _defsPlatform = PLATFORM_INDEV
 
@@ -145,9 +143,6 @@ class MCIndevLevel(EntityLevel):
 
     def __repr__(self):
         return u"MCIndevLevel({0}): {1}W {2}L {3}H".format(self.filename, self.Width, self.Length, self.Height)
-
-    def _loadMaterials(self):
-        return getMaterials(self.defsIds, forceNew=True, name="Indev", defaultName="Not present in Indev")
 
     @classmethod
     def _isTagLevel(cls, root_tag):

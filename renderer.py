@@ -223,6 +223,7 @@ import logging
 import numpy
 from OpenGL import GL
 import pymclevel
+from pymclevel.id_definitions import PLATFORM_ALPHA, PLATFORM_CLASSIC, PLATFORM_POCKET
 from pymclevel.entity import TileTick
 import sys
 from config import config
@@ -730,7 +731,7 @@ class ChunkCalculator(object):
             WaterBlockRenderer,
             SlabBlockRenderer,
         ]
-        if materials.name in ("Alpha", "Pocket"):
+        if materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
             self.blockRendererClasses += [
                 RailBlockRenderer,
                 LadderBlockRenderer,
@@ -1052,18 +1053,19 @@ class ChunkCalculator(object):
                 areaBlockLights[slabs] = areaBlockLights[:, :, 1:][slabs[:, :, :-1]]
             yield
 
+        areaBlocksMin = numpy.minimum(areaBlocks, pymclevel.materials.id_limit - 1)
         showHiddenOres = cr.renderer.showHiddenOres
         if showHiddenOres:
-            facingMats = self.hiddenOreMaterials[areaBlocks]
+            facingMats = self.hiddenOreMaterials[areaBlocksMin]
         else:
-            facingMats = self.exposedMaterialMap[areaBlocks]
+            facingMats = self.exposedMaterialMap[areaBlocksMin]
 
         yield
 
         if self.roughGraphics:
-            areaBlockMats = self.roughMaterials[areaBlocks]
+            areaBlockMats = self.roughMaterials[areaBlocksMin]
         else:
-            areaBlockMats = self.materialMap[areaBlocks]
+            areaBlockMats = self.materialMap[areaBlocksMin]
 
         facingBlockIndices = self.getFacingBlockIndices(areaBlocks, facingMats)
         yield
@@ -1127,7 +1129,7 @@ class ChunkCalculator(object):
         append = blockRenderers.append
 
         def texMap(blocks, blockData=0, direction=slice(None)):
-            return materials.blockTextures[blocks, blockData, direction]  # xxx slow
+            return materials.blockTextures[blocks, numpy.bitwise_and(blockData, pymclevel.materials.data_limit_mask), direction]  # xxx slow
 
         for blockRendererClass in self.blockRendererClasses:
             mi = blockRendererClass.materialIndex
@@ -1562,8 +1564,7 @@ class LowDetailBlockRenderer(BlockRenderer):
         if nonAirBlocks.any():
             blockTypes = blocks[blockIndices]
 
-            # pcm1k - data limit
-            flatcolors = level.materials.flatColors[blockTypes, ch.Data[blockIndices] & 0xf][:, numpy.newaxis, :]
+            flatcolors = level.materials.flatColors[blockTypes, ch.Data[blockIndices] & pymclevel.materials.data_limit_mask][:, numpy.newaxis, :]
             x, z, y = blockIndices.nonzero()
 
             yield
@@ -1649,7 +1650,7 @@ class GenericBlockRenderer(BlockRenderer):
             vertexArray[_ST] += texMap(theseBlocks, bdata, direction)[:, numpy.newaxis, 0:2]
 
             vertexArray.view('uint8')[_RGB] *= facingBlockLight[blockIndices][..., numpy.newaxis, numpy.newaxis]
-            if self.materials.name in ("Alpha", "Pocket"):
+            if self.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
                 if direction == pymclevel.faces.FaceYIncreasing:
                     grass = theseBlocks == pymclevel.materials.alphaMaterials.Grass.ID
                     vertexArray.view('uint8')[_RGB][grass] = vertexArray.view('uint8')[_RGB][grass].astype(float) * self.grassColor
@@ -1685,7 +1686,7 @@ class LeafBlockRenderer(BlockRenderer):
 
         alphaMaterials = pymclevel.materials.alphaMaterials
 
-        if self.materials.name in ("Alpha", "Pocket"):
+        if self.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
             if not self.chunkCalculator.fastLeaves:
                 blockIndices = materialIndices
                 data = blockData[blockIndices]
@@ -1702,7 +1703,7 @@ class LeafBlockRenderer(BlockRenderer):
             texes = texMap(blocks[blockIndices], [0], 0)
 
         for (direction, exposedFaceIndices) in enumerate(facingBlockIndices):
-            if self.materials.name in ("Alpha", "Pocket"):
+            if self.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
                 if self.chunkCalculator.fastLeaves:
                     blockIndices = materialIndices & exposedFaceIndices
                     data = blockData[blockIndices]
@@ -1727,7 +1728,7 @@ class LeafBlockRenderer(BlockRenderer):
                 vertexArray[_ST] -= (0x10, 0x0)
 
             vertexArray.view('uint8')[_RGB] *= facingBlockLight[blockIndices][..., numpy.newaxis, numpy.newaxis]
-            if self.materials.name in ("Alpha", "Pocket"):
+            if self.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
                 vertexArray.view('uint8')[_RGB][leaves] = vertexArray.view('uint8')[_RGB][leaves].astype(float) * self.leafColor
                 vertexArray.view('uint8')[_RGB][pines] = vertexArray.view('uint8')[_RGB][pines].astype(float) * self.pineLeafColor
                 vertexArray.view('uint8')[_RGB][birches] = vertexArray.view('uint8')[_RGB][birches].astype(float) * self.birchLeafColor
@@ -1776,7 +1777,7 @@ class PlantBlockRenderer(BlockRenderer):
         lights = blockLight[blockIndices][..., numpy.newaxis, numpy.newaxis]
 
         colorize = None
-        if self.materials.name in ("Alpha", "Pocket"):  #so hacky, someone more competent fix this
+        if self.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):  #so hacky, someone more competent fix this
             colorize = (theseBlocks == self.materials.TallGrass.ID) & (bdata != 0)
             colorize2 = (theseBlocks == self.materials.TallFlowers.ID) & (bdata != 0) & (
             bdata != 1) & (bdata != 4) & (bdata != 5)
@@ -3729,7 +3730,7 @@ class MCRenderer(object):
         if not self.render:
             return
 
-        if self.level.materials.name in ("Pocket", "Alpha"):
+        if self.level.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
             GL.glMatrixMode(GL.GL_TEXTURE)
             GL.glScalef(1 / 2., 1 / 2., 1 / 2.)
 
@@ -3767,7 +3768,7 @@ class MCRenderer(object):
             GL.glDisableClientState(GL.GL_TEXTURE_COORD_ARRAY)
             self.drawLoadableChunkMarkers()
 
-        if self.level.materials.name in ("Pocket", "Alpha"):
+        if self.level.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET):
             GL.glMatrixMode(GL.GL_TEXTURE)
             GL.glScalef(2., 2., 2.)
 

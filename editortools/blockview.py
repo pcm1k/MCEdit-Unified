@@ -7,6 +7,7 @@ import thumbview
 import blockpicker
 from glbackground import Panel, GLBackground
 from glutils import DisplayList
+from pymclevel.id_definitions import PLATFORM_ALPHA, PLATFORM_POCKET
 
 #&# Prototype for blocks/items names
 import mclangres
@@ -22,7 +23,7 @@ class BlockView(GLOrtho):
     listBlockInfo = None
 
     def gl_draw(self):
-        if self.listBlockInfo != self.blockInfo:
+        if self.listBlockInfo is not self.blockInfo:
             self.list.invalidate()
             self.listBlockInfo = self.blockInfo
 
@@ -30,14 +31,15 @@ class BlockView(GLOrtho):
 
     def _gl_draw(self):
         blockInfo = self.blockInfo
-        if blockInfo.ID is 0:
+        if blockInfo.ID == 0:
             return
 
         GL.glColor(1.0, 1.0, 1.0, 1.0)
         GL.glEnable(GL.GL_TEXTURE_2D)
         GL.glEnable(GL.GL_ALPHA_TEST)
-        self.materials.terrainTexture.bind()
-        pixelScale = 0.5 if self.materials.name in ("Pocket", "Alpha") else 1.0
+        materials = blockInfo.materials
+        materials.terrainTexture.bind()
+        pixelScale = 0.5 if materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET) else 1.0
         texSize = 16 * pixelScale
 
         GL.glEnableClientState(GL.GL_TEXTURE_COORD_ARRAY)
@@ -45,12 +47,7 @@ class BlockView(GLOrtho):
                                                      - 1, 1,
                                                      1, 1,
                                                      1, -1, ], dtype='float32'))
-        # hack to get end rod to render properly
-        # we really should use json models?
-        if blockInfo.ID == 198:
-            texOrigin = array([17*16, 20*16])
-        else:
-            texOrigin = array(self.materials.blockTextures[blockInfo.ID, blockInfo.blockData, 0])
+        texOrigin = array(blockInfo.iconTextures)
         texOrigin = texOrigin.astype(float) * pixelScale
 
         GL.glTexCoordPointer(2, GL.GL_FLOAT, 0, array([texOrigin[0], texOrigin[1] + texSize,

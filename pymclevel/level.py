@@ -15,7 +15,7 @@ from mclevelbase import ChunkMalformed, ChunkNotPresent
 import nbt
 from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
-from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN, VERSION_STR_FILTER
+from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN
 from items import items as globalItems, getItemTypes
 #from infiniteworld import DIM_NETHER, DIM_OVERWORLD, DIM_END
 import re
@@ -141,10 +141,7 @@ class MCLevel(object):
     # ## common to Creative, Survival and Indev. these routines assume
     ### self has Width, Height, Length, and Blocks
 
-    materialsName = "Classic"
     isInfinite = False
-    _gamePlatform = GAME_PLATFORM_UNKNOWN
-    _defsPlatform = PLATFORM_UNKNOWN
 
     saving = False
 
@@ -169,68 +166,45 @@ class MCLevel(object):
     def gamePlatform(self):
         """Returns the platform the world is from ("Java", "PE", "Schematic"...).
         This value is considered deprecated. New code should compare the class directly using isinstance()"""
-        return self._gamePlatform
+        if hasattr(self, "_gamePlatform"):
+            return self._gamePlatform
+        return GAME_PLATFORM_UNKNOWN
 
     @property
     def defsPlatform(self):
         """Returns the platform the world is from ("Alpha", "Pocket", "Classic"...).
         This value is meant to be somewhat compatible with the names used for materials and should be used for loading version data"""
-        return self._defsPlatform
-
-    def _findGameVersionNumber(self):
-        return self.defsPlatform
+        if hasattr(self, "_defsPlatform"):
+            return self._defsPlatform
+        return PLATFORM_UNKNOWN
 
     @property
     def gameVersionNumber(self):
         """Returns the name of the version the world was last opened in (eg "1.12.2"...), or VERSION_UNKNOWN if unavailable.
         Note that this value should only be used to display and is NOT suitable for comparison.
-        Use gameVersionId for comparison instead.
-        Subclasses should implement _findGameVersionNumber"""
-        if hasattr(self, "_gameVersionNumber"):
-            return self._gameVersionNumber
-        version = self._findGameVersionNumber()
-        if version:
-            self._gameVersionNumber = VERSION_STR_FILTER.sub("", version)
-        else:
-            # unavailable
-            self._gameVersionNumber = VERSION_UNKNOWN
-        return self._gameVersionNumber
-
-    def _findGameVersionId(self):
-        return None
+        Use gameVersionId for comparison instead"""
+        return self.defsPlatform
 
     @property
     def gameVersionId(self):
         """Returns the id of the version the world was last opened in as a list of ints, or None if unavailable.
-        This value should be used for comparison.
-        Subclasses should implement _findGameVersionId"""
-        if hasattr(self, "_gameVersionId"):
-            return self._gameVersionId
-        self._gameVersionId = self._findGameVersionId()
-        return self._gameVersionId
+        This value should be used for comparison"""
+        return None
 
     @property
     def defsVersion(self):
         """Returns the id of the version the world was last opened in as a string, or gameVersionNumber if unavailable.
         This value should be used for loading version data"""
-        if hasattr(self, "_defsVersion"):
-            return self._defsVersion
-        if self.gameVersionId:
-            self._defsVersion = ".".join([str(num) for num in self.gameVersionId])
-        else:
-            self._defsVersion = self.gameVersionNumber
-        return self._defsVersion
+        gameVersionId = self.gameVersionId
+        if bool(gameVersionId):
+            return ".".join([str(num) for num in gameVersionId])
+        return self.gameVersionNumber
 
     def loadVersionData(self):
         # pcm1k TODO - is this really worth having?
         Entity.updateGlobal(self.entityTypes)
         TileEntity.updateGlobal(self.tileEntityTypes)
         globalItems.updateGlobal(self.itemTypes)
-
-    def _loadMaterials(self):
-        if self.defsPlatform == PLATFORM_UNKNOWN:
-            return materials.getMaterials(self.defsIds, forceNew=True, name="Classic", defaultName="Not present in Classic")
-        return materials.getMaterials(self.defsIds, forceNew=True, name=self.materialsName)
 
     @property
     def defsIds(self):
@@ -251,7 +225,12 @@ class MCLevel(object):
     def materials(self):
         if hasattr(self, "_materials"):
             return self._materials
-        self._materials = self._loadMaterials()
+        if self.defsPlatform == PLATFORM_UNKNOWN:
+            self._materials = materials.classicMaterials
+        else:
+            # pcm1k TODO - Use a locked materials for pre-flattening versions? To prevent creating dummy blocks when they aren't relevant and we can't even encode them in the level data
+            # pcm1k TODO - also have something like a lockedProperties when we can have string block ids, but not properties (Pocket worlds)
+            self._materials = materials.getMaterials(self.defsIds, forceNew=True)
         return self._materials
 
     @materials.setter

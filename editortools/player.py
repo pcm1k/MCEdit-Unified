@@ -27,6 +27,7 @@ from mceutils import loadPNGTexture, alertException, drawTerrainCuttingWire, dra
 from operation import Operation
 import pymclevel
 from pymclevel.box import BoundingBox, FloatBox
+from pymclevel.id_definitions import PLATFORM_ALPHA, PLATFORM_POCKET
 from pymclevel import nbt, Entity
 import logging
 from player_cache import PlayerCache, ThreadRS
@@ -1091,7 +1092,7 @@ class PlayerSpawnPositionTool(PlayerPositionTool):
     def drawCage(self, x, y, z):
         cageTexVerts = numpy.array(pymclevel.alphaMaterials.blockTextures[52, 0])
 
-        pixelScale = 0.5 if self.editor.level.materials.name in ("Pocket", "Alpha") else 1.0
+        pixelScale = 0.5 if self.editor.level.materials.defsIds.platform in (PLATFORM_ALPHA, PLATFORM_POCKET) else 1.0
         texSize = 16 * pixelScale
         cageTexVerts = cageTexVerts.astype(float) * pixelScale
 

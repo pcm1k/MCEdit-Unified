@@ -18,7 +18,7 @@ import glutils
 import mceutils
 import itertools
 import pymclevel
-from pymclevel.level import GAME_PLATFORM_JAVA
+from pymclevel.id_definitions import PLATFORM_ALPHA
 
 from math import isnan
 from datetime import datetime, timedelta
@@ -852,12 +852,15 @@ class CameraViewport(GLViewport):
 
         # From version 1.8, signs accept Json format.
         # 1.9 does not support the old raw string format anymore.
-        if self.editor.level.gamePlatform == GAME_PLATFORM_JAVA and self.editor.level.gameVersionId and self.editor.level.gameVersionId[0] >= 100:
+        json_fmt = False
+        if self.editor.level.defsPlatform == PLATFORM_ALPHA:
+            gameVersionId = self.editor.level.gameVersionId
+            if bool(gameVersionId) and gameVersionId[0] >= 100:
+                json_fmt = True
+        if json_fmt:
             fmt = '{"text":""}'
-            json_fmt = True
         else:
             fmt = ""
-            json_fmt = False
 
         if not tileEntity:
             # Don't know how to handle the difference between wall and standing signs for now...
