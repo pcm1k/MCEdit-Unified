@@ -1,0 +1,9 @@
+{
+    "blockDefaults": {
+        "name": "Future Block!"
+    },
+    "blockFeatures": {
+        "materialsName": "AlphaFlat"
+    },
+    "load": "1139"
+}
