@@ -3115,10 +3115,11 @@ class LevelEditor(GLViewport):
                     self.inspectionString += _(", D: %d") % self.level.getChunk(cx, cz).dirty
                     self.inspectionString += _(", NL: %d") % self.level.getChunk(cx, cz).needsLighting
                     try:
-                        biome = self.level.getChunk(cx, cz).Biomes[x & 15, z & 15]
-                        from pymclevel import biome_types
+                        biome = self.level.biomeAt(x, z)
 
-                        self.inspectionString += _(", Bio: %s") % biome_types.biome_types[biome]
+                        biomeType = self.level.biomeTypes.biomeWithID(biome)
+                        if biomeType is not None:
+                            self.inspectionString += _(", Bio: %s") % biomeType.name
                     except AttributeError:
                         pass
 

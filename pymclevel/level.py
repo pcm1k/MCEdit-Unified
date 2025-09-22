@@ -17,6 +17,7 @@ from numpy import argmax, swapaxes, zeros, zeros_like
 import os.path
 from id_definitions import get_defs_ids, PLATFORM_UNKNOWN, VERSION_UNKNOWN
 from items import items as globalItems, getItemTypes
+from biome_types import getBiomeTypes
 #from infiniteworld import DIM_NETHER, DIM_OVERWORLD, DIM_END
 import re
 
@@ -257,6 +258,13 @@ class MCLevel(object):
             return self._itemTypes
         self._itemTypes = getItemTypes(self.defsIds)
         return self._itemTypes
+
+    @property
+    def biomeTypes(self):
+        if hasattr(self, "_biomeTypes"):
+            return self._biomeTypes
+        self._biomeTypes = getBiomeTypes(self.defsIds, forceNew=True)
+        return self._biomeTypes
 
     @classmethod
     def isLevel(cls, filename):

@@ -13,6 +13,7 @@ from pymclevel import TAG_Byte_Array
 from pymclevel import TAG_String
 from numpy import zeros, fromstring
 
+# pcm1k TODO - use biomeTypes from the level somehow
 inputs = (
     ("Biome",  ("Ocean",
                 "Plains",

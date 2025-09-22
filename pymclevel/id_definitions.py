@@ -454,7 +454,7 @@ class MCEditDefsIds(object):
         self.jsonDict = jsonDict if jsonDict is not None else {}
 
         # ensure these are present
-        for prefix in "blocks", "entities", "items", "tileentities":
+        for prefix in "biomes", "blocks", "entities", "items", "tileentities":
             if prefix not in self.mcedit_ids:
                 self.mcedit_ids[prefix] = {}
 

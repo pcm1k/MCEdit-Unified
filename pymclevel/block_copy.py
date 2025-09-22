@@ -7,12 +7,17 @@ import numpy
 from box import BoundingBox
 from mclevelbase import exhaust
 import materials
+import biome_types
 from entity import Entity, TileEntity
 from copy import deepcopy
 
 
 def convertBlocks(destLevel, sourceLevel, blocks, blockData):
     return materials.convertBlocks(destLevel.materials, sourceLevel.materials, blocks, blockData)
+
+
+def convertBiomes(destLevel, sourceLevel, biomes):
+    return biome_types.convertBiomes(destLevel.biomeTypes, sourceLevel.biomeTypes, biomes)
 
 
 def sourceMaskFunc(blocksToCopy):
@@ -163,7 +168,7 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
                     destLevel.addTileTick(eTag)
 
             if biomes and hasattr(destChunk, 'Biomes') and hasattr(sourceChunk, 'Biomes'):
-                destChunk.Biomes[destSlices[:2]] = sourceChunk.Biomes[sourceSlices[:2]]
+                destChunk.Biomes[destSlices[:2]] = convertBiomes(destLevel, sourceLevel, sourceChunk.Biomes[sourceSlices[:2]])
 
         destChunk.chunkChanged()
 
