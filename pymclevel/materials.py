@@ -389,7 +389,6 @@ class MCMaterials(BaseTypeSet):
         self.topData = zeros(id_limit, dtype="uint16")
         self.topData[:] = data_limit
 
-        # pcm1k TODO - maybe make topBlockID exclusive like topData
         self.topBlockID = 0
         self._hasSetDefaults = False
         self._tempBlocksFlag = False
@@ -576,7 +575,7 @@ class MCMaterials(BaseTypeSet):
 
     def _addDummyBlock(self, stringID, properties, blockID=None, blockData=None, namespace=None, **kw):
         if blockID is None:
-            blockID = max(self.topBlockID + 1, id_limit)
+            blockID = max(self.topBlockID, id_limit)
         if blockData is None:
             if blockID < len(self.topData):
                 blockData = self.topData[blockID]
@@ -793,8 +792,8 @@ class MCMaterials(BaseTypeSet):
             self._minData[blockID] = blockData
         if blockData >= self.topData[blockID]:
             self.topData[blockID] = blockData + 1
-        if blockID > self.topBlockID:
-            self.topBlockID = blockID
+        if blockID >= self.topBlockID:
+            self.topBlockID = blockID + 1
 
         block = Block(self, blockID, blockData)
 
