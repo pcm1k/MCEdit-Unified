@@ -37,6 +37,7 @@ def computeChunkHeightMap(materials, blocks, HeightMap=None):
     heights = extractHeights(lightAbsorption)
     heights = heights.swapaxes(0, 1)
     if HeightMap is None:
+        # pcm1k TODO - this might overflow
         return heights.astype('uint8')
     else:
         HeightMap[:] = heights
@@ -153,6 +154,8 @@ class MCLevel(object):
     Width = None
 
     minY = 0
+
+    biomesScale = 1
 
     players = ["Player"]
     # pcm1k TODO - can't really use the constants here because of circular import issues
@@ -383,6 +386,7 @@ class MCLevel(object):
         f.world = self
         f.chunkPosition = (cx, cz)
 
+        # pcm1k TODO - A FakeChunk may have a Blocks width that is less than 16, because when extracting the blocks, they can be on the edge of the real level. I don't think they can be padded, because it will create a copy, which will prevent the real Blocks from being affected. Should the Width and Length be changed to account for a smaller Blocks array?
         f.Blocks = self.fakeBlocksForChunk(cx, cz)
 
         f.Data = self.fakeDataForChunk(cx, cz)
@@ -452,7 +456,7 @@ class MCLevel(object):
 
         cxOff = cx << 4
         czOff = cz << 4
-        b = self.Blocks[cxOff:cxOff + 16, czOff:czOff + 16, 0:self.Height, ]
+        b = self.Blocks[cxOff:cxOff + 16, czOff:czOff + 16, :]
         # (w, l, h) = b.shape
         # if w<16 or l<16:
         #    b = resize(b, (16,16,h) )
@@ -464,7 +468,7 @@ class MCLevel(object):
         czOff = cz << 4
 
         if hasattr(self, "Data"):
-            return self.Data[cxOff:cxOff + 16, czOff:czOff + 16, 0:self.Height, ]
+            return self.Data[cxOff:cxOff + 16, czOff:czOff + 16, :]
 
         else:
             return zeros(shape=(16, 16, self.Height), dtype='uint8')

@@ -35,7 +35,8 @@ def createTileEntities(tileEntityTag, level):
 
 def apply(self, op, point):
     # pcm1k TODO - maybe use ZipSchematic instead?
-    undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
+    undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True,
+        dataVersion=op.level.dataVersion if isinstance(op.level, pymclevel.MCInfdevOldLevel) else None)
     undoLevel.materials = op.level.materials
     undoLevel.Height = op.level.Height
     undoLevel.minY = op.level.minY

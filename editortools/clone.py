@@ -1177,7 +1177,7 @@ class ConstructionTool(CloneTool):
         clipFilename = mcplatform.askOpenFile(title='Import a schematic or level...', schematics=True)
         # xxx mouthful
         if clipFilename:
-            if unicode(clipFilename).split(".")[-1] in ("schematic", "schematic.gz", "zip", "inv"):
+            if unicode(clipFilename).split(".")[-1] in ("schematic", "schematic.gz", "zip", "inv", "schem"):
                 self.loadSchematic(clipFilename)
             elif unicode(clipFilename).split(".")[-1].lower() == "nbt":
                 structure = pymclevel.schematic.StructureNBT(filename=clipFilename)

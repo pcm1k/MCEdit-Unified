@@ -50,7 +50,7 @@ class Operation(object):
             return self.extractUndoSchematic(level, box)
 
         # pcm1k TODO - maybe use ZipSchematic instead?
-        undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True)
+        undoLevel = pymclevel.MCInfdevOldLevel(mkundotemp(), create=True, dataVersion=level.dataVersion)
         undoLevel.materials = level.materials
         undoLevel.Height = level.Height
         undoLevel.minY = level.minY

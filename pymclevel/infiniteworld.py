@@ -9,6 +9,7 @@ from datetime import datetime
 import itertools
 from logging import getLogger
 from math import floor
+from operator import mul
 import os
 import random
 import shutil
@@ -16,16 +17,15 @@ import struct
 import time
 import traceback
 import weakref
-import zlib
 import sys
 
 from box import BoundingBox
 from entity import Entity, TileEntity, TileTick
 from faces import FaceXDecreasing, FaceXIncreasing, FaceZDecreasing, FaceZIncreasing
-from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase, GAME_PLATFORM_JAVA
+from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase, FakeChunk, GAME_PLATFORM_JAVA
 from mclevelbase import ChunkMalformed, ChunkNotPresent, ChunkAccessDenied,ChunkConcurrentException,exhaust, PlayerNotFound
 import nbt
-from numpy import array, clip, maximum, zeros, asarray, unpackbits, arange
+from numpy import array, clip, maximum, ndenumerate, packbits, pad, unpackbits, zeros
 from regionfile import MCRegionFile, ChunkTooBig, ExternalChunk
 import logging
 from uuid import UUID
@@ -82,6 +82,140 @@ def packNibbleArray(unpackedData):
     return array(packedData[:, :, :, 1])
 
 
+def _bitLen(value):
+    length = 0
+    while value > 0:
+        value >>= 1
+        length += 1
+    return length
+
+
+def _unpackBlockstates(blockstates, paletteLen, padded=False, minBits=4, shape=(16, 16, 16)):
+    # inspiration from https://github.com/MestreLion/mcworldlib/blob/d7e376d78dd8c6952e9450d59dc831daffe134f9/mcworldlib/chunk.py#L160-L188
+    bitsPerEntry = max(_bitLen(paletteLen - 1), minBits)
+    # convert the array into a bunch of binary values
+    result = unpackbits(blockstates[::-1].astype(">i8").view("uint8"))
+    if padded:
+        # format used in 1.16 and later
+        paddingPerEntry = 64 % bitsPerEntry
+        # reshape and remove the padding
+        result = result.reshape(-1, 64)[:, paddingPerEntry:]
+    # reshape to separate each entry
+    result = result.reshape(-1, bitsPerEntry)
+    # convert the binary values back into integers and reshape it
+    result = pad(result, ((0, 0), (64 - bitsPerEntry, 0)), "constant")
+    result = packbits(result).view(">i8")[::-1][:reduce(mul, shape, 1)].reshape(shape)
+    return result
+
+
+def _packBlockstates(blockstates, paletteLen, padded=False, minBits=4):
+    bitsPerEntry = max(_bitLen(paletteLen - 1), minBits)
+    # convert the array into a bunch of binary values
+    result = unpackbits(blockstates.ravel()[::-1].astype(">i8").view("uint8")).reshape(-1, 64)
+    # remove the bits that are not needed
+    result = result[:, -bitsPerEntry:]
+    if padded:
+        # format used in 1.16 and later
+        paddingPerEntry = 64 % bitsPerEntry
+        # the number of entries must be divisible by this number
+        entriesPerLong = 64 // bitsPerEntry
+        paddingEntries = entriesPerLong - len(result) % entriesPerLong
+        if paddingEntries > 0:
+            result = pad(result, ((paddingEntries, 0), (0, 0)), "constant")
+        # reshape without the padding
+        result = result.reshape(-1, 64 - paddingPerEntry)
+        # add the padding
+        result = pad(result, ((0, 0), (paddingPerEntry, 0)), "constant")
+    # convert the binary values back into integers
+    result = packbits(result).view(">i8")[::-1]
+    return result
+
+
+def _decodeBlockstateNbt(state):
+    propertiesTag = state.get("Properties")
+    if propertiesTag is not None:
+        properties = {key: value.value for key, value in propertiesTag.iteritems()}
+    else:
+        properties = {}
+    return state["Name"].value, properties
+
+
+def _encodeBlockstateNbt(name, properties):
+    result = nbt.TAG_Compound()
+    result["Name"] = nbt.TAG_String(name)
+
+    if bool(properties):
+        result["Properties"] = propsTag = nbt.TAG_Compound()
+        for key, value in properties.iteritems():
+            propsTag[key] = nbt.TAG_String(value)
+    return result
+
+
+def _getBlockPaletteTable(palette, mats):
+    blockstateToID = mats.blockstate_api.blockstateToID
+
+    # pcm1k TODO - Check to make sure the entry actually get referenced in the block data? Only matters for suboptimal data which probably would not normally happen anyways
+    table = zeros((len(palette), 2), dtype="uint16")
+    for paletteI, entry in enumerate(palette):
+        name, properties = _decodeBlockstateNbt(entry)
+        blockID, blockData = blockstateToID(name, properties, create=True)
+        if blockID == -1 or blockData == -1:
+            continue
+        table[paletteI] = (blockID, blockData)
+    return table
+
+
+def _createPaletteBlocks(blocks, data, mats):
+    idToBlockstate = mats.blockstate_api.idToBlockstate
+
+    unpackedBlocks = zeros(blocks.shape, dtype="uint16")
+    paletteTag = nbt.TAG_List()
+    stateCache = {}
+    cacheGet = stateCache.get
+    for pos, blockID in ndenumerate(blocks):
+        blockData = data[pos]
+        paletteIndex = cacheGet((blockID, blockData))
+        # pcm1k TODO - It may be possible for different blockID, blockData combinations to resolve to the same blockstate. This will result in duplicate entries in the palette. This is probably not super important, however
+        if paletteIndex is None:
+            stateCache[blockID, blockData] = paletteIndex = len(paletteTag)
+            name, properties = idToBlockstate(blockID, blockData)
+            paletteTag.append(_encodeBlockstateNbt(name, properties))
+
+        unpackedBlocks[pos] = paletteIndex
+    return unpackedBlocks, paletteTag
+
+def _getBiomePaletteTable(palette, biomeTypes):
+    biomeWithStringID = biomeTypes.biomeWithStringID
+
+    # pcm1k TODO - Check to make sure the entry actually get referenced in the biome data? Only matters for suboptimal data which probably would not normally happen anyways
+    table = zeros(len(palette), dtype="uint16")
+    for paletteI, entry in enumerate(palette):
+        biome = biomeWithStringID(entry.value, create=True)
+        if biome is None:
+            continue
+        table[paletteI] = biome.ID
+    return table
+
+
+def _createPaletteBiomes(biomes, biomeTypes):
+    biomeWithID = biomeTypes.biomeWithID
+    TAG_String = nbt.TAG_String
+
+    unpackedBiomes = zeros(biomes.shape, dtype="uint16")
+    paletteTag = nbt.TAG_List()
+    stateCache = {}
+    cacheGet = stateCache.get
+    for pos, biomeID in ndenumerate(biomes):
+        paletteIndex = cacheGet(biomeID)
+        if paletteIndex is None:
+            stateCache[biomeID] = paletteIndex = len(paletteTag)
+            biome = biomeWithID(biomeID)
+            paletteTag.append(TAG_String(biome.stringID))
+
+        unpackedBiomes[pos] = paletteIndex
+    return unpackedBiomes, paletteTag
+
+
 def sanitizeBlocks(chunk):
     # change grass to dirt where needed so Minecraft doesn't flip out and die
     grass = chunk.Blocks == chunk.materials.Grass.ID
@@ -99,7 +233,15 @@ def sanitizeBlocks(chunk):
         chunk.Blocks[:, :, 1:][badsnow] = chunk.materials.Air.ID
 
 
-class AnvilChunkData(object):
+class BaseChunkData(object):
+    def __init__(self, world, chunkPosition, root_tag=None):
+        self.chunkPosition = chunkPosition
+        self.world = world
+        self.root_tag = root_tag
+        self.dirty = False
+
+
+class AnvilChunkData(BaseChunkData):
     """ This is the chunk data backing an AnvilChunk. Chunk data is retained by the MCInfdevOldLevel until its
     AnvilChunk is no longer used, then it is either cached in memory, discarded, or written to disk according to
     resource limits.
@@ -110,97 +252,248 @@ class AnvilChunkData(object):
     """
 
     def __init__(self, world, chunkPosition, root_tag=None, create=False):
-        self.chunkPosition = chunkPosition
-        self.world = world
-        self.root_tag = root_tag
-        self.dirty = False
+        super(AnvilChunkData, self).__init__(world, chunkPosition, root_tag=None)
 
-        self.Blocks = zeros((16, 16, world.Height), 'uint16')
-        self.Data = zeros((16, 16, world.Height), 'uint8')
-        self.BlockLight = zeros((16, 16, world.Height), 'uint8')
-        self.SkyLight = zeros((16, 16, world.Height), 'uint8')
+        self.Blocks = zeros((16, 16, world.Height), dtype="uint16")
+        self.Data = None
+        self.BlockLight = zeros((16, 16, world.Height), dtype="uint8")
+        self.SkyLight = zeros((16, 16, world.Height), dtype="uint8")
         self.SkyLight[:] = 15
+        self.Biomes = None
 
         if create:
             self._create()
         else:
             self._load(root_tag)
 
-        levelTag = self.root_tag["Level"]
-        if "Biomes" not in levelTag:
-            levelTag["Biomes"] = nbt.TAG_Byte_Array(zeros((16, 16), 'uint8'))
-            levelTag["Biomes"].value[:] = -1
+    def _createAnvilBase(self, entities):
+        self.root_tag["Level"] = levelTag = nbt.TAG_Compound()
 
-    def _create(self):
-        (cx, cz) = self.chunkPosition
-        chunkTag = nbt.TAG_Compound()
-        chunkTag.name = ""
-
-        levelTag = nbt.TAG_Compound()
-        chunkTag["Level"] = levelTag
-
-        levelTag["HeightMap"] = nbt.TAG_Int_Array(zeros((16, 16), 'uint32').newbyteorder())
-        levelTag["TerrainPopulated"] = nbt.TAG_Byte(1)
+        cx, cz = self.chunkPosition
         levelTag["xPos"] = nbt.TAG_Int(cx)
         levelTag["zPos"] = nbt.TAG_Int(cz)
 
         levelTag["LastUpdate"] = nbt.TAG_Long(0)
 
-        levelTag["Entities"] = nbt.TAG_List()
+        if entities:
+            levelTag["Entities"] = nbt.TAG_List()
         levelTag["TileEntities"] = nbt.TAG_List()
         levelTag["TileTicks"] = nbt.TAG_List()
 
-        self.root_tag = chunkTag
+    def _createAnvil(self):
+        self._createAnvilBase(True)
+        levelTag = self.root_tag["Level"]
+        levelTag["HeightMap"] = nbt.TAG_Int_Array(zeros((16, 16), dtype=">u4"))
+        levelTag["TerrainPopulated"] = nbt.TAG_Byte(1)
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint8")
+        self.Biomes = zeros((16, 16), dtype="uint8")
+
+    def _createFlat13(self):
+        self._createAnvilBase(True)
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint16")
+        self.Biomes = zeros((16, 16), dtype="uint32")
+
+    def _createFlat15(self, dataVersion):
+        self._createAnvilBase(dataVersion < MCInfdevOldLevel.DATA_VERSION_FLAT17)
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint16")
+        self.Biomes = zeros((16 // 4, 16 // 4, self.world.Height // 4), dtype="uint32")
+
+    def _createFlat18(self):
+        levelTag = self.root_tag
+
+        cx, cz = self.chunkPosition
+        levelTag["xPos"] = nbt.TAG_Int(cx)
+        levelTag["zPos"] = nbt.TAG_Int(cz)
+        levelTag["yPos"] = nbt.TAG_Int(self.world.minY // 16)
+
+        levelTag["LastUpdate"] = nbt.TAG_Long(0)
+
+        levelTag["block_entities"] = nbt.TAG_List()
+        levelTag["block_ticks"] = nbt.TAG_List()
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint16")
+        self.Biomes = zeros((16 // 4, 16 // 4, self.world.Height // 4), dtype="uint32")
+
+    def _create(self):
+        self.root_tag = chunkTag = nbt.TAG_Compound()
+
+        dataVersion = self.world.dataVersion
+        if dataVersion is not None:
+            chunkTag["DataVersion"] = nbt.TAG_Int(dataVersion)
+
+        if dataVersion is None:
+            self._createAnvil()
+        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+            self._createFlat18()
+        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT15:
+            self._createFlat15(dataVersion)
+        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
+            self._createFlat13()
+        else:
+            self._createAnvil()
+        self.Biomes[:] = -1
 
         self.dirty = True
 
-    def _get_blocks_and_data_from_blockstates(self, section):
-        long_array = section["BlockStates"].value
-        bits_amount = len(long_array) / 64
-        binary_blocks = unpackbits(long_array[::-1].astype(">i8").view("uint8")).reshape(-1, bits_amount)
-        blocks_before_palette = binary_blocks.dot(2**arange(binary_blocks.shape[1]-1, -1, -1))[::-1]
-        blocks = asarray(section["Palette"].value, dtype="object")[blocks_before_palette]
-        raise NotImplementedError("1.13 version not supported yet")
+    @staticmethod
+    def _getSectionLightsAnvil(section):
+        blockLight = section.get("BlockLight")
+        if blockLight is None:
+            return None
+        skyLight = section.get("SkyLight")
+        if skyLight is None:
+            return None
+        blockLight = unpackNibbleArray(blockLight.value.reshape(16, 16, 8)).swapaxes(0, 2)
+        skyLight = unpackNibbleArray(skyLight.value.reshape(16, 16, 8)).swapaxes(0, 2)
+        return blockLight, skyLight
+
+    def _loadAnvilBase(self, getSectionBlocks):
+        self.Biomes[:] = -1
+
+        levelTag = self.root_tag["Level"]
+        minY = self.world.minY
+        for sec in levelTag.pop("Sections", []):
+            y = sec["Y"].value * 16 - minY
+            if y < 0 or y >= self.world.Height:
+                continue
+
+            blocksAndData = getSectionBlocks(sec)
+            if blocksAndData is not None:
+                self.Blocks[..., y:y + 16], self.Data[..., y:y + 16] = blocksAndData
+
+            lights = self._getSectionLightsAnvil(sec)
+            if lights is not None:
+                self.BlockLight[..., y:y + 16], self.SkyLight[..., y:y + 16] = lights
+
+            addTag = sec.get("Add")
+            if addTag is not None:
+                addTag.value.shape = (16, 16, 8)
+                add = unpackNibbleArray(addTag.value)
+                self.Blocks[..., y:y + 16] |= (array(add, dtype="uint16") << 8).swapaxes(0, 2)
+
+        biomesTag = levelTag.pop("Biomes", None)
+        if biomesTag is not None:
+            self.Biomes[:] = biomesTag.value.reshape(self.Biomes.swapaxes(0, -1).shape).swapaxes(0, -1)
+
+    def _loadAnvil(self):
+        # pcm1k TODO - this should convert older blocks if applicable
+        gameVersionId = self.world.gameVersionId
+        if bool(gameVersionId) and gameVersionId[0] >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
+            raise NotImplementedError('Loading pre-1.13 chunks in post-1.13 worlds is currently not supported. Please manually upgrade the world using the ingame "optimize world" button.')
+
+        def getSectionBlocks(section):
+            blocks = section.get("Blocks")
+            if blocks is None:
+                return None
+            data = section.get("Data")
+            if data is None:
+                return None
+            blocks = blocks.value.reshape(16, 16, 16).swapaxes(0, 2)
+            data = unpackNibbleArray(data.value.reshape(16, 16, 8)).swapaxes(0, 2)
+            return blocks, data
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint8")
+        self.Biomes = zeros((16, 16), dtype="uint8")
+
+        self._loadAnvilBase(getSectionBlocks)
+
+    def _loadFlat13(self, dataVersion):
+        def getSectionBlocks(section):
+            blockStatesTag = section.get("BlockStates")
+            if blockStatesTag is None:
+                return None
+            paletteTag = section.get("Palette")
+            if paletteTag is None:
+                return None
+            unpackedBlocks = _unpackBlockstates(blockStatesTag.value, len(paletteTag),
+                padded=dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT16).swapaxes(0, 2)
+            paletteTable = _getBlockPaletteTable(paletteTag, self.materials)
+            blocksAndData = paletteTable[unpackedBlocks]
+            return blocksAndData[..., 0], blocksAndData[..., 1]
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint16")
+        self.Biomes = zeros((16 // 4, 16 // 4, self.world.Height // 4)
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT15 else (16, 16), dtype="uint32")
+
+        self._loadAnvilBase(getSectionBlocks)
+
+    def _loadFlat18(self):
+        def getSectionBlocks(section):
+            blockStatesTag = section.get("block_states")
+            if blockStatesTag is None:
+                return None
+            paletteTag = blockStatesTag.get("palette")
+            if paletteTag is None:
+                return None
+            paletteTable = _getBlockPaletteTable(paletteTag, self.materials)
+            dataTag = blockStatesTag.get("data")
+            if dataTag is None:
+                unpackedBlocks = zeros((16, 16, 16), dtype="uint16")
+            else:
+                unpackedBlocks = _unpackBlockstates(dataTag.value, len(paletteTag),
+                    padded=True).swapaxes(0, 2)
+            blocksAndData = paletteTable[unpackedBlocks]
+            return blocksAndData[..., 0], blocksAndData[..., 1]
+
+        def getSectionBiomes(section):
+            biomesTag = section.get("biomes")
+            if biomesTag is None:
+                return None
+            paletteTag = biomesTag.get("palette")
+            if paletteTag is None:
+                return None
+            paletteTable = _getBiomePaletteTable(paletteTag, self.world.biomeTypes)
+            dataTag = biomesTag.get("data")
+            if dataTag is None:
+                unpackedBiomes = zeros((16 // 4, 16 // 4, 16 // 4), dtype="uint16")
+            else:
+                unpackedBiomes = _unpackBlockstates(dataTag.value, len(paletteTag),
+                    padded=True, minBits=1, shape=(16 // 4, 16 // 4, 16 // 4)).swapaxes(0, 2)
+            return paletteTable[unpackedBiomes]
+
+        self.Data = zeros((16, 16, self.world.Height), dtype="uint16")
+        self.Biomes = zeros((16 // 4, 16 // 4, self.world.Height // 4), dtype="uint32")
+        self.Biomes[:] = -1
+
+        minY = self.world.minY
+        for sec in self.root_tag.pop("sections", []):
+            y = sec["Y"].value * 16 - minY
+            if y < 0 or y >= self.world.Height:
+                continue
+
+            blocksAndData = getSectionBlocks(sec)
+            if blocksAndData is not None:
+                self.Blocks[..., y:y + 16], self.Data[..., y:y + 16] = blocksAndData
+
+            biomes = getSectionBiomes(sec)
+            if biomes is not None:
+                self.Biomes[..., y // 4:y // 4 + 16 // 4] = biomes
+
+            lights = self._getSectionLightsAnvil(sec)
+            if lights is not None:
+                self.BlockLight[..., y:y + 16], self.SkyLight[..., y:y + 16] = lights
 
     def _load(self, root_tag):
         self.root_tag = root_tag
-
-        for sec in self.root_tag["Level"].pop("Sections", []):
-            y = sec["Y"].value * 16
-
-            values_to_get = ["SkyLight", "BlockLight"]
-            if "Blocks" in sec and "Data" in sec:
-                values_to_get.extend(["Blocks", "Data"])
+        dataVersion = root_tag.get("DataVersion")
+        if dataVersion is None:
+            self._loadAnvil()
+        else:
+            dataVersion = dataVersion.value
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+                self._loadFlat18()
+            elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
+                self._loadFlat13(dataVersion)
             else:
-                Blocks, Data = self._get_blocks_and_data_from_blockstates(sec)
-                self.Blocks[..., y:y + 16], self.Data[..., y:y + 16] = Blocks, Data
+                self._loadAnvil()
 
-            for name in values_to_get:
-                arr = getattr(self, name)
-                secarray = sec[name].value
-                if name == "Blocks":
-                    secarray.shape = (16, 16, 16)
-                else:
-                    secarray.shape = (16, 16, 8)
-                    secarray = unpackNibbleArray(secarray)
-
-                arr[..., y:y + 16] = secarray.swapaxes(0, 2)
-
-            tag = sec.get("Add")
-            if tag is not None:
-                tag.value.shape = (16, 16, 8)
-                add = unpackNibbleArray(tag.value)
-                self.Blocks[..., y:y + 16] |= (array(add, 'uint16') << 8).swapaxes(0, 2)
-
-    def savedTagData(self):
-        """ does not recalculate any data or light """
-
-        log.debug(u"Saving chunk: {0}".format(self))
-        # pcm1k - this should either be removed or be optional
-#        sanitizeBlocks(self)
-
+    def _savedTagDataAnvilBase(self, addSectionBlocks, biomesType):
         sections = nbt.TAG_List()
         append = sections.append
+        minY = self.world.minY
         for y in xrange(0, self.world.Height, 16):
             section = nbt.TAG_Compound()
 
@@ -214,32 +507,216 @@ class AnvilChunkData(object):
                     (SkyLight == 15).all()):
                 continue
 
-            Data = packNibbleArray(Data)
             BlockLight = packNibbleArray(BlockLight)
             SkyLight = packNibbleArray(SkyLight)
 
-            add = Blocks >> 8
-            if add.any():
-                section["Add"] = nbt.TAG_Byte_Array(packNibbleArray(add).astype('uint8'))
+            addSectionBlocks(section, Blocks, Data)
 
-            section['Blocks'] = nbt.TAG_Byte_Array(array(Blocks, 'uint8'))
-            section['Data'] = nbt.TAG_Byte_Array(array(Data))
-            section['BlockLight'] = nbt.TAG_Byte_Array(array(BlockLight))
-            section['SkyLight'] = nbt.TAG_Byte_Array(array(SkyLight))
+            section["BlockLight"] = nbt.TAG_Byte_Array(array(BlockLight))
+            section["SkyLight"] = nbt.TAG_Byte_Array(array(SkyLight))
 
-            section["Y"] = nbt.TAG_Byte(y / 16)
+            section["Y"] = nbt.TAG_Byte((minY + y) // 16)
             append(section)
 
-        self.root_tag["Level"]["Sections"] = sections
+        # pcm1k TODO - convert to newer version if needed
+        levelTag = self.root_tag["Level"]
+        levelTag["Sections"] = sections
+        levelTag["Biomes"] = biomesType(self.Biomes.swapaxes(0, -1))
         data = self.root_tag.save(compressed=False)
-        del self.root_tag["Level"]["Sections"]
+        del levelTag["Sections"]
+        del levelTag["Biomes"]
+
+        return data
+
+    def _savedTagDataAnvil(self):
+        def addSectionBlocks(section, blocks, data):
+            data = packNibbleArray(data)
+
+            add = blocks >> 8 & 0xF
+            if add.any():
+                section["Add"] = nbt.TAG_Byte_Array(packNibbleArray(add).astype("uint8"))
+
+            section["Blocks"] = nbt.TAG_Byte_Array(array(blocks, dtype="uint8"))
+            section["Data"] = nbt.TAG_Byte_Array(array(data))
+
+        return self._savedTagDataAnvilBase(addSectionBlocks, nbt.TAG_Byte_Array)
+
+    def _savedTagDataFlat13(self, dataVersion):
+        def addSectionBlocks(section, blocks, data):
+            unpackedBlocks, paletteTag = _createPaletteBlocks(blocks, data, self.materials)
+            section["Palette"] = paletteTag
+            packedBlocks = _packBlockstates(unpackedBlocks, len(paletteTag),
+                padded=dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT16)
+            section["BlockStates"] = nbt.TAG_Long_Array(packedBlocks)
+
+        return self._savedTagDataAnvilBase(addSectionBlocks, nbt.TAG_Int_Array)
+
+    def _savedTagDataFlat18(self):
+        def addSectionBlocks(section, blocks, data):
+            section["block_states"] = blockStatesTag = nbt.TAG_Compound()
+            unpackedBlocks, paletteTag = _createPaletteBlocks(blocks, data, self.materials)
+            blockStatesTag["palette"] = paletteTag
+            if len(paletteTag) > 1:
+                packedBlocks = _packBlockstates(unpackedBlocks, len(paletteTag),
+                    padded=True)
+                blockStatesTag["data"] = nbt.TAG_Long_Array(packedBlocks)
+
+        def addSectionBiomes(section, biomes):
+            section["biomes"] = biomesTag = nbt.TAG_Compound()
+            unpackedBiomes, paletteTag = _createPaletteBiomes(biomes, self.world.biomeTypes)
+            biomesTag["palette"] = paletteTag
+            if len(paletteTag) > 1:
+                packedBiomes = _packBlockstates(unpackedBiomes, len(paletteTag),
+                    padded=True, minBits=1)
+                biomesTag["data"] = nbt.TAG_Long_Array(packedBiomes)
+
+        sections = nbt.TAG_List()
+        append = sections.append
+        minY = self.world.minY
+        for y in xrange(0, self.world.Height, 16):
+            section = nbt.TAG_Compound()
+
+            Blocks = self.Blocks[..., y:y + 16].swapaxes(0, 2)
+            Data = self.Data[..., y:y + 16].swapaxes(0, 2)
+            BlockLight = self.BlockLight[..., y:y + 16].swapaxes(0, 2)
+            SkyLight = self.SkyLight[..., y:y + 16].swapaxes(0, 2)
+            Biomes = self.Biomes[..., y // 4:y // 4 + 16 // 4].swapaxes(0, 2)
+
+            BlockLight = packNibbleArray(BlockLight)
+            SkyLight = packNibbleArray(SkyLight)
+
+            addSectionBlocks(section, Blocks, Data)
+            addSectionBiomes(section, Biomes)
+
+            if BlockLight.any() or (SkyLight != 15).any():
+                section["BlockLight"] = nbt.TAG_Byte_Array(array(BlockLight))
+                section["SkyLight"] = nbt.TAG_Byte_Array(array(SkyLight))
+
+            section["Y"] = nbt.TAG_Byte((minY + y) // 16)
+            append(section)
+
+        self.root_tag["sections"] = sections
+        data = self.root_tag.save(compressed=False)
+        del self.root_tag["sections"]
+
+        return data
+
+    def savedTagData(self):
+        """ does not recalculate any data or light """
+
+        log.debug(u"Saving chunk: {0}".format(self))
+        # pcm1k TODO - this should either be removed or be optional
+#        sanitizeBlocks(self)
+
+        dataVersion = self.world.dataVersion
+        if dataVersion is None:
+            data = self._savedTagDataAnvil()
+        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+            data = self._savedTagDataFlat18()
+        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
+            data = self._savedTagDataFlat13(dataVersion)
+        else:
+            data = self._savedTagDataAnvil()
 
         log.debug(u"Saved chunk {0}".format(self))
         return data
 
     @property
+    def Entities(self):
+        root_tag = self.root_tag
+        dataVersion = root_tag.get("DataVersion")
+        if dataVersion is not None:
+            dataVersion = dataVersion.value
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+                entities = root_tag.get("entities")
+#                if entities is None:
+#                    root_tag["entities"] = entities = nbt.TAG_List()
+                return entities
+
+        levelTag = root_tag["Level"]
+        entities = levelTag.get("Entities")
+#        if entities is None:
+#            levelTag["Entities"] = entities = nbt.TAG_List()
+        return entities
+
+    @property
+    def TileEntities(self):
+        root_tag = self.root_tag
+        dataVersion = root_tag.get("DataVersion")
+        if dataVersion is not None:
+            dataVersion = dataVersion.value
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+#                return root_tag["block_entities"]
+                tileEntities = root_tag.get("block_entities")
+                if tileEntities is None:
+                    root_tag["block_entities"] = tileEntities = nbt.TAG_List()
+                return tileEntities
+
+        levelTag = root_tag["Level"]
+#        return levelTag["TileEntities"]
+        tileEntities = levelTag.get("TileEntities")
+        if tileEntities is None:
+            levelTag["TileEntities"] = tileEntities = nbt.TAG_List()
+        return tileEntities
+
+    @property
+    def TileTicks(self):
+        root_tag = self.root_tag
+        dataVersion = root_tag.get("DataVersion")
+        if dataVersion is not None:
+            dataVersion = dataVersion.value
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+#                return root_tag["block_ticks"]
+                tileTicks = root_tag.get("block_ticks")
+                if tileTicks is None:
+                    root_tag["block_ticks"] = tileTicks = nbt.TAG_List()
+                return tileTicks
+
+        levelTag = root_tag["Level"]
+#        return levelTag["TileTicks"]
+        tileTicks = levelTag.get("TileTicks")
+        if tileTicks is None:
+            levelTag["TileTicks"] = tileTicks = nbt.TAG_List()
+        return tileTicks
+
+    @property
     def materials(self):
         return self.world.materials
+
+
+class AnvilEntityData(BaseChunkData):
+    def __init__(self, world, chunkPosition, root_tag=None, create=False):
+        super(AnvilEntityData, self).__init__(world, chunkPosition, root_tag=None)
+
+        if create:
+            self._create()
+        else:
+            self._load(root_tag)
+
+    def _create(self):
+        cx, cz = self.chunkPosition
+        self.root_tag = chunkTag = nbt.TAG_Compound()
+
+        dataVersion = self.world.dataVersion
+        if dataVersion is None:
+            dataVersion = MCInfdevOldLevel.DATA_VERSION_FLAT17
+        chunkTag["DataVersion"] = nbt.TAG_Int(dataVersion)
+        chunkTag["Position"] = nbt.TAG_Int_Array(array([cx, cz]))
+        chunkTag["Entities"] = nbt.TAG_List()
+
+        self.dirty = True
+
+    def _load(self, root_tag):
+        self.root_tag = root_tag
+
+    def savedTagData(self):
+        log.debug(u"Saving chunk: {0}".format(self))
+
+        # pcm1k TODO - vanilla seems to leave the entity chunk nonexistent if there are no entities in that chunk
+        data = self.root_tag.save(compressed=False)
+
+        log.debug(u"Saved chunk {0}".format(self))
+        return data
 
 
 class AnvilChunk(LightedChunk):
@@ -252,11 +729,13 @@ class AnvilChunk(LightedChunk):
     """
 
     _defsPlatform = PLATFORM_ALPHA
+    _fakeChunkHeightMap = FakeChunk.HeightMap
 
-    def __init__(self, chunkData):
+    def __init__(self, chunkData, entityData=None):
         self.world = chunkData.world
         self.chunkPosition = chunkData.chunkPosition
         self.chunkData = chunkData
+        self.entityData = entityData
 
     def savedTagData(self):
         return self.chunkData.savedTagData()
@@ -317,11 +796,13 @@ class AnvilChunk(LightedChunk):
 
     @property
     def dirty(self):
-        return self.chunkData.dirty
+        return self.chunkData.dirty or (self.entityData is not None and self.entityData.dirty)
 
     @dirty.setter
     def dirty(self, val):
         self.chunkData.dirty = val
+        if self.entityData is not None:
+            self.entityData.dirty = val
 
     # --- Chunk attributes ---
 
@@ -351,37 +832,62 @@ class AnvilChunk(LightedChunk):
 
     @property
     def Biomes(self):
-        return self.root_tag["Level"]["Biomes"].value.reshape((16, 16))
+        return self.chunkData.Biomes
+
+    @property
+    def biomesScale(self):
+        return 16 // self.Biomes.shape[0]
 
     @property
     def HeightMap(self):
-        return self.root_tag["Level"]["HeightMap"].value.reshape((16, 16))
+        # pcm1k TODO - figure this out
+        try:
+            return self.root_tag["Level"]["HeightMap"].value.reshape(16, 16)
+        except KeyError:
+            return self._fakeChunkHeightMap
 
     @property
     def Entities(self):
-        return self.root_tag["Level"]["Entities"]
+        chunkEntities = self.chunkData.Entities
+        entityData = self.entityData
+        if entityData is not None:
+            # pcm1k TODO - even if there is an "entities" directory, entities can still be saved in the main chunk if the chunk is considered to be a "proto chunk"
+            entityEntities = entityData.root_tag["Entities"]
+            # copy from and clear chunkEntities if it is not empty
+            if bool(chunkEntities):
+                # pcm1k TODO - we should do this the other way around if the chunk is considered to be a "proto chunk"
+                entityEntities.extend(chunkEntities)
+                del chunkEntities[:]
+                self.dirty = True
+            return entityEntities
+
+        return chunkEntities
 
     @property
     def TileEntities(self):
-        return self.root_tag["Level"]["TileEntities"]
+        return self.chunkData.TileEntities
 
     @property
     def TileTicks(self):
-        if "TileTicks" in self.root_tag["Level"]:
-            return self.root_tag["Level"]["TileTicks"]
-        else:
-            self.root_tag["Level"]["TileTicks"] = nbt.TAG_List()
-            return self.root_tag["Level"]["TileTicks"]
+        return self.chunkData.TileTicks
 
     @property
     def TerrainPopulated(self):
-        return self.root_tag["Level"]["TerrainPopulated"].value
+        try:
+            return self.root_tag["Level"]["TerrainPopulated"].value
+        except KeyError:
+            # no longer relevant for 1.13 and later, I believe
+            return True
 
     @TerrainPopulated.setter
     def TerrainPopulated(self, val):
         """True or False. If False, the game will populate the chunk with
         ores and vegetation on next load"""
-        self.root_tag["Level"]["TerrainPopulated"].value = val
+        try:
+            self.root_tag["Level"]["TerrainPopulated"].value = val
+        except KeyError:
+            # no longer relevant for 1.13 and later, I believe
+            return
         self.dirty = True
 
 
@@ -410,18 +916,6 @@ def base36(n):
         work.append(base36alphabet[digit])
 
     return neg + ''.join(reversed(work))
-
-
-def deflate(data):
-    # zobj = zlib.compressobj(6,zlib.DEFLATED,-zlib.MAX_WBITS,zlib.DEF_MEM_LEVEL,0)
-    # zdata = zobj.compress(data)
-    # zdata += zobj.flush()
-    # return zdata
-    return zlib.compress(data)
-
-
-def inflate(data):
-    return zlib.decompress(data)
 
 
 class ChunkedLevelMixin(MCLevel):
@@ -959,7 +1453,7 @@ def TagProperty(tagName, tagType, default_or_func=None):
 
 
 class AnvilWorldFolder(object):
-    def __init__(self, filename):
+    def __init__(self, filename, regionFolder="region"):
         if not os.path.exists(filename):
             os.mkdir(filename)
 
@@ -967,6 +1461,7 @@ class AnvilWorldFolder(object):
             raise IOError("AnvilWorldFolder: Not a folder: %s" % filename)
 
         self.filename = filename
+        self.regionFolder = regionFolder
         self.regionFiles = {}
 
     # --- File paths ---
@@ -976,6 +1471,7 @@ class AnvilWorldFolder(object):
         return os.path.join(self.filename, path)
 
     def getFolderPath(self, path, checksExists=True, generation=False):
+        # pcm1k TODO - why "##MCEDIT.TEMP##"?
         if checksExists and not os.path.exists(self.filename) and "##MCEDIT.TEMP##" in path and not generation:
             raise IOError("The file does not exist")
         path = self.getFilePath(path)
@@ -987,7 +1483,7 @@ class AnvilWorldFolder(object):
     # --- Region files ---
 
     def getRegionFilename(self, rx, rz):
-        return os.path.join(self.getFolderPath("region", False), "r.%s.%s.%s" % (rx, rz, "mca"))
+        return os.path.join(self.getFolderPath(self.regionFolder, False), "r.%s.%s.%s" % (rx, rz, "mca"))
 
     def getRegionFile(self, rx, rz):
         regionFile = self.regionFiles.get((rx, rz))
@@ -1025,7 +1521,7 @@ class AnvilWorldFolder(object):
         return MCRegionFile(filepath, (rx, rz))
 
     def findRegionFiles(self):
-        regionDir = self.getFolderPath("region", generation=True)
+        regionDir = self.getFolderPath(self.regionFolder, generation=True)
 
         regionFiles = os.listdir(regionDir)
         for filename in regionFiles:
@@ -1109,7 +1605,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
     '''
     playersFolder = None
 
-    def __init__(self, filename=None, create=False, random_seed=None, last_played=None, readonly=False, dat_name='level'):
+    def __init__(self, filename=None, create=False, random_seed=None, last_played=None, readonly=False, dat_name='level', dataVersion=None):
         """
         Load an Alpha level from the given filename. It can point to either
         a level.dat or a folder containing one. If create is True, it will
@@ -1161,38 +1657,59 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
         # maps (cx, cz) pairs to AnvilChunkData
         self._loadedChunkData = {}
+        self._loadedEntityData = None
+        # used to keep references to recent chunks to prevent them from unloading too early
         self.recentChunks = collections.deque(maxlen=20)
 
         self.chunksNeedingLighting = set()
         self._allChunks = None
         self.dimensions = {}
 
-        self.loadLevelDat(create, random_seed, last_played)
+        self.loadLevelDat(create, random_seed, last_played, dataVersion=dataVersion)
 
-        if dat_name == 'level':
-            assert self.version == self.VERSION_ANVIL, "Pre-Anvil world formats are not supported (for now)"
+        assert self.version == self.VERSION_ANVIL, "Pre-Anvil world formats are not supported (for now)"
 
+        dataVersion = self.dataVersion
+
+        def setupVersion():
+            if dataVersion is None or dataVersion < self.DATA_VERSION_FLAT17:
+                return
+            self.worldEntityFolder = AnvilWorldFolder(filename, regionFolder="entities")
             if not readonly:
-                if os.path.exists(self.worldFolder.getFolderPath("players")) and os.listdir(
-                        self.worldFolder.getFolderPath("players")) != []:
-                    self.playersFolder = self.worldFolder.getFolderPath("players")
-                    self.oldPlayerFolderFormat = True
-                if os.path.exists(self.worldFolder.getFolderPath("playerdata")):
-                    self.playersFolder = self.worldFolder.getFolderPath("playerdata")
+                self.unsavedEntityFolder = AnvilWorldFolder(workFolderPath, regionFolder="entities")
+            self._loadedEntityData = {}
+            if dataVersion < self.DATA_VERSION_FLAT18:
+                return
+            if self.dimNo == DIM_OVERWORLD:
+                self.Height = 384
+                self.minY = -64
+        setupVersion()
+
+        if not readonly:
+            if dat_name == 'level':
+                playersFolder = self.worldFolder.getFolderPath("playerdata")
+                if os.path.exists(playersFolder):
+                    self.playersFolder = playersFolder
                     self.oldPlayerFolderFormat = False
+                else:
+                    # pcm1k TODO - apparently only the "playerdata" folder uses UUIDs, so the below code won't even work for that
+                    playersFolder = self.worldFolder.getFolderPath("players")
+                    if os.path.exists(playersFolder) and bool(os.listdir(playersFolder)):
+                        self.playersFolder = playersFolder
+                        self.oldPlayerFolderFormat = True
                 self.players = [x[:-4] for x in os.listdir(self.playersFolder) if x.endswith(".dat")]
                 for player in self.players:
                     try:
                         UUID(player, version=4)
                     except ValueError:
-                        # pcm1k - Why does this need to be 3 times? Also "UnicodeEncode" is not a thing apparently
-                        try:
-                            print "{0} does not seem to be in a valid UUID format".format(player)
-                        except UnicodeEncode:
-                            try:
-                                print u"{0} does not seem to be in a valid UUID format".format(player)
-                            except UnicodeError:
-                                print "{0} does not seem to be in a valid UUID format".format(repr(player))
+                        # pcm1k TODO - Why does this need to be 3 times? Also "UnicodeEncode" is not a thing apparently
+#                        try:
+#                            print "{0} does not seem to be in a valid UUID format".format(player)
+#                        except UnicodeEncode:
+#                            try:
+                        print u"{0} does not seem to be in a valid UUID format".format(player)
+#                            except UnicodeError:
+#                                print "{0} does not seem to be in a valid UUID format".format(repr(player))
                         self.players.remove(player)
                 if "Player" in self.root_tag["Data"]:
                     self.players.append("Player")
@@ -1201,14 +1718,14 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
     # --- Load, save, create ---
 
-    def _create(self, filename, random_seed, last_played):
+    def _create(self, filename, random_seed, last_played, dataVersion):
 
         # create a new level
         root_tag = nbt.TAG_Compound()
-        root_tag["Data"] = nbt.TAG_Compound()
-        root_tag["Data"]["SpawnX"] = nbt.TAG_Int(0)
-        root_tag["Data"]["SpawnY"] = nbt.TAG_Int(2)
-        root_tag["Data"]["SpawnZ"] = nbt.TAG_Int(0)
+        root_tag["Data"] = dataTag = nbt.TAG_Compound()
+        dataTag["SpawnX"] = nbt.TAG_Int(0)
+        dataTag["SpawnY"] = nbt.TAG_Int(2)
+        dataTag["SpawnZ"] = nbt.TAG_Int(0)
 
         if last_played is None:
             last_played = long(time.time() * 1000)
@@ -1216,13 +1733,18 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             random_seed = long(random.random() * 0xffffffffffffffffL) - 0x8000000000000000L
 
         self.root_tag = root_tag
-        root_tag["Data"]['version'] = nbt.TAG_Int(self.VERSION_ANVIL)
+        dataTag["version"] = nbt.TAG_Int(self.VERSION_ANVIL)
+
+        if dataVersion is not None:
+            dataTag["Version"] = versionTag = nbt.TAG_Compound()
+            versionTag["Id"] = nbt.TAG_Int(dataVersion)
 
         self.LastPlayed = long(last_played)
         self.RandomSeed = long(random_seed)
         self.SizeOnDisk = 0
         self.Time = 1
         self.DayTime = 1
+        # pcm1k TODO - the filename argument is not used
         self.LevelName = os.path.basename(self.worldFolder.filename)
 
         # ## if singleplayer:
@@ -1258,12 +1780,12 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                 func()
             raise SessionLockLost("Session lock lost. This world is being accessed from another location.")
 
-    def loadLevelDat(self, create=False, random_seed=None, last_played=None):
+    def loadLevelDat(self, create=False, random_seed=None, last_played=None, dataVersion=None):
 
         dat_name = self.dat_name
 
         if create:
-            self._create(self.filename, random_seed, last_played)
+            self._create(self.filename, random_seed, last_played, dataVersion)
             self.saveInPlace()
         else:
             try:
@@ -1279,10 +1801,33 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                     traceback.print_exc()
                     print repr(e)
                     log.info("Error loading %s.dat_old. Initializing with defaults."%dat_name)
-                    self._create(self.filename, random_seed, last_played)
+                    self._create(self.filename, random_seed, last_played, dataVersion)
 
-        if self.gameVersionId and self.gameVersionId[0] > 1451:
-            raise NotImplementedError("Java 1.13 format worlds are not supported at this time")
+    # pcm1k TODO - put loadedChunkData, worldFolder, and unsavedWorkFolder into their own class?
+    @staticmethod
+    def _saveChunkData(loadedChunkData, worldFolder, unsavedWorkFolder):
+        dirtyChunkCount = 0
+        for chunk in loadedChunkData.itervalues():
+            cx, cz = chunk.chunkPosition
+            if chunk.dirty:
+                data = chunk.savedTagData()
+                dirtyChunkCount += 1
+                worldFolder.saveChunk(cx, cz, data)
+                chunk.dirty = False
+            yield None
+
+        for cx, cz in unsavedWorkFolder.listChunks():
+            if (cx, cz) not in loadedChunkData:
+                data = unsavedWorkFolder.readChunk(cx, cz)
+                worldFolder.saveChunk(cx, cz, data)
+                dirtyChunkCount += 1
+            yield None
+
+        unsavedWorkFolder.closeRegions()
+        shutil.rmtree(unsavedWorkFolder.filename, True)
+        if not os.path.exists(unsavedWorkFolder.filename):
+            os.mkdir(unsavedWorkFolder.filename)
+        yield dirtyChunkCount
 
     def saveInPlaceGen(self):
         if self.readonly:
@@ -1294,27 +1839,12 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             for _ in MCInfdevOldLevel.saveInPlaceGen(level):
                 yield
 
-        dirtyChunkCount = 0
-        for chunk in self._loadedChunkData.itervalues():
-            cx, cz = chunk.chunkPosition
-            if chunk.dirty:
-                data = chunk.savedTagData()
-                dirtyChunkCount += 1
-                self.worldFolder.saveChunk(cx, cz, data)
-                chunk.dirty = False
+        for dirtyChunkCount in self._saveChunkData(self._loadedChunkData, self.worldFolder, self.unsavedWorkFolder):
             yield
-
-        for cx, cz in self.unsavedWorkFolder.listChunks():
-            if (cx, cz) not in self._loadedChunkData:
-                data = self.unsavedWorkFolder.readChunk(cx, cz)
-                self.worldFolder.saveChunk(cx, cz, data)
-                dirtyChunkCount += 1
-            yield
-
-        self.unsavedWorkFolder.closeRegions()
-        shutil.rmtree(self.unsavedWorkFolder.filename, True)
-        if not os.path.exists(self.unsavedWorkFolder.filename):
-            os.mkdir(self.unsavedWorkFolder.filename)
+        if self._loadedEntityData is not None:
+            for dirtyAdd in self._saveChunkData(self._loadedEntityData, self.worldEntityFolder, self.unsavedEntityFolder):
+                yield
+            dirtyChunkCount += dirtyAdd
 
         for path, tag in self.playerTagCache.iteritems():
             tag.save(path)
@@ -1345,6 +1875,12 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         self._loadedChunks.clear()
         self._loadedChunkData.clear()
 
+        if self._loadedEntityData is not None:
+            self.worldEntityFolder.closeRegions()
+            if not self.readonly:
+                self.unsavedEntityFolder.closeRegions()
+            self._loadedEntityData.clear()
+
     def close(self):
         """
         Unload all chunks and close all open filehandles. Discard any unsaved data.
@@ -1353,6 +1889,8 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         try:
             self.checkSessionLock()
             shutil.rmtree(self.unsavedWorkFolder.filename, True)
+            if self._loadedEntityData is not None:
+                shutil.rmtree(self.unsavedEntityFolder.filename, True)
         except SessionLockLost:
             pass
 
@@ -1367,6 +1905,12 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
     VERSION_MCR = 19132
     VERSION_ANVIL = 19133
+
+    DATA_VERSION_FLAT13 = 1451
+    DATA_VERSION_FLAT15 = 2203
+    DATA_VERSION_FLAT16 = 2529
+    DATA_VERSION_FLAT17 = 2681
+    DATA_VERSION_FLAT18 = 2844
 
     # --- Instance variables  ---
 
@@ -1417,28 +1961,20 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :return: A scoreboard
         :rtype: pymclevel.nbt.TAG_Compound()
         '''
-        if os.path.exists(self.worldFolder.getFolderPath("data")):
-                if os.path.exists(self.worldFolder.getFolderPath("data")+"/scoreboard.dat"):
-                    return nbt.load(self.worldFolder.getFolderPath("data")+"/scoreboard.dat")
-                else:
-                    root_tag = nbt.TAG_Compound()
-                    root_tag["data"] = nbt.TAG_Compound()
-                    root_tag["data"]["Objectives"] = nbt.TAG_List()
-                    root_tag["data"]["PlayerScores"] = nbt.TAG_List()
-                    root_tag["data"]["Teams"] = nbt.TAG_List()
-                    root_tag["data"]["DisplaySlots"] = nbt.TAG_List()
-                    self.save_scoreboard(root_tag)
-                    return root_tag
-        else:
-            self.worldFolder.getFolderPath("data")
-            root_tag = nbt.TAG_Compound()
-            root_tag["data"] = nbt.TAG_Compound()
-            root_tag["data"]["Objectives"] = nbt.TAG_List()
-            root_tag["data"]["PlayerScores"] = nbt.TAG_List()
-            root_tag["data"]["Teams"] = nbt.TAG_List()
-            root_tag["data"]["DisplaySlots"] = nbt.TAG_List()
-            self.save_scoreboard(root_tag)
-            return root_tag
+        dataPath = self.worldFolder.getFolderPath("data")
+        if os.path.exists(dataPath):
+            scoreboardPath = os.path.join(dataPath, "scoreboard.dat")
+            if os.path.exists(scoreboardPath):
+                return nbt.load(scoreboardPath)
+
+        root_tag = nbt.TAG_Compound()
+        root_tag["data"] = dataTag = nbt.TAG_Compound()
+        dataTag["Objectives"] = nbt.TAG_List()
+        dataTag["PlayerScores"] = nbt.TAG_List()
+        dataTag["Teams"] = nbt.TAG_List()
+        dataTag["DisplaySlots"] = nbt.TAG_List()
+        self.save_scoreboard(root_tag)
+        return root_tag
 
     def save_scoreboard(self, score):
         '''
@@ -1447,27 +1983,21 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :param score: The scoreboard
         :type score: pymclevel.nbt.TAG_Compound()
         '''
-        score.save(self.worldFolder.getFolderPath("data")+"/scoreboard.dat")
+        scoreboardPath = os.path.join(self.worldFolder.getFolderPath("data"), "scoreboard.dat")
+        score.save(scoreboardPath)
 
     def init_player_data(self):
-        dat_name = self.dat_name
         player_data = {}
         if self.oldPlayerFolderFormat:
-            for p in self.players:
-                if p != "Player":
-                    player_data_file = os.path.join(self.worldFolder.getFolderPath("players"), p+".dat")
-                    player_data[p] = nbt.load(player_data_file)
-                else:
-                    data = nbt.load(self.worldFolder.getFilePath("%s.dat"%dat_name))
-                    player_data[p] = data["Data"]["Player"]
+            playersFolder = self.worldFolder.getFolderPath("players")
         else:
-            for p in self.players:
-                if p != "Player":
-                    player_data_file = os.path.join(self.worldFolder.getFolderPath("playerdata"), p+".dat")
-                    player_data[p] = nbt.load(player_data_file)
-                else:
-                    data = nbt.load(self.worldFolder.getFilePath("%s.dat"%dat_name))
-                    player_data[p] = data["Data"]["Player"]
+            playersFolder = self.worldFolder.getFolderPath("playerdata")
+        for p in self.players:
+            if p == "Player":
+                continue
+            player_data_file = os.path.join(playersFolder, p + ".dat")
+            player_data[p] = nbt.load(player_data_file)
+        player_data["Player"] = self.root_tag["Data"]["Player"]
 
         #player_data = []
         #for p in [x for x in os.listdir(self.playersFolder) if x.endswith(".dat")]:
@@ -1476,13 +2006,13 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
     def save_player_data(self, player_data):
         if self.oldPlayerFolderFormat:
-            for p in player_data.keys():
-                if p != "Player":
-                    player_data[p].save(os.path.join(self.worldFolder.getFolderPath("players"), p+".dat"))
+            playersFolder = self.worldFolder.getFolderPath("players")
         else:
-            for p in player_data.keys():
-                if p != "Player":
-                    player_data[p].save(os.path.join(self.worldFolder.getFolderPath("playerdata"), p+".dat"))
+            playersFolder = self.worldFolder.getFolderPath("playerdata")
+        for p in player_data.keys():
+            if p != "Player":
+                player_data[p].save(os.path.join(playersFolder, p + ".dat"))
+        # pcm1k TODO - what about "Player"?
 
     @property
     def bounds(self):
@@ -1683,7 +2213,9 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
 
                 # Only source chunk loaded. Discard destination chunk and save source chunk in its place.
                 self._loadedChunkData.pop((cx, cz), None)
-                self.unsavedWorkFolder.saveChunk(cx, cz, sourceChunk.savedTagData())
+                self.unsavedWorkFolder.saveChunk(cx, cz, sourceChunk.chunkData.savedTagData())
+                self._loadedEntityData.pop((cx, cz), None)
+                self.unsavedEntityFolder.saveChunk(cx, cz, sourceChunk.entityData.savedTagData())
                 return
         else:
             if destChunk:
@@ -1694,29 +2226,53 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             else:
                 log.debug("No chunk loaded. Using world folder.copyChunkFrom")
                 # Neither chunk loaded. Copy via world folders.
-                self._loadedChunkData.pop((cx, cz), None)
+                def copyChunk(loadedChunkDataProp, worldFolderProp, unsavedWorkFolderProp):
+                    loadedChunkData = getattr(self, loadedChunkDataProp)
+                    if loadedChunkData is None:
+                        return
+                    worldLoadedChunkData = getattr(world, loadedChunkDataProp)
+                    if worldLoadedChunkData is None:
+                        return
 
-                # If the source chunk is dirty, write it to the work folder.
-                chunkData = world._loadedChunkData.pop((cx, cz), None)
-                if chunkData and chunkData.dirty:
-                    data = chunkData.savedTagData()
-                    world.unsavedWorkFolder.saveChunk(cx, cz, data)
+                    loadedChunkData.pop((cx, cz), None)
 
-                if world.unsavedWorkFolder.containsChunk(cx, cz):
-                    sourceFolder = world.unsavedWorkFolder
-                else:
-                    sourceFolder = world.worldFolder
+                    # If the source chunk is dirty, write it to the work folder.
+                    chunkData = worldLoadedChunkData.pop((cx, cz), None)
+                    worldUnsavedWorkFolder = getattr(world, unsavedWorkFolderProp)
+                    if chunkData and chunkData.dirty:
+                        data = chunkData.savedTagData()
+                        worldUnsavedWorkFolder.saveChunk(cx, cz, data)
 
-                self.unsavedWorkFolder.copyChunkFrom(sourceFolder, cx, cz)
+                    if worldUnsavedWorkFolder.containsChunk(cx, cz):
+                        sourceFolder = worldUnsavedWorkFolder
+                    else:
+                        sourceFolder = getattr(world, worldFolderProp)
 
-    def _getChunkBytes(self, cx, cz):
-        if not self.readonly and self.unsavedWorkFolder.containsChunk(cx, cz):
-            return self.unsavedWorkFolder.readChunk(cx, cz)
+                    getattr(self, unsavedWorkFolderProp).copyChunkFrom(sourceFolder, cx, cz)
+
+                copyChunk("_loadedChunkData", "worldFolder", "unsavedWorkFolder")
+                copyChunk("_loadedEntityData", "worldEntityFolder", "unsavedEntityFolder")
+
+    def _getChunkBytes(self, cx, cz, worldFolder=None, unsavedWorkFolder=None):
+        if worldFolder is None:
+            worldFolder = self.worldFolder
+        if unsavedWorkFolder is None:
+            unsavedWorkFolder = self.unsavedWorkFolder
+
+        if not self.readonly and unsavedWorkFolder.containsChunk(cx, cz):
+            return unsavedWorkFolder.readChunk(cx, cz)
         else:
-            return self.worldFolder.readChunk(cx, cz)
+            return worldFolder.readChunk(cx, cz)
 
-    def _getChunkData(self, cx, cz):
-        chunkData = self._loadedChunkData.get((cx, cz))
+    def _getChunkData(self, cx, cz, loadedChunkData=None, worldFolder=None, unsavedWorkFolder=None, dataClass=AnvilChunkData):
+        if loadedChunkData is None:
+            loadedChunkData = self._loadedChunkData
+        if worldFolder is None:
+            worldFolder = self.worldFolder
+        if unsavedWorkFolder is None:
+            unsavedWorkFolder = self.unsavedWorkFolder
+
+        chunkData = loadedChunkData.get((cx, cz))
         if chunkData is not None:
             return chunkData
 
@@ -1724,37 +2280,48 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             raise ChunkAccessDenied
 
         try:
-            data = self._getChunkBytes(cx, cz)
+            data = self._getChunkBytes(cx, cz,
+                worldFolder=worldFolder,
+                unsavedWorkFolder=unsavedWorkFolder)
             root_tag = nbt.load(buf=data)
-            chunkData = AnvilChunkData(self, (cx, cz), root_tag)
+            chunkData = dataClass(self, (cx, cz), root_tag)
         except (MemoryError, ChunkNotPresent):
             raise
         except Exception as e:
+            traceback.print_exc()
             raise ChunkMalformed("Chunk {0} had an error: {1!r}".format((cx, cz), e), sys.exc_info()[2])
 
-        if not self.readonly and self.unsavedWorkFolder.containsChunk(cx, cz):
+        if not self.readonly and unsavedWorkFolder.containsChunk(cx, cz):
             chunkData.dirty = True
 
-        self._storeLoadedChunkData(chunkData)
+        self._storeLoadedChunkData(chunkData,
+            loadedChunkData=loadedChunkData,
+            unsavedWorkFolder=unsavedWorkFolder)
 
         return chunkData
 
-    def _storeLoadedChunkData(self, chunkData):
-        if len(self._loadedChunkData) > self.loadedChunkLimit:
+    def _storeLoadedChunkData(self, chunkData, loadedChunkData=None, unsavedWorkFolder=None):
+        if loadedChunkData is None:
+            loadedChunkData = self._loadedChunkData
+        if unsavedWorkFolder is None:
+            unsavedWorkFolder = self.unsavedWorkFolder
+
+        if len(loadedChunkData) > self.loadedChunkLimit:
             # Try to find a chunk to unload. The chunk must not be in _loadedChunks, which contains only chunks that
             # are in use by another object. If the chunk is dirty, save it to the temporary folder.
             if not self.readonly:
                 self.checkSessionLock()
-            for (ocx, ocz), oldChunkData in self._loadedChunkData.items():
-                if (ocx, ocz) not in self._loadedChunks:
-                    if oldChunkData.dirty and not self.readonly:
-                        data = oldChunkData.savedTagData()
-                        self.unsavedWorkFolder.saveChunk(ocx, ocz, data)
+            for (ocx, ocz), oldChunkData in loadedChunkData.iteritems():
+                if (ocx, ocz) in self._loadedChunks:
+                    continue
+                if oldChunkData.dirty and not self.readonly:
+                    data = oldChunkData.savedTagData()
+                    unsavedWorkFolder.saveChunk(ocx, ocz, data)
 
-                    del self._loadedChunkData[ocx, ocz]
-                    break
+                del loadedChunkData[ocx, ocz]
+                break
 
-        self._loadedChunkData[chunkData.chunkPosition] = chunkData
+        loadedChunkData[chunkData.chunkPosition] = chunkData
 
     def getChunk(self, cx, cz):
         '''
@@ -1772,7 +2339,21 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             return chunk
 
         chunkData = self._getChunkData(cx, cz)
-        chunk = AnvilChunk(chunkData)
+        if self._loadedEntityData is not None:
+            try:
+                entityData = self._getChunkData(cx, cz,
+                    loadedChunkData=self._loadedEntityData,
+                    worldFolder=self.worldEntityFolder,
+                    unsavedWorkFolder=self.unsavedEntityFolder,
+                    dataClass=AnvilEntityData)
+            except ChunkNotPresent:
+                entityData = AnvilEntityData(self, (cx, cz), create=True)
+                self._storeLoadedChunkData(entityData,
+                    loadedChunkData=self._loadedEntityData,
+                    unsavedWorkFolder=self.unsavedEntityFolder)
+        else:
+            entityData = None
+        chunk = AnvilChunk(chunkData, entityData=entityData)
 
         self._loadedChunks[cx, cz] = chunk
         self.recentChunks.append(chunk)
@@ -1805,10 +2386,9 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         return heightMap[zInChunk, xInChunk]  # HeightMap indices are backwards
 
     # --- Biome manipulation ---
-    def biomeAt(self, x, z):
+    def biomeAt(self, x, z, y=0):
         '''
-        Gets the biome of the block at the specified coordinates. Since biomes are for the entire column at the coordinate, the Y coordinate wouldn't
-        change the result
+        Gets the biome of the block at the specified coordinates
 
         :param x: The X block coordinate
         :type x: int
@@ -1816,12 +2396,25 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :type z: int
         :rtype: int
         '''
-        biomes = self.getChunk(int(x/16),int(z/16)).root_tag["Level"]["Biomes"].value
-        xChunk = int(x/16) * 16
-        zChunk = int(z/16) * 16
-        return int(biomes[(z - zChunk) * 16 + (x - xChunk)])
+        if y < self.minY or y >= self.maxY:
+            return -1
 
-    def setBiomeAt(self, x, z, biomeID):
+        zc = z >> 4
+        xc = x >> 4
+
+        ch = self.getChunk(xc, zc)
+        biomes = ch.Biomes
+        biomesScale = ch.biomesScale
+
+        xInChunk = (x & 0xf) // biomesScale
+        zInChunk = (z & 0xf) // biomesScale
+
+        if len(biomes.shape) >= 3:
+            yInChunk = (y - self.minY) // biomesScale
+            return biomes[xInChunk, zInChunk, yInChunk]
+        return biomes[xInChunk, zInChunk]
+
+    def setBiomeAt(self, x, z, biomeID, y=0):
         '''
         Sets the biome data for the Y column at the specified X and Z coordinates
 
@@ -1832,10 +2425,25 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :param biomeID: The wanted biome ID
         :type biomeID: int
         '''
-        biomes = self.getChunk(int(x/16), int(z/16)).root_tag["Level"]["Biomes"].value
-        xChunk = int(x/16) * 16
-        zChunk = int(z/16) * 16
-        biomes[(z - zChunk) * 16 + (x - xChunk)] = biomeID
+        if y < self.minY or y >= self.maxY:
+            return
+
+        zc = z >> 4
+        xc = x >> 4
+
+        ch = self.getChunk(xc, zc)
+        biomes = ch.Biomes
+        biomesScale = ch.biomesScale
+
+        xInChunk = (x & 0xf) // biomesScale
+        zInChunk = (z & 0xf) // biomesScale
+
+        if len(biomes.shape) >= 3:
+            yInChunk = (y - self.minY) // biomesScale
+            biomes[xInChunk, zInChunk, yInChunk] = biomeID
+        else:
+            biomes[xInChunk, zInChunk] = biomeID
+        ch.dirty = True
 
     # --- Entities and TileEntities ---
 
@@ -2058,6 +2666,10 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
             self._allChunks.add((cx, cz))
 
         self._storeLoadedChunkData(AnvilChunkData(self, (cx, cz), create=True))
+        if self._loadedEntityData is not None:
+            self._storeLoadedChunkData(AnvilEntityData(self, (cx, cz), create=True),
+                loadedChunkData=self._loadedEntityData,
+                unsavedWorkFolder=self.unsavedEntityFolder)
         self._bounds = None
 
     def createChunks(self, chunks):
@@ -2108,6 +2720,8 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         :type cz: int
         '''
         self.worldFolder.deleteChunk(cx, cz)
+        if self._loadedEntityData is not None:
+            self.worldEntityFolder.deleteChunk(cx, cz)
         if self._allChunks is not None:
             self._allChunks.discard((cx, cz))
 
@@ -2218,6 +2832,7 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
         playerTag = self.getPlayerTag(player)
         if "Dimension" not in playerTag:
             return 0
+        # pcm1k TODO - "Dimension" is a string in newer versions
         return playerTag["Dimension"].value
 
     def setPlayerDimension(self, d, player="Player"):
@@ -2388,8 +3003,8 @@ class MCAlphaDimension(MCInfdevOldLevel):
         filename = parentWorld.worldFolder.getFolderPath("DIM" + str(int(dimNo)))
 
         self.parentWorld = parentWorld
-        MCInfdevOldLevel.__init__(self, filename, create)
         self.dimNo = dimNo
+        MCInfdevOldLevel.__init__(self, filename, create)
         self.filename = parentWorld.filename
         self.players = self.parentWorld.players
         self.playersFolder = self.parentWorld.playersFolder
@@ -2402,7 +3017,7 @@ class MCAlphaDimension(MCInfdevOldLevel):
     def __str__(self):
         return u"MCAlphaDimension({0}, {1})".format(self.parentWorld, self.dimNo)
 
-    def loadLevelDat(self, create=False, random_seed=None, last_played=None):
+    def loadLevelDat(self, create=False, random_seed=None, last_played=None, dataVersion=None):
         pass
 
     def preloadDimensions(self):

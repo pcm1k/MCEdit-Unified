@@ -53,6 +53,37 @@ def adjustCopyParameters(destLevel, sourceLevel, sourceBox, destinationPoint):
     return actualSourceBox, actualDestPoint
 
 
+def _getBiomeCopyViews(destChunk, sourceChunk, destSlices, sourceSlices):
+    destBiomes = destChunk.Biomes
+    sourceBiomes = sourceChunk.Biomes
+
+    destScale = destChunk.biomesScale
+    # adjust the start and stop of destSlices to match destScale
+    destBiomesSlices = tuple([slice(
+        s.start // destScale,
+        (s.stop + (destScale - 1)) // destScale,
+        s.step) for s in destSlices[:len(destBiomes.shape)]])
+
+    sourceScaleInv = 1.0 / sourceChunk.biomesScale
+    # meshgrid for expanding sourceBiomes to full width if needed
+    sourceGrid = numpy.mgrid[tuple(
+        [slice(None, s, sourceScaleInv) for s in sourceBiomes.shape])].astype("uint")
+    # adjust the step of sourceSlices to match destScale
+    sourceBiomesSlices = tuple([slice(s.start, s.stop, destScale)
+        for s in sourceSlices[:len(sourceBiomes.shape)]])
+
+    sourceBiomes = sourceBiomes[tuple(sourceGrid)][sourceBiomesSlices]
+    destBiomes = destBiomes[destBiomesSlices]
+    if len(destBiomes.shape) == 3 and len(sourceBiomes.shape) == 2:
+        # so sourceBiomes is broadcasted along the y axis correctly
+        destBiomes = numpy.moveaxis(destBiomes, 2, 0)
+    elif len(destBiomes.shape) == 2 and len(sourceBiomes.shape) == 3:
+        # only use the bottom y block from sourceBiomes
+        sourceBiomes = sourceBiomes[:, :, 0]
+
+    return destBiomes, sourceBiomes
+
+
 def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, blocksToCopy=None, entities=True,
                        create=False, biomes=False, tileTicks=True, staticCommands=False, moveSpawnerPos=False, regenerateUUID=False, first=None, cancelCommandBlockOffset=False):
     """ copy blocks between two infinite levels by looping through the
@@ -168,7 +199,8 @@ def copyBlocksFromIter(destLevel, sourceLevel, sourceBox, destinationPoint, bloc
                     destLevel.addTileTick(eTag)
 
             if biomes and hasattr(destChunk, 'Biomes') and hasattr(sourceChunk, 'Biomes'):
-                destChunk.Biomes[destSlices[:2]] = convertBiomes(destLevel, sourceLevel, sourceChunk.Biomes[sourceSlices[:2]])
+                destBiomes, sourceBiomes = _getBiomeCopyViews(destChunk, sourceChunk, destSlices, sourceSlices)
+                destBiomes[:] = convertBiomes(destLevel, sourceLevel, sourceBiomes)
 
         destChunk.chunkChanged()
 

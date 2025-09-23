@@ -144,6 +144,7 @@ def loadNBTCompoundList(data, littleEndian=True, partNBT=False, count=None):
 
 
 # =====================================================================
+# pcm1k TODO - this can probably just be imported from infiniteworld if it's the same
 def TagProperty(tagName, tagType, default_or_func=None):
     """
     Copied from infiniteworld.py. Custom property object to handle NBT-tag properties.
@@ -164,6 +165,7 @@ def TagProperty(tagName, tagType, default_or_func=None):
         return root_tag[tagName].value
 
     def setter(self, val):
+        # pcm1k TODO - this does not include the "Data"
         self.root_tag[tagName] = tagType(value=val)
 
     return property(getter, setter)
@@ -180,6 +182,7 @@ def get_blocks_storage_from_blocks_and_data(blocks, data, level):
     palette = []
     numpy_blocks = numpy.zeros(4096, 'uint16')
     for blockID, blockData in uniqueBlocks:
+        # pcm1k TODO - use new stuff
         try:
             if blockID != 0:
                 block_string = "minecraft:" + level.materials.idStr[blockID]
@@ -192,6 +195,7 @@ def get_blocks_storage_from_blocks_and_data(blocks, data, level):
             block_data = 0
         with nbt.littleEndianNBT():
             block_nbt = nbt.TAG_Compound([nbt.TAG_String(block_string, "name"), nbt.TAG_Short(block_data, "val")]).save(compressed=False)
+        # pcm1k TODO - would comparison even work for this?
         if block_nbt not in palette:
             palette.append(block_nbt)
         position = palette.index(block_nbt)
@@ -228,6 +232,7 @@ class PocketLeveldbDatabase(object):
     To access the actual database, world_db() should be called.
     """
     holdDatabaseOpen = True
+    # pcm1k TODO - use constants instead of the string directly
 #    world_version = None  # to be set to 'pre1.0' or '1.plus'
 
     def __open_db(self):
@@ -357,6 +362,7 @@ class PocketLeveldbDatabase(object):
 
             # Only way to see if value exists is by failing db.Get()
             try:
+                # pcm1k TODO - magic numbers are bad
                 terrain = db.Get(rop, key + "0")
             except RuntimeError:
                 return None
@@ -453,6 +459,7 @@ class PocketLeveldbDatabase(object):
                 # PE 1+ chunk detected. Iterate through the subchunks to rebuild the whole data.
                 # If the world version was set o pre1.0 during initialization, change it for 1+.
                 # Change also the world height to 256...
+                # pcm1k TODO - I would just bail instead. It's invalid data, right?
                 if world.world_version == 'pre1.0':
                     logger.info("Detected pre 1.0 world, but 1.0+ chunk found. Changing world version and height accordingly.")
                     world.world_version = '1.plus'
@@ -492,6 +499,7 @@ class PocketLeveldbDatabase(object):
                     write_dump("Unknown chunk version detected for chunk (%s, %s): %s" % (cx, cz, repr(chunk_version)))
                 raise AttributeError("Unknown chunk version detected for chunk (%s, %s): %s" % (cx, cz, repr(chunk_version)))
             logger.debug("CHUNK LOAD %s %s" % (cx, cz))
+            # pcm1k TODO - The docstring lies. I also think we should not deal with chunk objects here, maybe
             return chunk
 
     def _saveChunk_pre1_0(self, chunk, batch=None, writeOptions=None):
@@ -508,6 +516,7 @@ class PocketLeveldbDatabase(object):
         if batch is None:
             with self.world_db() as db:
                 wop = self.writeOptions if writeOptions is None else writeOptions
+                # pcm1k TODO - should just unpack the data rather than directly using the index
                 db.Put(wop, key + "0", data[0])
                 if data[1] is not None:
                     db.Put(wop, key + "1", data[1])
@@ -540,7 +549,9 @@ class PocketLeveldbDatabase(object):
 
             entityData = ''
             for ent in chunk.Entities:
+                # pcm1k TODO - do not do this here
                 if 'identifier' in ent:
+                    # pcm1k TODO - The value is 'see "identifier"'??? Does this make any sense at all?
                     v = 'see "identifier"'
                     if "id" in ent:
                         v = ent["id"].value
@@ -770,6 +781,7 @@ class PocketLeveldbDatabase(object):
 
 
 # =====================================================================
+# pcm1k TODO - this can probably be rewritten to use stuff from MCInfdevOldLevel instead of doing it again in a worse way
 class PocketLeveldbWorld(PocketWorldBase):
 
     # Methods are missing and prvent some parts of MCEdit to work properly.
@@ -1536,6 +1548,7 @@ class PocketLeveldbWorld(PocketWorldBase):
         if fullid is not None:
             # This is mostly a copy of what we have in camera.py.
             # Has to be optimized for PE...
+            # pcm1k TODO - it should either be in MCEdit or pymclevel, but not both
             if "EntityId" in tile_entity:
                 tile_entity["EntityId"] = nbt.TAG_Int(fullid)
             if "SpawnData" in tile_entity:
@@ -1568,9 +1581,9 @@ class PocketLeveldbChunkPre1(LightedChunk):
 
     Height = 128
 
-    _Entities = nbt.TAG_List()
-    _TileEntities = nbt.TAG_List()
-    dirty = False
+#    _Entities = nbt.TAG_List()
+#    _TileEntities = nbt.TAG_List()
+#    dirty = False
     chunk_version = "\x02"
 
     def __init__(self, cx, cz, world, data=None, create=False, world_version=None):
@@ -1843,9 +1856,9 @@ class PocketLeveldbChunk1Plus(LightedChunk):
 
     Height = 256
 
-    _Entities = nbt.TAG_List()
-    _TileEntities = nbt.TAG_List()
-    dirty = False
+#    _Entities = nbt.TAG_List()
+#    _TileEntities = nbt.TAG_List()
+#    dirty = False
     chunk_version = "\x04"
 
     def __init__(self, cx, cz, world, data=None, create=False, world_version=None, chunk_version=None):

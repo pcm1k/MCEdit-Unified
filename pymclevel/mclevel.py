@@ -182,7 +182,7 @@ import os
 from pocket import PocketWorld
 from leveldbpocket import PocketLeveldbWorld
 from pymclevel import leveldbpocket
-from schematic import INVEditChest, MCSchematic, ZipSchematic
+from schematic import INVEditChest, MCSchematic, SpongeSchematic, ZipSchematic
 import sys
 import traceback
 
@@ -286,6 +286,9 @@ def fromFile(filename, loadInfinite=True, readonly=False):
         if MCSchematic._isTagLevel(root_tag):
             log.info(u"Detected Schematic.")
             return MCSchematic(filename=filename)
+        if SpongeSchematic._isTagLevel(root_tag):
+            log.info(u"Detected Sponge Schematic.")
+            return SpongeSchematic(filename=filename)
 
         if INVEditChest._isTagLevel(root_tag):
             log.info(u"Detected INVEdit inventory file")

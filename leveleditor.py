@@ -13,7 +13,7 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE."""
 # Moving this here to get log entries ASAP -- D.C.-G.
 import logging
-from pymclevel.schematic import StructureNBT
+from pymclevel.schematic import SpongeSchematic, StructureNBT
 from utilities import mcworld_support
 
 log = logging.getLogger(__name__)
@@ -961,32 +961,52 @@ class LevelEditor(GLViewport):
         dlg.present()
 
     def exportSchematic(self, schematic):
+        # pcm1k TODO - the list of file types appears pretty messed up
         filename = mcplatform.askSaveSchematic(
-            directories.schematicsDir, self.level.displayName, ({"Minecraft Schematics": ["schematic"], "Minecraft Structure NBT": ["nbt"]},[]))
+            directories.schematicsDir, self.level.displayName,
+            ({"Minecraft Schematics": ["schematic"], "Sponge Schematics": ["schem"], "Minecraft Structure NBT": ["nbt"]}, []))
 
-        def save_as_nbt(schem, filename):
+        def saveAsNbt(schem, filename):
             gameVersionId = self.level.gameVersionId
             structure = StructureNBT.fromSchematic(schem,
-                version=gameVersionId[0] if gameVersionId else None,
+                version=gameVersionId[0] if bool(gameVersionId) else None,
                 author="MCEdit-Unified v{}".format(release.TAG))
             structure.save(filename)
 
+        def saveAsSchem(schem, filename):
+#            if not isinstance(schem, SpongeSchematic):
+            if type(schem) is pymclevel.MCSchematic or isinstance(schem, pymclevel.ZipSchematic):
+                schem.saveToFile(filename)
+                return
+            schemToSave = schem.extractSchematic(schem.bounds)
+            schemToSave.saveToFile(filename)
+
+        def saveAsSponge(schem, filename):
+            if isinstance(schem, SpongeSchematic):
+                schem.saveToFile(filename)
+                return
+            schemToSave = schem.extractSpongeSchematic(schem.bounds)
+            schemToSave.saveToFile(filename)
+
         if filename:
             if filename.endswith(".schematic"):
-                schematic.saveToFile(filename)
+                saveAsSchem(schematic, filename)
+            elif filename.endswith(".schem"):
+                saveAsSponge(schematic, filename)
             elif filename.endswith(".nbt"):
                 if schematic.Height >= 50 or schematic.Length >= 50 or schematic.Width >= 50:
                     result = ask("You're trying to export a large selection as a Structure NBT file, this is not recommended " +
                                  "and may cause MCEdit to hang and/or crash. We recommend you export this selection as a Schematic instead.",
                                  responses=['Export as Structure anyway', 'Export as Schematic', 'Cancel Export'], wrap_width=80)
                     if result == 'Export as Structure anyway':
-                        save_as_nbt(schematic, filename)
+                        saveAsNbt(schematic, filename)
                     elif result == 'Export as Schematic':
                         # filename ends in ".nbt"
-                        schematic.saveToFile(filename[:-4] + ".schematic")
+#                        saveAsSchem(schematic, filename[:-4] + ".schematic")
+                        saveAsSponge(schematic, filename[:-4] + ".schem")
                     elif result == 'Cancel Export':
                         return
-                save_as_nbt(schematic, filename)
+                saveAsNbt(schematic, filename)
 
     def getLastCopiedSchematic(self):
         if len(self.copyStack) == 0:
@@ -2305,10 +2325,12 @@ class LevelEditor(GLViewport):
             levelFormat = "Minecraft Indev (.mclevel format)"
         elif isinstance(self.level, pymclevel.MCSchematic):
             levelFormat = "MCEdit Schematic"
+        # pcm1k TODO - ZipSchematic inherits from MCInfdevOldLevel, so this code might not ever be reached
         elif isinstance(self.level, pymclevel.ZipSchematic):
             levelFormat = "MCEdit Schematic (Zipped Format)"
         elif isinstance(self.level, pymclevel.MCJavaLevel):
             levelFormat = "Minecraft Classic or raw block array"
+        # pcm1k TODO - what about old Pocket?
         elif isinstance(self.level, pymclevel.PocketLeveldbWorld):
             levelFormat = "Minecraft Pocket Edition"
         else:
@@ -3115,7 +3137,7 @@ class LevelEditor(GLViewport):
                     self.inspectionString += _(", D: %d") % self.level.getChunk(cx, cz).dirty
                     self.inspectionString += _(", NL: %d") % self.level.getChunk(cx, cz).needsLighting
                     try:
-                        biome = self.level.biomeAt(x, z)
+                        biome = self.level.biomeAt(x, z, y)
 
                         biomeType = self.level.biomeTypes.biomeWithID(biome)
                         if biomeType is not None:
@@ -3137,8 +3159,8 @@ class LevelEditor(GLViewport):
         except Exception as e:
             self.inspectionString += _("Chunk {0} had an error: {1!r}").format(
                 (int(numpy.floor(blockPosition[0])) >> 4, int(numpy.floor(blockPosition[2])) >> 4), e)
-            import traceback
-            traceback.print_exc()
+#            import traceback
+#            traceback.print_exc()
 
     def drawWireCubeReticle(self, color=(1.0, 1.0, 1.0, 1.0), position=None):
         GL.glPolygonOffset(DepthOffset.TerrainWire, DepthOffset.TerrainWire)

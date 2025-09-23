@@ -252,6 +252,7 @@ def askOpenFile(title='Select a Minecraft level....', schematics=False, suffixes
             _suffixes.append("inv")
 
             _suffixes.append("nbt")
+            _suffixes.append("schem")
 
             # BO support
             _suffixes.append("bo2")

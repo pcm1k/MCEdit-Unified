@@ -3,7 +3,7 @@ import os
 import unittest
 from pymclevel import mclevel
 from templevel import TempLevel, mktemp
-from pymclevel.schematic import MCSchematic
+from pymclevel.schematic import MCSchematic, SpongeSchematic
 from pymclevel.box import BoundingBox
 
 __author__ = 'Rio'
@@ -44,6 +44,22 @@ class TestSchematics(unittest.TestCase):
         schematic.copyBlocksFrom(level, BoundingBox((0, 0, 0), (64, 64, 64,)), (0, 0, 0))
         schematic.close()
         os.remove(temp)
+
+    def testCreateSponge(self):
+        # log.info("Schematic from indev")
+
+        size = (64, 64, 64)
+        temp = mktemp("testcreate.schematic")
+        schematic = SpongeSchematic(shape=size, filename=temp, mats='Classic')
+        level = self.indevLevel.level
+
+        schematic.copyBlocksFrom(level, BoundingBox((0, 0, 0), (64, 64, 64,)), (0, 0, 0))
+        assert ((schematic.Blocks[0:64, 0:64, 0:64] == level.Blocks[0:64, 0:64, 0:64]).all())
+
+        schematic.copyBlocksFrom(level, BoundingBox((0, 0, 0), (64, 64, 64,)), (-32, -32, -32))
+        assert ((schematic.Blocks[0:32, 0:32, 0:32] == level.Blocks[32:64, 32:64, 32:64]).all())
+
+        schematic.saveInPlace()
 
     def testRotate(self):
         level = self.anvilLevel.level

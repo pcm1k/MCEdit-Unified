@@ -14,12 +14,14 @@ import blockrotation
 from box import BoundingBox
 import infiniteworld
 from level import MCLevel, EntityLevel, GAME_PLATFORM_SCHEMATIC
-from materials import alphaMaterials, MCMaterials, namedMaterials, BlockstateAPI
+from materials import alphaMaterials, MCMaterials, namedMaterials, BlockstateAPI, getMaterials
 from mclevelbase import exhaust
+from id_definitions import get_defs_ids, PLATFORM_ALPHA, VERSION_LATEST
 import nbt
-from numpy import array, ndenumerate, resize, swapaxes, zeros
+from numpy import array, ndenumerate, ndindex, resize, swapaxes, zeros
 import math
 import copy
+from collections import defaultdict
 
 log = getLogger(__name__)
 
@@ -61,68 +63,16 @@ class MCSchematic(EntityLevel):
             self.filename = None
 
         if root_tag:
-            self.root_tag = root_tag
-            if DEBUG: log.debug(u"Processing materials.")
-            if "Materials" in root_tag:
-                self.materials = namedMaterials[self.Materials]
-            else:
-                if mats in namedMaterials:
-                    if DEBUG: log.debug(u"Using named materials.")
-                    self.materials = mats = namedMaterials[mats]
-                else:
-                    assert (isinstance(mats, MCMaterials))
-                    self.materials = mats
-                root_tag["Materials"] = nbt.TAG_String(mats.name)
-
-            if DEBUG: log.debug(u"Processing size.")
-            w = root_tag["Width"].value
-            l = root_tag["Length"].value
-            h = root_tag["Height"].value
-
-            if DEBUG: log.debug(u"Reshaping blocks.")
-            self._Blocks = root_tag.pop("Blocks").value.astype("uint16").reshape(h, l, w)
-            if "AddBlocks" in root_tag:
-                if DEBUG: log.debug(u"Processing AddBlocks.")
-                # Use WorldEdit's "AddBlocks" array to load and store the 4 high bits of a block ID.
-                # Unlike Minecraft's NibbleArrays, this array stores the first block's bits in the
-                # 4 high bits of the first byte.
-
-                size = (h * l * w)
-
-                # If odd, add one to the size to make sure the adjacent slices line up.
-                add = zeros(size + (size & 1), dtype="uint16")
-
-                # Fill the even bytes with data
-                add[::2] = resize(root_tag.pop("AddBlocks").value, add[::2].shape)
-
-                # Copy the low 4 bits to the odd bytes
-                add[1::2] = add[::2] & 0xf
-
-                # Shift the even bytes down
-                add[::2] >>= 4
-
-                # Shift every byte up before merging it with Blocks
-                add <<= 8
-                self._Blocks |= add[:size].reshape(h, l, w)
-
-            self._Blocks = swapaxes(self._Blocks, 0, 2)
-            self._Data = swapaxes(root_tag.pop("Data").value.astype("uint8").reshape(h, l, w) & 0xF, 0, 2)
-
-            if "Biomes" in root_tag:
-                if DEBUG: log.debug(u"Processing Biomes.")
-                root_tag["Biomes"].value.shape = (l, w)
+            self._load(root_tag, mats)
         else:
-            if DEBUG: log.debug(u"No root tag found, creating a blank schematic.")
-            assert shape is not None
-            self.root_tag = root_tag = nbt.TAG_Compound(name="Schematic")
-            root_tag["Height"] = nbt.TAG_Short(shape[1])
-            root_tag["Length"] = nbt.TAG_Short(shape[2])
-            root_tag["Width"] = nbt.TAG_Short(shape[0])
+            self._create(shape, mats)
 
-            root_tag["Entities"] = nbt.TAG_List()
-            root_tag["TileEntities"] = nbt.TAG_List()
-            root_tag["TileTicks"] = nbt.TAG_List()
-
+    def _load(self, root_tag, mats="Alpha"):
+        self.root_tag = root_tag
+        if DEBUG: log.debug(u"Processing materials.")
+        if "Materials" in root_tag:
+            self.materials = namedMaterials[self.Materials]
+        else:
             if mats in namedMaterials:
                 if DEBUG: log.debug(u"Using named materials.")
                 self.materials = mats = namedMaterials[mats]
@@ -131,13 +81,73 @@ class MCSchematic(EntityLevel):
                 self.materials = mats
             root_tag["Materials"] = nbt.TAG_String(mats.name)
 
-            self._Blocks = zeros((shape[0], shape[2], shape[1]), dtype="uint16")
-            # This is made uint16 to allow old code that uses MCSchematic only to
-            # manipulate stuff (in memory) to still work as expected. If it is saved
-            # it will be converted to old blocks, however
-            self._Data = zeros((shape[0], shape[2], shape[1]), dtype="uint16" if self.filename is None else "uint8")
+        if DEBUG: log.debug(u"Processing size.")
+        w = root_tag["Width"].value
+        l = root_tag["Length"].value
+        h = root_tag["Height"].value
 
-            root_tag["Biomes"] = nbt.TAG_Byte_Array(zeros((shape[2], shape[0]), dtype="uint8"))
+        if DEBUG: log.debug(u"Reshaping blocks.")
+        self._Blocks = root_tag.pop("Blocks").value.astype("uint16").reshape(h, l, w)
+        if "AddBlocks" in root_tag:
+            if DEBUG: log.debug(u"Processing AddBlocks.")
+            # Use WorldEdit's "AddBlocks" array to load and store the 4 high bits of a block ID.
+            # Unlike Minecraft's NibbleArrays, this array stores the first block's bits in the
+            # 4 high bits of the first byte.
+
+            size = (h * l * w)
+
+            # If odd, add one to the size to make sure the adjacent slices line up.
+            add = zeros(size + (size & 1), dtype="uint16")
+
+            # Fill the even bytes with data
+            add[::2] = resize(root_tag.pop("AddBlocks").value, add[::2].shape)
+
+            # Copy the low 4 bits to the odd bytes
+            add[1::2] = add[::2] & 0xf
+
+            # Shift the even bytes down
+            add[::2] >>= 4
+
+            # Shift every byte up before merging it with Blocks
+            add <<= 8
+            self._Blocks |= add[:size].reshape(h, l, w)
+
+        self._Blocks = swapaxes(self._Blocks, 0, 2)
+        self._Data = swapaxes(root_tag.pop("Data").value.astype("uint8").reshape(h, l, w) & 0xF, 0, 2)
+#        self._Data = swapaxes(root_tag.pop("Data").value.astype("uint16").reshape(h, l, w) & 0xF, 0, 2)
+
+        if "Biomes" in root_tag:
+            if DEBUG: log.debug(u"Processing Biomes.")
+            root_tag["Biomes"].value.shape = (l, w)
+
+    def _create(self, shape, mats="Alpha"):
+        if DEBUG: log.debug(u"No root tag found, creating a blank schematic.")
+        assert shape is not None
+        self.root_tag = root_tag = nbt.TAG_Compound(name="Schematic")
+        root_tag["Height"] = nbt.TAG_Short(shape[1])
+        root_tag["Length"] = nbt.TAG_Short(shape[2])
+        root_tag["Width"] = nbt.TAG_Short(shape[0])
+
+        root_tag["Entities"] = nbt.TAG_List()
+        root_tag["TileEntities"] = nbt.TAG_List()
+        root_tag["TileTicks"] = nbt.TAG_List()
+
+        if mats in namedMaterials:
+            if DEBUG: log.debug(u"Using named materials.")
+            self.materials = mats = namedMaterials[mats]
+        else:
+            assert (isinstance(mats, MCMaterials))
+            self.materials = mats
+        root_tag["Materials"] = nbt.TAG_String(mats.name)
+
+        self._Blocks = zeros((shape[0], shape[2], shape[1]), dtype="uint16")
+        # This is made uint16 to allow old code that uses MCSchematic only to
+        # manipulate stuff (in memory) to still work as expected. If it is saved
+        # it will be converted to old blocks, however
+        self._Data = zeros((shape[0], shape[2], shape[1]), dtype="uint16" if self.filename is None else "uint8")
+
+        # pcm1k TODO - make this 3d and uint16 for the same reason?
+        root_tag["Biomes"] = nbt.TAG_Byte_Array(zeros((shape[2], shape[0]), dtype="uint8"))
 
     def saveToFile(self, filename=None):
         """ save to file named filename, or use self.filename.  XXX NOT THREAD SAFE AT ALL. """
@@ -522,6 +532,16 @@ class MCSchematic(EntityLevel):
             return 0
         return self.Data[x, z, y]
 
+    def biomeAt(self, x, z, y=0):
+        if (x, y, z) not in self.bounds:
+            return 0
+        return self.Biomes[x, z]
+
+    def setBiomeAt(self, x, z, biomeID, y=0):
+        if (x, y, z) not in self.bounds:
+            return 0
+        self.Biomes[x, z] = biomeID
+
     @classmethod
     def chestWithItemID(cls, itemID, count=64, damage=0):
         """ Creates a chest with a stack of 'itemID' in each slot.
@@ -671,6 +691,489 @@ class ZipSchematic(infiniteworld.MCInfdevOldLevel):
     @classmethod
     def _isLevel(cls, filename):
         return zipfile.is_zipfile(filename)
+
+
+# pcm1k TODO - maybe have a SchematicBase class instead of using MCSchematic?
+class SpongeSchematic(MCSchematic):
+    NON_ALPHA_VERSION = 0x7FFFFFFF
+
+    def _load(self, root_tag, mats=None):
+        def handleBlockData(dataTag, palette, blocks, data, mats):
+            decodeSignedVarInt = self._decodeSignedVarInt
+            deStringifyBlockstate = BlockstateAPI.deStringifyBlockstate
+            blockstateToID = mats.blockstate_api.blockstateToID
+
+            buf = (byte for byte in dataTag.value)
+            stateCache = {}
+            cacheGet = stateCache.get
+            # we need the iteration order to be (x, z, y), but ndindex() does it in reverse order, so use swapaxes()
+            for y, z, x in ndindex(swapaxes(blocks, 0, 2).shape):
+                paletteI = decodeSignedVarInt(buf)
+                if paletteI is None:
+                    return
+
+                block = cacheGet(paletteI)
+                if block is None:
+                    name, properties = deStringifyBlockstate(palette[paletteI])
+                    stateCache[paletteI] = block = blockstateToID(name, properties, create=True)
+                blockID, blockData = block
+                if blockID == -1 or blockData == -1:
+                    continue
+
+                blocks[x, z, y] = blockID
+                data[x, z, y] = blockData
+
+        def handleBlocks(blocksTag):
+            if blocksTag is None:
+                return
+            palette = {value.value: key for key, value in blocksTag["Palette"].iteritems()}
+            handleBlockData(blocksTag["Data"], palette, self.Blocks, self.Data, self.materials)
+
+            blockEntitiesTag = blocksTag.get("BlockEntities")
+            if blockEntitiesTag is None:
+                return
+            tileEntities = self.TileEntities
+            for e in blockEntitiesTag:
+                entity = e.get("Data", nbt.TAG_Compound())
+                entity["id"] = e["Id"]
+                entity["x"], entity["y"], entity["z"] = [nbt.TAG_Int(p) for p in e["Pos"].value]
+#                TileEntity.setpos(entity, e["Pos"].value)
+                tileEntities.append(entity)
+
+        def handleBiomeData(dataTag, palette, biomes, biomeTypes):
+            decodeSignedVarInt = self._decodeSignedVarInt
+            biomeWithStringID = biomeTypes.biomeWithStringID
+
+            buf = (byte for byte in dataTag.value)
+            stateCache = {}
+            cacheGet = stateCache.get
+            # we need the iteration order to be (x, z, y), but ndindex() does it in reverse order, so use swapaxes()
+            for y, z, x in ndindex(swapaxes(biomes, 0, 2).shape):
+                paletteI = decodeSignedVarInt(buf)
+                if paletteI is None:
+                    return
+
+                biomeID = cacheGet(paletteI)
+                if biomeID is None:
+                    biome = biomeWithStringID(palette[paletteI], create=True)
+                    stateCache[paletteI] = biomeID = biome.ID if biome is not None else -1
+                if biomeID == -1:
+                    continue
+
+                biomes[x, z, y] = biomeID
+
+        def handleBiomes(biomesTag):
+            if biomesTag is None:
+                return
+            palette = {value.value: key for key, value in biomesTag["Palette"].iteritems()}
+            handleBiomeData(biomesTag["Data"], palette, self.Biomes, self.biomeTypes)
+
+        def handleEntities(entitiesTag):
+            if entitiesTag is None:
+                return
+            entities = self.Entities
+            for e in entitiesTag:
+                entity = e.get("Data", nbt.TAG_Compound())
+                entity["id"] = e["Id"]
+                entity["Pos"] = e["Pos"]
+                entities.append(entity)
+
+        def getPlatVer(dataVersion):
+            if dataVersion != self.NON_ALPHA_VERSION:
+                mceditTag = self.Metadata.get("MCEdit")
+                if mceditTag is not None:
+                    # these extra tags are not necessary, so remove them
+                    mceditTag.pop("DefsPlatform", None)
+                    mceditTag.pop("DefsVersion", None)
+                return PLATFORM_ALPHA, str(dataVersion)
+
+            mceditTag = self.Metadata["MCEdit"]
+            defsPlatform = mceditTag["DefsPlatform"].value
+            defsVersion = mceditTag["DefsVersion"].value
+            return defsPlatform, defsVersion
+
+        self.root_tag = root_tag
+        schemTag = root_tag["Schematic"]
+
+        if schemTag["Version"].value != 3:
+            raise IOError("Only SpongeSchematic version 3 is currently supported")
+
+        # pcm1k TODO - defsPlatform and defsVersion are defined, so is this kinda redundant?
+        dataVersion = schemTag["DataVersion"].value
+        defsPlatform, defsVersion = getPlatVer(dataVersion)
+        self.defsIds = defsIds = get_defs_ids(defsPlatform, defsVersion)
+        self.materials = getMaterials(defsIds, forceNew=True)
+
+        if DEBUG: log.debug(u"Processing size.")
+        w = schemTag["Width"].value
+        l = schemTag["Length"].value
+        h = schemTag["Height"].value
+
+        self._Blocks = zeros((w, l, h), dtype="uint16")
+        self._Data = zeros((w, l, h), dtype="uint16")
+        self._Biomes = zeros((w, l, h), dtype="uint16")
+
+        self._Entities = nbt.TAG_List()
+        self._TileEntities = nbt.TAG_List()
+
+        handleBlocks(schemTag.pop("Blocks", None))
+        handleBiomes(schemTag.pop("Biomes", None))
+        handleEntities(schemTag.pop("Entities", None))
+
+    def _create(self, shape, mats=None):
+        if DEBUG: log.debug(u"No root tag found, creating a blank schematic.")
+        assert shape is not None
+        self.root_tag = root_tag = nbt.TAG_Compound()
+        root_tag["Schematic"] = schemTag = nbt.TAG_Compound()
+
+        schemTag["Height"] = nbt.TAG_Short(shape[1])
+        schemTag["Length"] = nbt.TAG_Short(shape[2])
+        schemTag["Width"] = nbt.TAG_Short(shape[0])
+
+        self._Blocks = zeros((shape[0], shape[2], shape[1]), dtype="uint16")
+        self._Data = zeros((shape[0], shape[2], shape[1]), dtype="uint16")
+        self._Biomes = zeros((shape[0], shape[2], shape[1]), dtype="uint16")
+
+        self._Entities = nbt.TAG_List()
+        self._TileEntities = nbt.TAG_List()
+
+        schemTag["Version"] = nbt.TAG_Int(3)
+
+        if mats is None:
+            defsIds = get_defs_ids(PLATFORM_ALPHA, VERSION_LATEST)
+            self.materials = mats = getMaterials(defsIds, forceNew=True)
+        elif mats in namedMaterials:
+            if DEBUG: log.debug(u"Using named materials.")
+            self.materials = mats = namedMaterials[mats]
+        else:
+            assert (isinstance(mats, MCMaterials))
+            self.materials = mats
+
+        def getDataVersion(defsIds):
+            if defsIds.platform != PLATFORM_ALPHA:
+                return self.NON_ALPHA_VERSION
+            try:
+                return int(defsIds.version)
+            except ValueError:
+                return self.NON_ALPHA_VERSION
+
+        self.defsIds = defsIds = mats.defsIds
+        # pcm1k TODO - The dataVersion can be "wrong" if we are exporting from a world and don't have version definitions close to that version. Of course, this does not matter much if we actually have version definitions for that version
+        dataVersion = getDataVersion(defsIds)
+        schemTag["DataVersion"] = nbt.TAG_Int(dataVersion)
+        if dataVersion == self.NON_ALPHA_VERSION:
+            metaTag = self.Metadata
+            metaTag["MCEdit"] = mceditTag = nbt.TAG_Compound()
+            mceditTag["DefsPlatform"] = nbt.TAG_String(defsIds.platform)
+            mceditTag["DefsVersion"] = nbt.TAG_String(defsIds.version)
+
+    @staticmethod
+    def _encodeSignedVarInt(value):
+        value &= 0xFFFFFFFF
+        result = []
+        while True:
+            byte = value & 0x7F
+            value >>= 7
+            if value == 0:
+                result.append(byte)
+                break
+            result.append(byte | 0x80)
+        return result
+
+    @staticmethod
+    def _decodeSignedVarInt(input_):
+        result = 0
+        shift = 0
+        for byte in input_:
+            if shift >= 32:
+                raise IOError("VarInt too big")
+            result |= (byte & 0x7F) << shift
+            shift += 7
+            if (byte & 0x80) == 0:
+                if (result & 0x80000000) != 0:
+                    return result | -0x100000000
+                return result
+        return result if shift > 0 else None
+
+    def saveToFile(self, filename=None):
+        """ save to file named filename, or use self.filename.  XXX NOT THREAD SAFE AT ALL. """
+        if filename is None:
+            filename = self.filename
+        if filename is None:
+            raise IOError, u"Attempted to save an unnamed schematic in place"
+
+        # pcm1k TODO - maybe un-nest this stuff
+        def createPalette(usedBlocks):
+            usedBlocks = usedBlocks.items()
+            # only matters if more than 127 blocks, as everything will fit into 1 byte otherwise
+            if len(usedBlocks) > 127:
+                # sort to allow more frequent blocks to have a smaller index
+                usedBlocks.sort(key=lambda item: item[1], reverse=True)
+
+            paletteTag = nbt.TAG_Compound()
+            # apparently TAG_Compound uses a list internally and I want to be reasonably fast
+            paletteDict = {}
+            for paletteI, entry in enumerate(usedBlocks):
+                name = entry[0]
+                paletteTag[name] = nbt.TAG_Int(paletteI)
+                paletteDict[name] = paletteI
+            return paletteTag, paletteDict
+
+        def countBlocks(blocks, data, mats):
+            idToBlockstate = mats.blockstate_api.idToBlockstate
+            stringifyBlockstate = BlockstateAPI.stringifyBlockstate
+
+            usedBlocks = defaultdict(lambda: 0)
+            stateCache = {}
+            cacheGet = stateCache.get
+            for pos, blockID in ndenumerate(blocks):
+                blockData = data[pos]
+                state = cacheGet((blockID, blockData))
+                if state is None:
+                    name, properties = idToBlockstate(blockID, blockData)
+                    stateCache[blockID, blockData] = state = stringifyBlockstate(name, properties)
+
+                usedBlocks[state] += 1
+            return usedBlocks, stateCache
+
+        def createBlockPalette(blocks, data, mats):
+            # "blockToIndex" should really be "blockToState" at this point, it will be converted later
+            usedBlocks, blockToIndex = countBlocks(blocks, data, mats)
+            paletteTag, paletteDict = createPalette(usedBlocks)
+            for block, name in blockToIndex.iteritems():
+                blockToIndex[block] = paletteDict[name]
+            return paletteTag, blockToIndex
+
+        def createBlockData(blocks, data, blockToIndex):
+            encodeSignedVarInt = self._encodeSignedVarInt
+
+            result = []
+            # we need the iteration order to be (x, z, y), but ndenumerate() does it in reverse order, so use swapaxes()
+            for (y, z, x), blockID in ndenumerate(swapaxes(blocks, 0, 2)):
+                blockData = data[x, z, y]
+                paletteIndex = blockToIndex[blockID, blockData]
+                result.extend(encodeSignedVarInt(paletteIndex))
+            resultTag = nbt.TAG_Byte_Array(array(result, dtype="uint8"))
+            return resultTag
+
+        def countBiomes(biomes, biomeTypes):
+            biomeWithID = biomeTypes.biomeWithID
+
+            usedBiomes = defaultdict(lambda: 0)
+            stateCache = {}
+            cacheGet = stateCache.get
+            # pcm1k TODO - Use nditer()? But then apparently each entry returns a numpy.ndarray?
+            for pos, biomeID in ndenumerate(biomes):
+                state = cacheGet(biomeID)
+                if state is None:
+                    biome = biomeWithID(biomeID)
+                    stateCache[biomeID] = state = biome.stringID
+
+                usedBiomes[state] += 1
+            return usedBiomes, stateCache
+
+        def createBiomePalette(biomes, biomeTypes):
+            # "biomeToIndex" should really be "biomeToState" at this point, it will be converted later
+            usedBiomes, biomeToIndex = countBiomes(biomes, biomeTypes)
+            paletteTag, paletteDict = createPalette(usedBiomes)
+            for biome, name in biomeToIndex.iteritems():
+                biomeToIndex[biome] = paletteDict[name]
+            return paletteTag, biomeToIndex
+
+        def createBiomeData(biomes, biomeToIndex):
+            encodeSignedVarInt = self._encodeSignedVarInt
+
+            result = []
+            # we need the iteration order to be (x, z, y), but ndenumerate() does it in reverse order, so use swapaxes()
+            # pcm1k TODO - Use nditer()? But then apparently each entry returns a numpy.ndarray?
+            for (y, z, x), biomeID in ndenumerate(swapaxes(biomes, 0, 2)):
+                paletteIndex = biomeToIndex[biomeID]
+                result.extend(encodeSignedVarInt(paletteIndex))
+            resultTag = nbt.TAG_Byte_Array(array(result, dtype="uint8"))
+            return resultTag
+
+        def createBlockEntities(tileEntities):
+            result = nbt.TAG_List()
+            for e in tileEntities:
+                entity = nbt.TAG_Compound()
+                entity["Data"] = entityData = copy.deepcopy(e)
+                entity["Id"] = entityData.pop("id")
+                entity["Pos"] = nbt.TAG_Int_Array((entityData.pop("x").value, entityData.pop("y").value, entityData.pop("z").value))
+#                entity["Pos"] = nbt.TAG_Int_Array(TileEntity.pos(entityData))
+                result.append(entity)
+            return result
+
+        def createEntities(entities):
+            result = nbt.TAG_List()
+            for e in entities:
+                entity = nbt.TAG_Compound()
+                entity["Data"] = entityData = copy.deepcopy(e)
+                entity["Id"] = entityData.pop("id")
+                entity["Pos"] = entityData.pop("Pos")
+                result.append(entity)
+            return result
+
+        schemTag = self.root_tag["Schematic"]
+
+        schemTag["Blocks"] = blocksTag = nbt.TAG_Compound()
+        blocksTag["Palette"], blockToIndex = createBlockPalette(self.Blocks, self.Data, self.materials)
+        blocksTag["Data"] = createBlockData(self.Blocks, self.Data, blockToIndex)
+        if bool(self.TileEntities):
+            blocksTag["BlockEntities"] = createBlockEntities(self.TileEntities)
+
+        schemTag["Biomes"] = biomesTag = nbt.TAG_Compound()
+        biomesTag["Palette"], biomeToIndex = createBiomePalette(self.Biomes, self.biomeTypes)
+        biomesTag["Data"] = createBiomeData(self.Biomes, biomeToIndex)
+
+        if bool(self.Entities):
+            schemTag["Entities"] = createEntities(self.Entities)
+
+        with open(filename, 'wb') as chunkfh:
+            self.root_tag.save(chunkfh)
+
+        del schemTag["Blocks"]
+        del schemTag["Biomes"]
+        schemTag.pop("Entities", None)
+
+    def __str__(self):
+        return u"SpongeSchematic(shape={0}, materials={2}, filename=\"{1}\")".format(self.size, self.filename or u"",
+                                                                                     self.Materials)
+
+    @property
+    def Blocks(self):
+        return self._Blocks
+
+    @property
+    def Data(self):
+        return self._Data
+
+    @property
+    def Entities(self):
+        return self._Entities
+
+    @property
+    def TileEntities(self):
+        return self._TileEntities
+
+    @property
+    def TileTicks(self):
+        metaTag = self.Metadata
+        mceditTag = metaTag.get("MCEdit")
+        if mceditTag is None:
+            metaTag["MCEdit"] = mceditTag = nbt.TAG_Compound()
+        tileTicks = mceditTag.get("TileTicks")
+        if tileTicks is None:
+            mceditTag["TileTicks"] = tileTicks = nbt.TAG_List()
+        return tileTicks
+
+    @property
+    def Materials(self):
+        return self.materials.name
+
+    @property
+    def Biomes(self):
+        return self._Biomes
+
+    @property
+    def Metadata(self):
+        schemTag = self.root_tag["Schematic"]
+        metaTag = schemTag.get("Metadata")
+        if metaTag is None:
+            schemTag["Metadata"] = metaTag = nbt.TAG_Compound()
+        return metaTag
+
+    @property
+    def defsPlatform(self):
+        schemTag = self.root_tag["Schematic"]
+
+        dataVersion = schemTag["DataVersion"].value
+        if dataVersion != self.NON_ALPHA_VERSION:
+            return PLATFORM_ALPHA
+
+        mceditTag = self.Metadata["MCEdit"]
+        defsPlatform = mceditTag["DefsPlatform"].value
+        return defsPlatform
+
+    @property
+    def gameVersionId(self):
+        schemTag = self.root_tag["Schematic"]
+
+        dataVersion = schemTag["DataVersion"].value
+        if dataVersion != self.NON_ALPHA_VERSION:
+            return dataVersion
+
+        return None
+
+    @property
+    def defsVersion(self):
+        schemTag = self.root_tag["Schematic"]
+
+        dataVersion = schemTag["DataVersion"].value
+        if dataVersion != self.NON_ALPHA_VERSION:
+            return str(dataVersion)
+
+        mceditTag = self.Metadata["MCEdit"]
+        defsVersion = mceditTag["DefsVersion"].value
+        return defsVersion
+
+    @classmethod
+    def _isTagLevel(cls, root_tag):
+        return "Schematic" in root_tag
+
+    def rotateLeft(self):
+        self._Blocks = swapaxes(self._Blocks, 0, 1)[:, ::-1, :]  # x=z; z=-x
+        self._Data = swapaxes(self._Data, 0, 1)[:, ::-1, :]
+        self._Biomes = swapaxes(self._Biomes, 0, 1)[:, ::-1, :]
+        self._update_shape()
+        self.rotateLeftBlocks()
+        self._rotateLeftEntities()
+
+    def roll(self):
+        self._Blocks = swapaxes(self._Blocks, 0, 2)[::-1, :, :]  # x=-y; y=x
+        self._Data = swapaxes(self._Data, 0, 2)[::-1, :, :]
+        self._Biomes = swapaxes(self._Biomes, 0, 2)[::-1, :, :]
+        self._update_shape()
+        self.rollBlocks()
+        self._rollEntities()
+
+    def flipVertical(self):
+        self._Blocks = self._Blocks[:, :, ::-1]  # y=-y
+        self._Data = self._Data[:, :, ::-1]
+        self._Biomes = self._Biomes[:, :, ::-1]
+        self.flipVerticalBlocks()
+        self._flipVerticalEntities()
+
+    def flipNorthSouth(self):
+        self._Blocks = self._Blocks[::-1, :, :]  # x=-x
+        self._Data = self._Data[::-1, :, :]
+        self._Biomes = self._Biomes[::-1, :, :]
+        self.flipNorthSouthBlocks()
+        self._flipNorthSouthEntities()
+
+    def flipEastWest(self):
+        self._Blocks = self._Blocks[:, ::-1, :]  # z=-z
+        self._Data = self._Data[:, ::-1, :]
+        self._Biomes = self._Biomes[:, ::-1, :]
+        self.flipEastWestBlocks()
+        self._flipEastWestEntities()
+
+    def biomeAt(self, x, z, y=0):
+        if (x, y, z) not in self.bounds:
+            return 0
+        return self.Biomes[x, z, y]
+
+    def setBiomeAt(self, x, z, biomeID, y=0):
+        if (x, y, z) not in self.bounds:
+            return 0
+        self.Biomes[x, z, y] = biomeID
+
+    def getChunk(self, cx, cz):
+#        chunk = super(MCSchematic, self).getChunk(cx, cz)
+        chunk = EntityLevel.getChunk(self, cx, cz)
+        x = cx << 4
+        z = cz << 4
+        chunk.Biomes = self.Biomes[x:x + 16, z:z + 16]
+        return chunk
 
 
 # pcm1k TODO - a bunch of this can probably be rewritten
@@ -987,6 +1490,7 @@ def adjustExtractionParameters(self, box):
     return box, (destX, destY, destZ)
 
 
+# pcm1k TODO - Make this return a SpongeSchematic? And instead have an extractOldSchematicFrom?
 def extractSchematicFrom(sourceLevel, box, entities=True, cancelCommandBlockOffset=False):
     return exhaust(extractSchematicFromIter(sourceLevel, box, entities, cancelCommandBlockOffset))
 
@@ -1005,8 +1509,28 @@ def extractSchematicFromIter(sourceLevel, box, entities=True, cancelCommandBlock
     yield tempSchematic
 
 
+def extractSpongeSchematicFrom(sourceLevel, box, entities=True):
+    return exhaust(extractSpongeSchematicFromIter(sourceLevel, box, entities))
+
+
+def extractSpongeSchematicFromIter(sourceLevel, box, entities=True):
+    p = sourceLevel.adjustExtractionParameters(box)
+    if p is None:
+        yield None
+        return
+    newbox, destPoint = p
+
+    tempSchematic = SpongeSchematic(shape=box.size, mats=sourceLevel.materials)
+    for i in tempSchematic.copyBlocksFromIter(sourceLevel, newbox, destPoint, entities=entities, biomes=True, first=True):
+        yield i
+
+    yield tempSchematic
+
+
 MCLevel.extractSchematic = extractSchematicFrom
 MCLevel.extractSchematicIter = extractSchematicFromIter
+MCLevel.extractSpongeSchematic = extractSpongeSchematicFrom
+MCLevel.extractSpongeSchematicIter = extractSpongeSchematicFromIter
 MCLevel.adjustExtractionParameters = adjustExtractionParameters
 
 import tempfile
