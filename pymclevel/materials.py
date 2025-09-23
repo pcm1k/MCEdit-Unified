@@ -389,6 +389,7 @@ class MCMaterials(BaseTypeSet):
         self.topData = zeros(id_limit, dtype="uint16")
         self.topData[:] = data_limit
 
+        # pcm1k TODO - maybe make topBlockID exclusive like topData
         self.topBlockID = 0
         self._hasSetDefaults = False
         self._tempBlocksFlag = False
@@ -790,8 +791,8 @@ class MCMaterials(BaseTypeSet):
 
         if blockData < self._minData[blockID]:
             self._minData[blockID] = blockData
-        if blockData > self.topData[blockID]:
-            self.topData[blockID] = blockData
+        if blockData >= self.topData[blockID]:
+            self.topData[blockID] = blockData + 1
         if blockID > self.topBlockID:
             self.topBlockID = blockID
 
