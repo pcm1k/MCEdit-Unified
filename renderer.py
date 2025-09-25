@@ -1464,6 +1464,7 @@ class ChunkBorderRenderer(EntityRendererGeneric):
     color = (0, 210, 225)
     vertexTemplate = numpy.zeros((6, 4, 6), 'float32')
     vertexTemplate[_XYZ] = faceVertexTemplates[_XYZ]
+    # pcm1k TODO - height changes
     vertexTemplate[_XYZ] *= (16, 256, 16)
     vertexTemplate.view('uint8')[_RGBA] = color + (150,)
 
@@ -1590,6 +1591,7 @@ class LowDetailBlockRenderer(BlockRenderer):
 
             va0[_XYZ][:, :, 0] *= step
             va0[_XYZ][:, :, 2] *= step
+            va0[_XYZ][:, :, 1] += ch.world.minY
 
             yield
             if self.detailLevel == 2:
@@ -1605,6 +1607,7 @@ class LowDetailBlockRenderer(BlockRenderer):
 
             va1[_XYZ][:, :, 0] *= step
             va1[_XYZ][:, :, 2] *= step
+            va1[_XYZ][:, :, 1] += ch.world.minY
 
             flatcolors = flatcolors.astype(float) * 0.8
 

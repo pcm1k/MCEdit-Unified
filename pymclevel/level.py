@@ -37,8 +37,7 @@ def computeChunkHeightMap(materials, blocks, HeightMap=None):
     heights = extractHeights(lightAbsorption)
     heights = heights.swapaxes(0, 1)
     if HeightMap is None:
-        # pcm1k TODO - this might overflow
-        return heights.astype('uint8')
+        return heights.astype("uint16")
     else:
         HeightMap[:] = heights
         return HeightMap
