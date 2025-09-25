@@ -13850,7 +13850,7 @@
                     }
                 },
                 "1": {
-                    "name": "OLD/Redstone Comparator (Off, Compare, West)",
+                    "name": "OLD/Redstone Comparator (Off, Compare, East)",
                     "properties": {
                         "facing": "west",
                         "mode": "compare",
