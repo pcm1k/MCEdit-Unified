@@ -1,0 +1,277 @@
+{
+    "blocks": [
+        {
+            "allProperties": {
+                "unstable": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "mapcolor": [
+                        160,
+                        83,
+                        65
+                    ],
+                    "name": "TNT",
+                    "properties": {
+                        "unstable": "false"
+                    },
+                    "tex": [
+                        8,
+                        0
+                    ],
+                    "tex_direction": {
+                        "BOTTOM": [
+                            10,
+                            0
+                        ],
+                        "TOP": [
+                            9,
+                            0
+                        ]
+                    }
+                },
+                "1": {
+                    "mapcolor": [
+                        160,
+                        83,
+                        65
+                    ],
+                    "name": "TNT (Primed when Punched)",
+                    "properties": {
+                        "unstable": "true"
+                    },
+                    "tex": [
+                        16,
+                        16
+                    ],
+                    "tex_direction": {
+                        "BOTTOM": [
+                            18,
+                            16
+                        ],
+                        "TOP": [
+                            17,
+                            16
+                        ]
+                    }
+                }
+            },
+            "id": 46,
+            "idStr": "tnt"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 817,
+            "idStr": "tube_coral",
+            "name": "Tube Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 818,
+            "idStr": "brain_coral",
+            "name": "Brain Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 819,
+            "idStr": "bubble_coral",
+            "name": "Bubble Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 820,
+            "idStr": "fire_coral",
+            "name": "Fire Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 821,
+            "idStr": "horn_coral",
+            "name": "Horn Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 844,
+            "idStr": "conduit",
+            "name": "Conduit"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 849,
+            "idStr": "dead_bubble_coral",
+            "name": "Dead Bubble Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 850,
+            "idStr": "dead_brain_coral",
+            "name": "Dead Brain Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 851,
+            "idStr": "dead_horn_coral",
+            "name": "Dead Horn Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 852,
+            "idStr": "dead_fire_coral",
+            "name": "Dead Fire Coral"
+        },
+        {
+            "allProperties": {
+                "waterlogged": [
+                    "true",
+                    "false"
+                ]
+            },
+            "data": {
+                "0": {
+                    "default": true,
+                    "properties": {
+                        "waterlogged": "true"
+                    }
+                }
+            },
+            "id": 853,
+            "idStr": "dead_tube_coral",
+            "name": "Dead Tube Coral"
+        }
+    ],
+    "load": "1519"
+}

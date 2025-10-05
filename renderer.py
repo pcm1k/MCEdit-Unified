@@ -770,8 +770,7 @@ class ChunkCalculator(object):
         materialCount = 2
 
         for br in self.blockRendererClasses[1:]:  # skip generic blocks
-#             materialMap[br.getBlocktypes(materials)] = materialCount
-            materialMap[br(self).getBlocktypes(materials)] = materialCount
+            materialMap[br.getBlocktypes(materials)] = materialCount
             br.materialIndex = materialCount
             materialCount += 1
 
@@ -1184,8 +1183,9 @@ class BlockRenderer(object):
         self.materials = cc.level.materials
         pass
 
-    def getBlocktypes(self, mats):
-        return self.blocktypes
+    @classmethod
+    def getBlocktypes(cls, mats):
+        return cls.blocktypes
 
     def setAlpha(self, alpha):
         "alpha is an unsigned byte value"
@@ -2245,7 +2245,7 @@ class SnowBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:snow_layer"].ID]
+        return [mats.SnowLayer.ID]
 
     def makeSnowVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         materialIndices = self.getMaterialIndices(blockMaterials)
@@ -2288,7 +2288,7 @@ class CarpetBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:carpet"].ID, mats["minecraft:waterlily"].ID] #Separate before implementing layers
+        return [mats.Carpet.ID, mats.Lilypad.ID] #Separate before implementing layers
 
     def makeCarpetVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         materialIndices = self.getMaterialIndices(blockMaterials)
@@ -2632,7 +2632,8 @@ class RedstoneBlockRenderer(BlockRenderer):
 
     @classmethod
     def getBlocktypes(cls, mats):
-        return [mats["minecraft:redstone_wire"].ID]
+        cls.redstoneID = mats.RedstoneWire.ID
+        return [cls.redstoneID]
 
     def redstoneVertices(self, facingBlockIndices, blocks, blockMaterials, blockData, areaBlockLights, texMap):
         blockIndices = self.getMaterialIndices(blockMaterials)
@@ -2641,7 +2642,7 @@ class RedstoneBlockRenderer(BlockRenderer):
         if not len(vertexArray):
             return
 
-        vertexArray[_ST] += self.materials.blockTextures[self.materials.RedstoneWire.ID, 0, 0]
+        vertexArray[_ST] += self.materials.blockTextures[self.redstoneID, 0, 0]
         vertexArray[_XYZ][..., 1] -= 0.9
 
         bdata = blockData[blockIndices]
@@ -3042,17 +3043,10 @@ class VineBlockRenderer(BlockRenderer):
 
 
 class SlabBlockRenderer(BlockRenderer):
-    def __init__(self, *args, **kwargs):
-        BlockRenderer.__init__(self, *args, **kwargs)
-        materials = self.materials
-#         self.blocktypes = [materials["minecraft:wooden_slab"].ID,
-#                   materials["minecraft:stone_slab"].ID,
-#                   materials["minecraft:stone_slab2"].ID,
-#                   materials["minecraft:purpur_slab"].ID]
-#         print "self.blocktypes", self.blocktypes
-#         print "self.materials.AllSlabs", list(set(a.ID for a in self.materials.AllSlabs if "double" not in a.name.lower()))
-#         print list(set(a for a in self.materials.AllSlabs if "double" not in a.name.lower()))
-        self.blocktypes = list(set(a.ID for a in materials.AllSlabs if "double" not in a.name.lower()))
+
+    @classmethod
+    def getBlocktypes(cls, mats):
+        return list(set(a.ID for a in mats.AllSlabs if "double" not in a.name.lower()))
 
     def slabFaceVertices(self, direction, blockIndices, facingBlockLight, blocks, blockData, blockLight,
                          areaBlockLights, texMap):
@@ -3085,9 +3079,10 @@ class SlabBlockRenderer(BlockRenderer):
 
 # 1.9 renderer's
 class EndRodRenderer(BlockRenderer):
-    def __init__(self, *args, **kwargs):
-        BlockRenderer.__init__(self, *args, **kwargs)
-        self.blocktypes = [self.materials["minecraft:end_rod"].ID]
+
+    @classmethod
+    def getBlocktypes(cls, mats):
+        return [mats["minecraft:end_rod"].ID]
 
     rodTemplate = makeVertexTemplatesFromJsonModel((7, 1, 7), (9, 16, 9), {
         "down": (4, 2, 2, 0),
