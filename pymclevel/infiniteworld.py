@@ -518,7 +518,6 @@ class AnvilChunkData(BaseChunkData):
             section["Y"] = nbt.TAG_Byte((minY + y) // 16)
             append(section)
 
-        # pcm1k TODO - convert to newer version if needed
         levelTag = self.root_tag["Level"]
         levelTag["Sections"] = sections
         levelTag["Biomes"] = biomesType(self.Biomes.swapaxes(0, -1))
@@ -611,12 +610,15 @@ class AnvilChunkData(BaseChunkData):
         dataVersion = self.world.dataVersion
         if dataVersion is None:
             data = self._savedTagDataAnvil()
-        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
-            data = self._savedTagDataFlat18()
-        elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
-            data = self._savedTagDataFlat13(dataVersion)
         else:
-            data = self._savedTagDataAnvil()
+            # pcm1k TODO - properly convert to newer version if needed
+            self.root_tag["DataVersion"] = nbt.TAG_Int(dataVersion)
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
+                data = self._savedTagDataFlat18()
+            elif dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT13:
+                data = self._savedTagDataFlat13(dataVersion)
+            else:
+                data = self._savedTagDataAnvil()
 
         log.debug(u"Saved chunk {0}".format(self))
         return data
