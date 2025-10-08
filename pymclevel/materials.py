@@ -654,10 +654,7 @@ class MCMaterials(BaseTypeSet):
         blockID = kw['id'] & id_limit_mask
 
         def createTexture(datakw):
-            tex = datakw.get("tex")
-            if not bool(tex):
-                return
-            tex = [t * 16 for t in tex]
+            tex = [t * 16 for t in datakw.get("tex", self.defaultTex)]
             datakw["texture"] = texture = [tex] * 6
             texDirs = {
                 "FORWARD": 5,
