@@ -68,7 +68,7 @@ On Windows, these are also required (Either one works, pypiwin32 is recommended)
 Clone the repo (recursively, to also clone submodules):
 
 ```sh
-git clone --recursive https://github.com/Podshot/MCEdit-Unified
+git clone --recursive https://github.com/pcm1k/MCEdit-Unified
 ```
 
 ### 2. Install dependencies

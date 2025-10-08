@@ -52,7 +52,7 @@ def is_dev():
 
 
 def fetch_new_version_info():
-    return json.loads(urllib2.urlopen("https://api.github.com/repos/Podshot/MCEdit-Unified/releases").read())
+    return json.loads(urllib2.urlopen("https://api.github.com/repos/pcm1k/MCEdit-Unified/releases").read())
 
 
 def check_for_new_version(release_api_response):
