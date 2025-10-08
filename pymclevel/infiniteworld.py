@@ -2215,8 +2215,9 @@ class MCInfdevOldLevel(ChunkedLevelMixin, EntityLevel):
                 # Only source chunk loaded. Discard destination chunk and save source chunk in its place.
                 self._loadedChunkData.pop((cx, cz), None)
                 self.unsavedWorkFolder.saveChunk(cx, cz, sourceChunk.chunkData.savedTagData())
-                self._loadedEntityData.pop((cx, cz), None)
-                self.unsavedEntityFolder.saveChunk(cx, cz, sourceChunk.entityData.savedTagData())
+                if self._loadedEntityData is not None:
+                    self._loadedEntityData.pop((cx, cz), None)
+                    self.unsavedEntityFolder.saveChunk(cx, cz, sourceChunk.entityData.savedTagData())
                 return
         else:
             if destChunk:
