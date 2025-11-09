@@ -630,15 +630,15 @@ class AnvilChunkData(BaseChunkData):
         if dataVersion is not None:
             dataVersion = dataVersion.value
             if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT18:
-                entities = root_tag.get("entities")
-#                if entities is None:
-#                    root_tag["entities"] = entities = nbt.TAG_List()
-                return entities
+                return root_tag.get("entities")
+            if dataVersion >= MCInfdevOldLevel.DATA_VERSION_FLAT17:
+                levelTag = root_tag["Level"]
+                return levelTag.get("Entities")
 
         levelTag = root_tag["Level"]
         entities = levelTag.get("Entities")
-#        if entities is None:
-#            levelTag["Entities"] = entities = nbt.TAG_List()
+        if entities is None:
+            levelTag["Entities"] = entities = nbt.TAG_List()
         return entities
 
     @property
