@@ -285,7 +285,7 @@ class MCSchematic(EntityLevel):
         """
         rotateLeft the blocks direction without their location
         """
-        blockrotation.RotateLeft(self.Blocks, self.Data)
+        blockrotation.RotateLeft(self.Blocks, self.Data, mats=self.materials)
 
     def rotateLeft(self):
         self._Blocks = swapaxes(self._Blocks, 0, 1)[:, ::-1, :]  # x=z; z=-x
@@ -330,7 +330,7 @@ class MCSchematic(EntityLevel):
         """
         rolls the blocks direction without the block location
         """
-        blockrotation.Roll(self.Blocks, self.Data)
+        blockrotation.Roll(self.Blocks, self.Data, mats=self.materials)
 
     def roll(self):
         self._Blocks = swapaxes(self._Blocks, 0, 2)[::-1, :, :]  # x=-y; y=x
@@ -374,7 +374,7 @@ class MCSchematic(EntityLevel):
                     self.Width - tileEntity["y"].value - 1, tileEntity["x"].value
 
     def flipVerticalBlocks(self):
-        blockrotation.FlipVertical(self.Blocks, self.Data)
+        blockrotation.FlipVertical(self.Blocks, self.Data, mats=self.materials)
 
     def flipVertical(self):
         self._Blocks = self._Blocks[:, :, ::-1]  # y=-y
@@ -431,7 +431,7 @@ class MCSchematic(EntityLevel):
                    'BurningSkull': 4}
 
     def flipNorthSouthBlocks(self):
-        blockrotation.FlipNorthSouth(self.Blocks, self.Data)
+        blockrotation.FlipNorthSouth(self.Blocks, self.Data, mats=self.materials)
 
     def flipNorthSouth(self):
         self._Blocks = self._Blocks[::-1, :, :]  # x=-x
@@ -477,7 +477,7 @@ class MCSchematic(EntityLevel):
                     tileEntity["x"].value = self.Width - tileEntity["x"].value - 1
 
     def flipEastWestBlocks(self):
-        blockrotation.FlipEastWest(self.Blocks, self.Data)
+        blockrotation.FlipEastWest(self.Blocks, self.Data, mats=self.materials)
 
     def flipEastWest(self):
         self._Blocks = self._Blocks[:, ::-1, :]  # z=-z

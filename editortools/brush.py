@@ -1004,7 +1004,7 @@ class BrushTool(CloneTool):
             for key in list:
                 bl = self.options[key]
                 data = [[[bl.blockData]]]
-                blockrotation.RotateLeft([[[bl.ID]]], data)
+                blockrotation.RotateLeft([[[bl.ID]]], data, mats=self.editor.level.materials)
                 bl.blockData = data[0][0][0]
             self.showPanel()
 
@@ -1027,7 +1027,7 @@ class BrushTool(CloneTool):
             for key in list:
                 bl = self.options[key]
                 data = [[[bl.blockData]]]
-                blockrotation.Roll([[[bl.ID]]], data)
+                blockrotation.Roll([[[bl.ID]]], data, mats=self.editor.level.materials)
                 bl.blockData = data[0][0][0]
             self.showPanel()
 

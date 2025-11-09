@@ -275,37 +275,37 @@ class FillTool(EditorTool):
 
     def roll(self, amount=1, blocksOnly=False):
         if blocksOnly:
-            bid = [self._blockInfo.ID]
-            data = [self._blockInfo.blockData]
-            Roll(bid,data)
-            self.blockInfo = self.editor.level.materials[(bid[0], data[0])]
+            bid = self.blockInfo.ID
+            data = [self.blockInfo.blockData]
+            Roll([bid], data, mats=self.editor.level.materials)
+            self.blockInfo = self.editor.level.materials[bid, data[0]]
         else:
             self.toggleReplacing()
 
     def mirror(self, amount=1, blocksOnly=False):
         if blocksOnly:
-            bid = [self._blockInfo.ID]
-            data = [self._blockInfo.blockData]
+            bid = self.blockInfo.ID
+            data = [self.blockInfo.blockData]
             yaw = int(self.editor.mainViewport.yaw) % 360
             if (45 <= yaw < 135) or (225 < yaw <= 315):
-                FlipEastWest(bid,data)
+                FlipEastWest([bid], data, mats=self.editor.level.materials)
             else:
-                FlipNorthSouth(bid,data)
-            self.blockInfo = self.editor.level.materials[(bid[0], data[0])]
+                FlipNorthSouth([bid], data, mats=self.editor.level.materials)
+            self.blockInfo = self.editor.level.materials[bid, data[0]]
 
     def flip(self, amount=1, blocksOnly=False):
         if blocksOnly:
-            bid = [self._blockInfo.ID]
-            data = [self._blockInfo.blockData]
-            FlipVertical(bid,data)
-            self.blockInfo = self.editor.level.materials[(bid[0], data[0])]
+            bid = self.blockInfo.ID
+            data = [self.blockInfo.blockData]
+            FlipVertical([bid], data, mats=self.editor.level.materials)
+            self.blockInfo = self.editor.level.materials[bid, data[0]]
 
     def rotate(self, amount=1, blocksOnly=False):
         if blocksOnly:
-            bid = [self._blockInfo.ID]
-            data = [self._blockInfo.blockData]
-            RotateLeft(bid,data)
-            self.blockInfo = self.editor.level.materials[(bid[0], data[0])]
+            bid = self.blockInfo.ID
+            data = [self.blockInfo.blockData]
+            RotateLeft([bid], data, mats=self.editor.level.materials)
+            self.blockInfo = self.editor.level.materials[bid, data[0]]
 
     def toggleReplacing(self):
         self.replacing = not self.replacing
