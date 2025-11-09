@@ -16,6 +16,7 @@ import operator
 import codecs
 
 from math import floor
+from collections import defaultdict
 
 try:
     import readline  # if available, used by raw_input()
@@ -450,33 +451,28 @@ class mce(object):
 
         Counts all of the block types in every chunk of the world.
         """
-        # pcm1k TODO - id limit
-        blockCounts = zeros((65536,), 'uint64')
+        blockCounts = defaultdict(lambda: 0)
 
         print "Analyzing {0} chunks...".format(self.level.chunkCount)
-        # for input to bincount, create an array of uint16s by
-        # shifting the data left and adding the blocks
 
         for i, cPos in enumerate(self.level.allChunks, 1):
             ch = self.level.getChunk(*cPos)
-            btypes = numpy.array(ch.Data.ravel(), dtype='uint16')
-            btypes <<= 12
-            btypes += ch.Blocks.ravel()
-            counts = bincount(btypes)
+            uniqueBlocks, counts = numpy.unique(
+                numpy.stack((ch.Blocks.ravel(), ch.Data.ravel()), axis=1),
+                axis=0, return_counts=True)
+            for b, c in zip(uniqueBlocks, counts):
+                blockCounts[tuple(b)] += c
 
-            blockCounts[:counts.shape[0]] += counts
             if i % 100 == 0:
                 logging.info("Chunk {0}...".format(i))
 
-        for blockID in range(materials.id_limit):
-            for data in range(materials.data_limit):
-                i = (data << 12) + blockID
-                if blockCounts[i]:
-                    idstring = "({id}:{data})".format(id=blockID, data=data)
+        blockCounts = sorted([(self.level.materials.blockWithID(*b), c) for b, c in blockCounts.iteritems()])
 
-                    print "{idstring:9} {name:30}: {count:<10}".format(
-                        idstring=idstring, name=self.level.materials.blockWithID(blockID, data).name,
-                        count=blockCounts[i])
+        for b, c in blockCounts:
+            idstring = "({id}:{data})".format(id=b.ID, data=b.blockData)
+
+            print "{idstring:9} {name:30}: {count:<10}".format(
+                idstring=idstring, name=b.name, count=c)
 
         self.needsSave = True
 

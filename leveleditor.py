@@ -108,7 +108,7 @@ from pymclevel.infiniteworld import AnvilWorldFolder, SessionLockLost, MCAlphaDi
     MCInfdevOldLevel, DIM_NETHER, DIM_OVERWORLD, DIM_END
 from pymclevel.level import GAME_PLATFORM_POCKET, GAME_PLATFORM_SCHEMATIC
 from pymclevel.id_definitions import VERSION_UNKNOWN
-from pymclevel.materials import BlockstateAPI
+from pymclevel.materials import BlockstateAPI, id_limit, data_limit
 # Block and item translation
 from mclangres import translate as trn
 from mclangres import buildResources
@@ -820,25 +820,26 @@ class LevelEditor(GLViewport):
         self.analyzeBox(schematic, schematic.bounds)
 
     def analyzeBox(self, level, box):
-        entityCounts = defaultdict(int)
-        tileEntityCounts = defaultdict(int)
-        # pcm1k TODO - id limit
-        types = numpy.zeros(65536, dtype='uint32')
+        entityCounts = defaultdict(lambda: 0)
+        tileEntityCounts = defaultdict(lambda: 0)
+        blockCounts = defaultdict(lambda: 0)
 
         def _analyzeBox():
             i = 0
             for (chunk, slices, point) in level.getChunkSlices(box):
                 i += 1
                 yield i, box.chunkCount
-                blocks = numpy.array(chunk.Blocks[slices], dtype='uint16')
-                blocks |= (numpy.array(chunk.Data[slices], dtype='uint16') << 12)
-                b = numpy.bincount(blocks.ravel())
-                types[:b.shape[0]] = types[:b.shape[0]].astype(int) + b
+                uniqueBlocks, counts = numpy.unique(
+                    numpy.stack((chunk.Blocks[slices].ravel(), chunk.Data[slices].ravel()), axis=1),
+                    axis=0, return_counts=True)
+                for b, c in zip(uniqueBlocks, counts):
+                    blockCounts[tuple(b)] += c
 
                 for ent in chunk.getEntitiesInBox(box):
                     entID = level.entityTypes.getId(ent["id"].value)
                     if level.entityTypes.getDefId(ent["id"].value) == "DEF_ENTITIES_ITEM":
                         try:
+                            # pcm1k TODO - "Damage" does not exist in newer versions
                             v = pymclevel.items.items.findItem(ent["Item"]["id"].value,
                                                                ent["Item"]["Damage"].value).name
                             v += " (Item)"
@@ -855,13 +856,15 @@ class LevelEditor(GLViewport):
 
         entitySum = numpy.sum(entityCounts.values())
         tileEntitySum = numpy.sum(tileEntityCounts.values())
-        presentTypes = types.nonzero()
 
-        blockCounts = sorted([(level.materials[t & 0xfff, t >> 12], types[t]) for t in presentTypes[0]])
+        blockCounts = sorted([(level.materials.blockWithID(*b), c) for b, c in blockCounts.iteritems()])
 
         rows = blockRows = [("", "", ""), (box.volume, "<%s>" % _("Blocks"), "")]
         #rows = list(blockRows)
-        rows.extend([[count, trn(block.name), ("({0}:{1})".format(block.ID, block.blockData))] for block, count in blockCounts])
+        # pcm1k TODO - this should have the stringID
+        rows.extend([[count, trn(block.name), ("({0}:{1})".format(
+            block.ID if block.ID < id_limit else "?",
+            block.blockData if block.blockData < data_limit else "?"))] for block, count in blockCounts])
         #rows.sort(key=lambda x: alphanum_key(x[2]), reverse=True)
 
         def extendEntities():
