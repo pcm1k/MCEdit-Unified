@@ -18,7 +18,7 @@ from materials import alphaMaterials, MCMaterials, namedMaterials, BlockstateAPI
 from mclevelbase import exhaust
 from id_definitions import get_defs_ids, PLATFORM_ALPHA, VERSION_LATEST
 import nbt
-from numpy import array, ndenumerate, ndindex, resize, swapaxes, zeros
+from numpy import array, ndenumerate, ndindex, resize, stack, swapaxes, unique, zeros
 import math
 import copy
 from collections import defaultdict
@@ -923,17 +923,17 @@ class SpongeSchematic(MCSchematic):
             idToBlockstate = mats.blockstate_api.idToBlockstate
             stringifyBlockstate = BlockstateAPI.stringifyBlockstate
 
+            uniqueBlocks, counts = unique(
+                stack((blocks.ravel(), data.ravel()), axis=1),
+                axis=0, return_counts=True)
+
             usedBlocks = defaultdict(lambda: 0)
             stateCache = {}
-            cacheGet = stateCache.get
-            for pos, blockID in ndenumerate(blocks):
-                blockData = data[pos]
-                state = cacheGet((blockID, blockData))
-                if state is None:
-                    name, properties = idToBlockstate(blockID, blockData)
-                    stateCache[blockID, blockData] = state = stringifyBlockstate(name, properties)
+            for (blockID, blockData), c in zip(uniqueBlocks, counts):
+                name, properties = idToBlockstate(blockID, blockData)
+                stateCache[blockID, blockData] = state = stringifyBlockstate(name, properties)
 
-                usedBlocks[state] += 1
+                usedBlocks[state] += c
             return usedBlocks, stateCache
 
         def createBlockPalette(blocks, data, mats):
@@ -959,17 +959,16 @@ class SpongeSchematic(MCSchematic):
         def countBiomes(biomes, biomeTypes):
             biomeWithID = biomeTypes.biomeWithID
 
+            uniqueBiomes, counts = unique(
+                biomes.ravel(), axis=0, return_counts=True)
+
             usedBiomes = defaultdict(lambda: 0)
             stateCache = {}
-            cacheGet = stateCache.get
-            # pcm1k TODO - Use nditer()? But then apparently each entry returns a numpy.ndarray?
-            for pos, biomeID in ndenumerate(biomes):
-                state = cacheGet(biomeID)
-                if state is None:
-                    biome = biomeWithID(biomeID)
-                    stateCache[biomeID] = state = biome.stringID
+            for biomeID, c in zip(uniqueBiomes, counts):
+                biome = biomeWithID(biomeID)
+                stateCache[biomeID] = state = biome.stringID
 
-                usedBiomes[state] += 1
+                usedBiomes[state] += c
             return usedBiomes, stateCache
 
         def createBiomePalette(biomes, biomeTypes):
