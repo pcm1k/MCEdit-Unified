@@ -50,11 +50,11 @@ class Items(BaseTypeSet):
                 item["name"] = item["data"][str(lowestData)]["name"]
             self.items[idStr] = item
 
-        for idStr, defId in defsIds.mcedit_ids["items"].iteritems():
-            addItem(idStr, defsIds.mcedit_defs[defId])
+        for idStr, defName in defsIds.mcedit_ids["items"].iteritems():
+            addItem(idStr, defsIds.mcedit_defs[defName])
         # pcm1k TODO - this should use materials instead of directly using the JSON
-        for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
-            addItem(idStr, defsIds.mcedit_defs[defId])
+        for idStr, defName in defsIds.mcedit_ids["blocks"].iteritems():
+            addItem(idStr, defsIds.mcedit_defs[defName])
 
     @classmethod
     def getTypeSet(cls, defsIds, forceNew=False):

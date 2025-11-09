@@ -174,7 +174,7 @@ def _addItem(data, prefix, namespace, defs_dict, ids_dict, autobuilds, item):
         return str(item["id"])
 
     _name = getEntryName(item)
-    entry_name = MCEditDefsIds.formatDefId(prefix, _name)
+    entry_name = MCEditDefsIds.formatDefName(prefix, _name)
     prefixDict = ids_dict.get(prefix)
     if prefixDict is None:
         ids_dict[prefix] = prefixDict = {}
@@ -459,9 +459,9 @@ class MCEditDefsIds(object):
                 self.mcedit_ids[prefix] = {}
 
     def get_id(self, prefix, obj_id, default=None, resolve=False):
-        """Retrieves a "defId" from mcedit_ids and then optionally resolves it using mcedit_defs"""
-        if obj_id.startswith(MCEditDefsIds.formatDefId(prefix, "")):
-            # it's actually a defId
+        """Retrieves a "defName" from mcedit_ids and then optionally resolves it using mcedit_defs"""
+        if obj_id.startswith(MCEditDefsIds.formatDefName(prefix, "")):
+            # it's actually a defName
             if not resolve:
                 return obj_id
             return self.get_def(obj_id, default)
@@ -470,10 +470,10 @@ class MCEditDefsIds(object):
             return default
         if obj_id not in self.mcedit_ids[prefix]:
             return default
-        defId = self.mcedit_ids[prefix][obj_id]
+        defName = self.mcedit_ids[prefix][obj_id]
         if not resolve:
-            return defId
-        return self.get_def(defId, default)
+            return defName
+        return self.get_def(defName, default)
 
     def get_def(self, def_id, default=None):
         """Acts like mcedit_defs.get(def_id, default)"""
@@ -484,7 +484,7 @@ class MCEditDefsIds(object):
         return not self.mcedit_defs or not self.mcedit_ids
 
     @staticmethod
-    def formatDefId(prefix, defName):
+    def formatDefName(prefix, defName):
         return "DEF_%s_%s" % (prefix.upper(), defName.upper())
 
 

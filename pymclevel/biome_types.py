@@ -61,7 +61,7 @@ class BiomeTypeSet(BaseTypeSet):
         self._biomesByID = {}
         self._biomesByName = {}
         self._biomesByStringID = {}
-        self._biomesByDefID = {}
+        self._biomesByDefName = {}
 
         self._biomeDataByID = {}
 
@@ -70,10 +70,10 @@ class BiomeTypeSet(BaseTypeSet):
         if defsIds is None:
             return
 
-        for defId, item in defsIds.mcedit_defs.iteritems():
-            if not defId.startswith("DEF_BIOMES_"):
+        for defName, item in defsIds.mcedit_defs.iteritems():
+            if not defName.startswith("DEF_BIOMES_"):
                 continue
-            self._addJsonBiome(item, defId=defId)
+            self._addJsonBiome(item, defName=defName)
 
     @classmethod
     def getTypeSet(cls, defsIds, forceNew=False):
@@ -109,13 +109,13 @@ class BiomeTypeSet(BaseTypeSet):
             biomeID = max(self.topBiomeID + 1, id_limit)
         return self._addBiome(biomeID, stringID, stringID, invalid=True, **kwargs)
 
-    def _addJsonBiome(self, jsonDict, defId=None):
+    def _addJsonBiome(self, jsonDict, defName=None):
         biomeID = jsonDict["id"] & id_limit_mask
         stringID = "%s:%s" % (jsonDict["namespace"], jsonDict["idStr"])
         name = jsonDict["name"]
-        self._addBiome(biomeID, stringID, name, defId=defId)
+        self._addBiome(biomeID, stringID, name, defName=defName)
 
-    def _addBiome(self, biomeID, stringID, name, defId=None, invalid=False):
+    def _addBiome(self, biomeID, stringID, name, defName=None, invalid=False):
         biomeData = _BiomeData(biomeID, stringID, name)
         biome = Biome(self, biomeID)
         self._biomeDataByID[biomeID] = biomeData
@@ -124,8 +124,8 @@ class BiomeTypeSet(BaseTypeSet):
         self._biomesByID[biomeID] = biome
         self._biomesByName[name] = biome
         self._biomesByStringID[stringID.lower()] = biome
-        if bool(defId):
-            self._biomesByDefID[defId] = biome
+        if bool(defName):
+            self._biomesByDefName[defName] = biome
 
         if biomeID > self.topBiomeID:
             self.topBiomeID = biomeID

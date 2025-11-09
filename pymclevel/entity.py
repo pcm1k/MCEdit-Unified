@@ -82,10 +82,10 @@ class TileEntityTypeSet(BaseTypeSet):
 
             return tagType(value)
 
-        for idStr, defId in defsIds.mcedit_ids["tileentities"].iteritems():
+        for idStr, defName in defsIds.mcedit_ids["tileentities"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
-            item = defsIds.mcedit_defs[defId]
+            item = defsIds.mcedit_defs[defName]
 
             self.knownIDs.append(idStr)
 
@@ -100,17 +100,17 @@ class TileEntityTypeSet(BaseTypeSet):
             baseStructure = item.get("baseStructure")
             if baseStructure is not None and isinstance(baseStructure, dict):
                 self.baseStructures[idStr] = parseNbtDict({"type": "Compound", "value": baseStructure})
-        for idStr, defId in defsIds.mcedit_ids["blocks"].iteritems():
+        for idStr, defName in defsIds.mcedit_ids["blocks"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
-            item = defsIds.mcedit_defs[defId]
+            item = defsIds.mcedit_defs[defName]
 
             tileentity = item.get("tileentity")
             if tileentity is not None and isinstance(tileentity, basestring):
-                defIdTe = MCEditDefsIds.formatDefId("tileentities", tileentity)
-                idStrTe = self.getStrId(defIdTe)
+                defNameTe = MCEditDefsIds.formatDefName("tileentities", tileentity)
+                idStrTe = self.getStrId(defNameTe)
                 if idStrTe is None:
-                    logger.warn("Could not find tileentity %s", defIdTe)
+                    logger.warn("Could not find tileentity %s", defNameTe)
                     continue
                 self.stringNames[idStr] = idStrTe
 
@@ -121,8 +121,8 @@ class TileEntityTypeSet(BaseTypeSet):
         return entityTypes
 
     def Create(self, tileEntityID, pos=(0, 0, 0), convertOld=True, **kw):
-        def handleSpecialStruct(defId, name, **kw):
-            if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
+        def handleSpecialStruct(defName, name, **kw):
+            if defName == "DEF_TILEENTITIES_MOB_SPAWNER":
                 if self.defsIds is None:
                     return None
 
@@ -161,9 +161,9 @@ class TileEntityTypeSet(BaseTypeSet):
             tileEntityID = getNewId(tileEntityID)
         tileEntityTag["id"] = nbt.TAG_String(tileEntityID)
 
-        defId = self.getDefId(tileEntityID)
+        defName = self.getDefId(tileEntityID)
         for name in tileEntityTag.iterkeys():
-            structTag = handleSpecialStruct(defId, name, **kw)
+            structTag = handleSpecialStruct(defName, name, **kw)
             if structTag is not None:
                 tileEntityTag[name] = structTag
 
@@ -436,10 +436,10 @@ class TileEntityTypeSet(BaseTypeSet):
         eTag["y"] = nbt.TAG_Int(tileEntity["y"].value + copyOffset[1])
         eTag["z"] = nbt.TAG_Int(tileEntity["z"].value + copyOffset[2])
 
-        defId = self.getDefId(eTag["id"].value)
-        if defId == "DEF_TILEENTITIES_MOB_SPAWNER":
+        defName = self.getDefId(eTag["id"].value)
+        if defName == "DEF_TILEENTITIES_MOB_SPAWNER":
             self._adjustSpawnerTile(eTag, copyOffset, toSchematic, moveSpawnerPos)
-        elif defId == "DEF_TILEENTITIES_COMMAND_BLOCK":
+        elif defName == "DEF_TILEENTITIES_COMMAND_BLOCK":
             self._adjustCommandTile(eTag, copyOffset, toSchematic, moveCommandPos)
 
         return eTag
@@ -579,10 +579,10 @@ class EntityTypeSet(BaseTypeSet):
         if defsIds is None:
             return
 
-        for idStr, defId in defsIds.mcedit_ids["entities"].iteritems():
+        for idStr, defName in defsIds.mcedit_ids["entities"].iteritems():
             if not isinstance(idStr, basestring):
                 continue
-            item = defsIds.mcedit_defs[defId]
+            item = defsIds.mcedit_defs[defName]
 
             self.entityList[idStr] = item["id"]
             maxItems = item.get("maxItems")
@@ -592,10 +592,10 @@ class EntityTypeSet(BaseTypeSet):
         spawnerMonsters = defsIds.get_def("spawner_monsters")
         if spawnerMonsters is not None:
             for mob in spawnerMonsters:
-                defId = MCEditDefsIds.formatDefId("entities", mob)
-                idStr = self.getStrId(defId)
+                defName = MCEditDefsIds.formatDefName("entities", mob)
+                idStr = self.getStrId(defName)
                 if idStr is None:
-                    logger.warn("Could not find spawner entity %s", defId)
+                    logger.warn("Could not find spawner entity %s", defName)
                     continue
                 self.monsters.append(idStr)
         else:
