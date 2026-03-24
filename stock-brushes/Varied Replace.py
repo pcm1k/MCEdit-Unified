@@ -1,4 +1,4 @@
-from pymclevel.materials import Block, data_limit
+from pymclevel.materials import Block
 from editortools.brush import createBrushMask, createTileEntities
 from albow import alert
 from pymclevel import block_fill
@@ -48,9 +48,9 @@ def applyToChunkSlices(self, op, chunk, slices, brushBox, brushBoxThisChunk):
 
     if op.options['Block'].wildcard:
         print "Wildcard replace"
-        blocksToReplace = []
-        for i in xrange(data_limit):
-            blocksToReplace.append(op.editor.level.materials.blockWithID(op.options['Block'].ID, i))
+        bid = op.options['Block'].ID
+        mats = op.editor.level.materials
+        blocksToReplace = [mats.blockWithID(bid, i) for i in xrange(mats.topData[bid])]
     else:
         blocksToReplace = [op.options['Block']]
 

@@ -1,5 +1,5 @@
 from id_definitions import BaseTypeSet
-from numpy import array
+from numpy import unique, zeros
 
 class Biome(object):
     def __init__(self, biomeTypes, biomeID):
@@ -34,15 +34,16 @@ class Biome(object):
     def name(self):
         biomeData = self.biomeTypes._biomeDataByID.get(self.ID)
         if biomeData is None:
-            return "Unknown Biome"
+            return BiomeTypeSet.defaultName
         return biomeData.name
 
 
 class _BiomeData(object):
-    def __init__(self, biomeID, stringID, name):
+    def __init__(self, biomeID, stringID):
         self.ID = biomeID
         self.stringID = stringID
-        self.name = name
+
+        self.name = BiomeTypeSet.defaultName
 
 
 # these are exclusive
@@ -52,6 +53,8 @@ id_limit_mask = 0xFF
 
 
 class BiomeTypeSet(BaseTypeSet):
+    defaultName = "Unknown Biome"
+
     _typeSetCache = {}
 
     def __init__(self, defsIds):
@@ -106,81 +109,82 @@ class BiomeTypeSet(BaseTypeSet):
 
     def _addDummyBiome(self, stringID, biomeID=None, **kwargs):
         if biomeID is None:
-            biomeID = max(self.topBiomeID + 1, id_limit)
-        return self._addBiome(biomeID, stringID, stringID, invalid=True, **kwargs)
+            biomeID = max(self.topBiomeID, id_limit)
+        return self._addBiome(biomeID, stringID, name=stringID, invalid=True, **kwargs)
 
     def _addJsonBiome(self, jsonDict, defName=None):
         biomeID = jsonDict["id"] & id_limit_mask
         stringID = "%s:%s" % (jsonDict["namespace"], jsonDict["idStr"])
-        name = jsonDict["name"]
-        self._addBiome(biomeID, stringID, name, defName=defName)
+        self._addBiome(biomeID, stringID, defName=defName, **jsonDict)
 
-    def _addBiome(self, biomeID, stringID, name, defName=None, invalid=False):
-        biomeData = _BiomeData(biomeID, stringID, name)
+    def _addBiome(self, biomeID, stringID, defName=None, **kw):
+        if self.locked:
+            raise Exception("Biome being added to locked BiomeTypeSet")
+
+        biomeData = _BiomeData(biomeID, stringID)
+        name = kw.pop("name", None)
+        if name is not None:
+            biomeData.name = name
+        invalid = kw.pop("invalid", False)
+
         biome = Biome(self, biomeID)
+
         self._biomeDataByID[biomeID] = biomeData
         if not invalid and biomeID not in self._biomesByID:
             self.allBiomes.append(biome)
         self._biomesByID[biomeID] = biome
-        self._biomesByName[name] = biome
+        if not invalid and bool(name):
+            self._biomesByName[name] = biome
         self._biomesByStringID[stringID.lower()] = biome
         if bool(defName):
             self._biomesByDefName[defName] = biome
 
-        if biomeID > self.topBiomeID:
-            self.topBiomeID = biomeID
+        if biomeID >= self.topBiomeID:
+            self.topBiomeID = biomeID + 1
 
         return biome
+
+
+def filterBiomesArray(biomes, filterFunc, dtype, shape=()):
+    uniqueBiomes = unique(biomes.ravel(), axis=0)
+    topBiomeID = uniqueBiomes[-1] + 1
+    table = zeros((topBiomeID,) + shape, dtype=dtype)
+    for biomeID in uniqueBiomes:
+        table[biomeID] = filterFunc(biomeID)
+    return table[biomes]
+
+
+def _convertBiomesArray(biomes, destTypes, sourceTypes):
+    biomeWithID = sourceTypes.biomeWithID
+    biomeWithStringID = destTypes.biomeWithStringID
+
+    def filterFunc(biomeID):
+        biome = biomeWithID(biomeID)
+        biomeNew = biomeWithStringID(biome.stringID, create=True)
+        if biomeNew is None:
+            return biomeID
+        return biomeNew.ID
+    result = filterBiomesArray(biomes, filterFunc, "uint16")
+    return result
 
 
 _nullConversion = lambda b, d: (b, d)
 
 
-def _convertNoLimit(biomes, destDefs, sourceDefs):
-    biomeWithID = sourceDefs.biomeWithID
-    biomeWithStringID = destDefs.biomeWithStringID
-
-    biomesNew = array(biomes)
-    for pos in zip(*(biomes >= id_limit).nonzero()):
-        biome = biomeWithID(biomes[pos])
-        biomeNew = biomeWithStringID(biome.stringID, create=True)
-        if biomeNew is None:
-            continue
-        biomesNew[pos] = biomeNew.ID
-    return biomesNew
-
-
-def conversionFunc(destDefs, sourceDefs):
-    if destDefs is sourceDefs:
+# pcm1k TODO - there is really no reason to have this anymore
+def conversionFunc(destTypes, sourceTypes):
+    if destTypes is sourceTypes:
         return _nullConversion
-#    destName = destMats.name
-#    sourceName = sourceMats.name
-#    func = _conversionFuncs.get((destName, sourceName))
-#    if func is not None:
-#        return func
 
-#    destMats = namedMaterials.get(destName, destMats)
-#    sourceMats = namedMaterials.get(sourceName, sourceMats)
-#    filters, unavailable = guessFilterTable(sourceMats, destMats)
-#    log.debug("")
-#    log.debug("%s %s %s", sourceName, "=>", destName)
-#    for a, b in [(sourceMats.blockWithID(*a), destMats.blockWithID(*b)) for a, b in filters]:
-#        log.debug("{0:20}: \"{1}\"".format('"' + a.name + '"', b.name))
-
-#    log.debug("")
-#    log.debug("Missing blocks: %s", [sourceMats.blockWithID(*a).name for a in unavailable])
-
-#    table = _createFilterTable(filters, unavailable, (35, 0))
-    func = lambda biomes: _convertNoLimit(biomes, destDefs, sourceDefs)
-#    _conversionFuncs[destName, sourceName] = func
+    func = lambda biomes: _convertBiomesArray(biomes, destTypes, sourceTypes)
     return func
 
 
-def convertBiomes(destDefs, sourceDefs, biomes):
-    if sourceDefs is destDefs:
+def convertBiomes(destTypes, sourceTypes, biomes):
+    if sourceTypes is destTypes:
         return biomes
 
-    return conversionFunc(destDefs, sourceDefs)(biomes)
+    return conversionFunc(destTypes, sourceTypes)(biomes)
 
 
 getBiomeTypes = BiomeTypeSet.getTypeSet

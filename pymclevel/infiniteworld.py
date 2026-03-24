@@ -25,11 +25,13 @@ from faces import FaceXDecreasing, FaceXIncreasing, FaceZDecreasing, FaceZIncrea
 from level import LightedChunk, EntityLevel, computeChunkHeightMap, MCLevel, ChunkBase, FakeChunk, GAME_PLATFORM_JAVA
 from mclevelbase import ChunkMalformed, ChunkNotPresent, ChunkAccessDenied,ChunkConcurrentException,exhaust, PlayerNotFound
 import nbt
-from numpy import array, clip, maximum, ndenumerate, packbits, pad, unpackbits, zeros
+from numpy import array, clip, maximum, packbits, pad, unpackbits, zeros
 from regionfile import MCRegionFile, ChunkTooBig, ExternalChunk
 import logging
 from uuid import UUID
 from id_definitions import PLATFORM_ALPHA, VERSION_UNKNOWN
+from materials import filterBlocksArray
+from biome_types import filterBiomesArray
 
 log = getLogger(__name__)
 
@@ -168,21 +170,16 @@ def _getBlockPaletteTable(palette, mats):
 def _createPaletteBlocks(blocks, data, mats):
     idToBlockstate = mats.blockstate_api.idToBlockstate
 
-    unpackedBlocks = zeros(blocks.shape, dtype="uint16")
     paletteTag = nbt.TAG_List()
-    stateCache = {}
-    cacheGet = stateCache.get
-    for pos, blockID in ndenumerate(blocks):
-        blockData = data[pos]
-        paletteIndex = cacheGet((blockID, blockData))
+    def filterFunc(blockID, blockData):
         # pcm1k TODO - It may be possible for different blockID, blockData combinations to resolve to the same blockstate. This will result in duplicate entries in the palette. This is probably not super important, however
-        if paletteIndex is None:
-            stateCache[blockID, blockData] = paletteIndex = len(paletteTag)
-            name, properties = idToBlockstate(blockID, blockData)
-            paletteTag.append(_encodeBlockstateNbt(name, properties))
-
-        unpackedBlocks[pos] = paletteIndex
+        paletteIndex = len(paletteTag)
+        name, properties = idToBlockstate(blockID, blockData)
+        paletteTag.append(_encodeBlockstateNbt(name, properties))
+        return paletteIndex
+    unpackedBlocks = filterBlocksArray(blocks, data, filterFunc, "uint16")
     return unpackedBlocks, paletteTag
+
 
 def _getBiomePaletteTable(palette, biomeTypes):
     biomeWithStringID = biomeTypes.biomeWithStringID
@@ -201,18 +198,13 @@ def _createPaletteBiomes(biomes, biomeTypes):
     biomeWithID = biomeTypes.biomeWithID
     TAG_String = nbt.TAG_String
 
-    unpackedBiomes = zeros(biomes.shape, dtype="uint16")
     paletteTag = nbt.TAG_List()
-    stateCache = {}
-    cacheGet = stateCache.get
-    for pos, biomeID in ndenumerate(biomes):
-        paletteIndex = cacheGet(biomeID)
-        if paletteIndex is None:
-            stateCache[biomeID] = paletteIndex = len(paletteTag)
-            biome = biomeWithID(biomeID)
-            paletteTag.append(TAG_String(biome.stringID))
-
-        unpackedBiomes[pos] = paletteIndex
+    def filterFunc(biomeID):
+        paletteIndex = len(paletteTag)
+        biome = biomeWithID(biomeID)
+        paletteTag.append(TAG_String(biome.stringID))
+        return paletteIndex
+    unpackedBiomes = filterBiomesArray(biomes, filterFunc, "uint16")
     return unpackedBiomes, paletteTag
 
 

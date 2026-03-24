@@ -253,9 +253,9 @@ class FillTool(EditorTool):
                 self.replaceBlockInfo = self.panel.replaceBlockButton.blockInfo
                 if self.blockInfo.wildcard:
                     print "Wildcard replace"
-                    blocksToReplace = []
-                    for i in xrange(pymclevel.materials.data_limit):
-                        blocksToReplace.append(self.editor.level.materials.blockWithID(self.blockInfo.ID, i))
+                    bid = self.blockInfo.ID
+                    mats = self.editor.level.materials
+                    blocksToReplace = [mats.blockWithID(bid, i) for i in xrange(mats.topData[bid])]
                 else:
                     blocksToReplace = [self.blockInfo]
 

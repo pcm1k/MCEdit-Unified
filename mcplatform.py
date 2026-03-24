@@ -714,6 +714,7 @@ USE_WM = True
 # The two first values of the tuple are the amount of pixels to add to the window x and y coords.
 # The two last ones tell whether these pixels shall be added only once (at program startup) or always.
 #
+# pcm1k TODO - Hardcoding different behaviors for each desktop environment smells like a horrible hack. Please investigate
 desktops = {'linux2': {
         'cinnamon': {  # Actually, there's a bug when resizing on XCinnamon.
             'position_setter': 'parent',

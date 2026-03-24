@@ -6,32 +6,24 @@ log = logging.getLogger(__name__)
 import numpy
 
 from mclevelbase import exhaust
-import blockrotation
 from box import BoundingBox
 from entity import TileEntity
 
 
-def blockReplaceTable(blocksToReplace):
-    blocktable = numpy.zeros((materials.id_limit, materials.data_limit), dtype='bool')
+def _blockReplaceTable(blocksToReplace):
+    blocktable = materials.UnlimitedBlockTable.fromBlocks(blocksToReplace, "bool")
     for b in blocksToReplace:
-        if b.ID < materials.id_limit and b.blockData < materials.data_limit:
-            blocktable[b.ID, b.blockData] = True
+        blocktable[b.ID, b.blockData] = True
     return blocktable
 
 
 def blockReplaceFunc(blocksToReplace):
-    blocktable = blockReplaceTable(blocksToReplace)
-    toReplaceSet = {(b.ID, b.blockData) for b in blocksToReplace}
+    blocktable = _blockReplaceTable(blocksToReplace)
 
     def replaceFunc(blocks, data):
-        # pcm1k TODO - this will probably be replaced with a more proper solution later
         mask = numpy.zeros(blocks.shape, dtype="bool")
-        belowLimit = (blocks < materials.id_limit) & (data < materials.data_limit)
-        mask[belowLimit] = blocktable[blocks[belowLimit], data[belowLimit]]
-
-        # handle blocks that are above the limit
-        for pos in zip(*(~belowLimit).nonzero()):
-            mask[pos] = (blocks[pos], data[pos]) in toReplaceSet
+        belowLimit, dataIndex = blocktable.indexChecked(blocks, data)
+        mask[belowLimit] = blocktable.table[dataIndex]
         return mask
 
     return replaceFunc
@@ -93,7 +85,6 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
 
         blocks = chunk.Blocks[slices]
         data = chunk.Data[slices]
-        mask = slice(None)
 
         needsLighting = changesLighting
 
@@ -105,9 +96,20 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
 
             # don't waste time relighting and copying if the mask is empty
             if blockCount:
-                blocks[:][mask] = blockInfo.ID
+                blocks[mask] = blockInfo.ID
                 if not noData:
                     data[mask] = blockInfo.blockData
+                else:
+                    # try to avoid invalid blocks
+                    # pcm1k TODO - maybe the noData option should just not be allowed in post-flattening versions?
+                    if blockInfo.blockData >= materials.data_limit:
+                        blockInfo = level.materials.blockWithID(blockInfo.ID, None)
+                        data[mask] = blockInfo.blockData
+                    else:
+                        aboveLimit = mask & (data >= materials.data_limit)
+                        if aboveLimit.any():
+                            blockInfo = level.materials.blockWithID(blockInfo.ID, None)
+                            data[aboveLimit] = blockInfo.blockData
             else:
                 skipped += 1
                 needsLighting = False
@@ -123,6 +125,17 @@ def fillBlocksIter(level, box, blockInfo, blocksToReplace=(), noData=False):
             blocks[:] = blockInfo.ID
             if not noData:
                 data[:] = blockInfo.blockData
+            else:
+                # try to avoid invalid blocks
+                # pcm1k TODO - maybe the noData option should just not be allowed in post-flattening versions?
+                if blockInfo.blockData >= materials.data_limit:
+                    blockInfo = level.materials.blockWithID(blockInfo.ID, None)
+                    data[:] = blockInfo.blockData
+                else:
+                    aboveLimit = data >= materials.data_limit
+                    if aboveLimit.any():
+                        blockInfo = level.materials.blockWithID(blockInfo.ID, None)
+                        data[aboveLimit] = blockInfo.blockData
             chunk.removeTileEntitiesInBox(box)
 
         chunkBounds = chunk.bounds

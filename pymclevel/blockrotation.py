@@ -1,5 +1,4 @@
-from materials import alphaMaterials, id_limit, data_limit
-from numpy import arange, zeros
+from materials import alphaMaterials, filterBlocksArray
 
 
 class _AngleType(object):
@@ -173,7 +172,7 @@ _TYPE_AXIS_LINES = 8
 _TYPE_NUMBER = len(_angleTypeList)
 
 
-def _getAngleFromSpecial(properties, allProps):
+def _getAngleFromSpecial(properties):
     rotation = properties.get("rotation")
     if rotation is not None:
         try:
@@ -183,32 +182,15 @@ def _getAngleFromSpecial(properties, allProps):
     return None
 
 
-def _hasAllProps(allProps, propName, requiredProps):
-    foundSet = set()
-    for properties in allProps:
-        if not bool(properties):
-            continue
-        # make sure propName exists
-        propValue = properties.get(propName)
-        if propValue is None:
-#            continue
-            return False
-        # make sure all of requiredProps exists
-        if propValue in requiredProps:
-            foundSet.add(propValue)
-        if len(foundSet) >= len(requiredProps):
-            return True
-    return False
-
-
 def _checkRequiredProps(allProps, angleType):
     requiredProps = angleType.requiredProps
     if not bool(requiredProps):
         return True
     if not bool(allProps):
         return False
-    for name, required in requiredProps.iteritems():
-        if not _hasAllProps(allProps, name, required):
+    for name, requiredValues in requiredProps.iteritems():
+        propValues = allProps.get(name)
+        if propValues is None or not requiredValues.issubset(propValues):
             return False
     return True
 
@@ -233,7 +215,7 @@ def _getPropValues(properties, allProps, angleType):
 
 
 def _getAngleFromProps(properties, allProps):
-    angleFull = _getAngleFromSpecial(properties, allProps)
+    angleFull = _getAngleFromSpecial(properties)
     if angleFull is not None:
         return angleFull
 
@@ -550,102 +532,60 @@ def _rollProps(properties, angle, angleIndex):
     return properties
 
 
-class _BlockRotation(object):
-    def __init__(self, materials):
-        blockstateToID = materials.blockstate_api.blockstateToID
+def _rotateBlock(block, rotateFunc):
+    properties = block.properties
+    if not bool(properties):
+        return block.blockData
+    blockID = block.ID
+    mats = block.materials
+    allProps = mats.allProperties[blockID]
 
-        def updateTable(table, block, properties):
-            rotatedID, rotatedData = blockstateToID(block.stringID, properties)
-            if rotatedID != -1 and rotatedData != -1:
-                table[block.ID, block.blockData] = rotatedData
+    angleFull = _getAngleFromProps(properties, allProps)
+    if angleFull is not None:
+        angle, angleIndex = angleFull
+    else:
+        angle = angleIndex = None
 
-        dataRange = arange(data_limit, dtype="uint8")
+    rotatedProperties = rotateFunc(properties, angle, angleIndex)
+    # validate rotatedProperties
+    for key, value in rotatedProperties.iteritems():
+        values = allProps.get(key)
+        if values is None or value not in values:
+            return block.blockData
 
-        self.rotateLeft = rotateLeft = zeros((id_limit, data_limit), "uint8")
-        rotateLeft[:] = dataRange
-        self.flipEastWest = flipEastWest = zeros((id_limit, data_limit), "uint8")
-        flipEastWest[:] = dataRange
-        self.flipNorthSouth = flipNorthSouth = zeros((id_limit, data_limit), "uint8")
-        flipNorthSouth[:] = dataRange
-        self.flipVertical = flipVertical = zeros((id_limit, data_limit), "uint8")
-        flipVertical[:] = dataRange
-        self.roll = roll = zeros((id_limit, data_limit), "uint8")
-        roll[:] = dataRange
+    rotatedID, rotatedData = mats.blockstate_api.blockstateToID(block.stringID, rotatedProperties, create=True)
+    if rotatedID == -1 or rotatedData == -1:
+        return block.blockData
+    return rotatedData
 
-        for block in materials:
-            properties = block.properties
-            if not bool(properties):
-                continue
-            blockID = block.ID
-            blockData = block.blockData
-            stringID = block.stringID
-            allProps = materials.properties[blockID]
 
-            angleFull = _getAngleFromProps(properties, allProps)
-            if angleFull is not None:
-                angle, angleIndex = angleFull
-            else:
-                angle = angleIndex = None
+def _rotateBlocksArray(blocks, data, mats, rotateFunc):
+    blockWithID = mats.blockWithID
 
-            updateTable(rotateLeft, block, _rotateLeftProps(properties, angle, angleIndex))
-            updateTable(flipEastWest, block, _flipEastWestProps(properties, angle, angleIndex))
-            updateTable(flipNorthSouth, block, _flipNorthSouthProps(properties, angle, angleIndex))
-            updateTable(flipVertical, block, _flipVerticalProps(properties, angle, angleIndex))
-            updateTable(roll, block, _rollProps(properties, angle, angleIndex))
+    def filterFunc(blockID, blockData):
+        block = blockWithID(blockID, blockData)
+        rotatedData = _rotateBlock(block, rotateFunc)
+        return rotatedData
+    data[:] = filterBlocksArray(blocks, data, filterFunc, "uint16")
 
 
 def FlipVertical(blocks, data, mats=alphaMaterials):
-    if hasattr(mats, "blockRotation"):
-        blockRotation = mats.blockRotation
-    else:
-        blockRotation = mats.blockRotation = _BlockRotation(mats)
-    # pcm1k TODO - ignore blocks that are above the limit for now
-#    data[:] = blockRotation.flipVertical[blocks, data]
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    data[belowLimit] = blockRotation.flipVertical[blocks[belowLimit], data[belowLimit]]
+    _rotateBlocksArray(blocks, data, mats, _flipVerticalProps)
 
 
 def FlipNorthSouth(blocks, data, mats=alphaMaterials):
-    if hasattr(mats, "blockRotation"):
-        blockRotation = mats.blockRotation
-    else:
-        blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    # pcm1k TODO - ignore blocks that are above the limit for now
-#    data[:] = blockRotation.flipEastWest[blocks, data]
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    data[belowLimit] = blockRotation.flipEastWest[blocks[belowLimit], data[belowLimit]]
+    _rotateBlocksArray(blocks, data, mats, _flipEastWestProps)
 
 
 def FlipEastWest(blocks, data, mats=alphaMaterials):
-    if hasattr(mats, "blockRotation"):
-        blockRotation = mats.blockRotation
-    else:
-        blockRotation = mats.blockRotation = _BlockRotation(mats)
     # This is NOT a mistake. The original code has north/south and east/west swapped
-    # pcm1k TODO - ignore blocks that are above the limit for now
-#    data[:] = blockRotation.flipNorthSouth[blocks, data]
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    data[belowLimit] = blockRotation.flipNorthSouth[blocks[belowLimit], data[belowLimit]]
+    _rotateBlocksArray(blocks, data, mats, _flipNorthSouthProps)
 
 
 def RotateLeft(blocks, data, mats=alphaMaterials):
-    if hasattr(mats, "blockRotation"):
-        blockRotation = mats.blockRotation
-    else:
-        blockRotation = mats.blockRotation = _BlockRotation(mats)
-    # pcm1k TODO - ignore blocks that are above the limit for now
-#    data[:] = blockRotation.rotateLeft[blocks, data]
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    data[belowLimit] = blockRotation.rotateLeft[blocks[belowLimit], data[belowLimit]]
+    _rotateBlocksArray(blocks, data, mats, _rotateLeftProps)
 
 
 def Roll(blocks, data, mats=alphaMaterials):
-    if hasattr(mats, "blockRotation"):
-        blockRotation = mats.blockRotation
-    else:
-        blockRotation = mats.blockRotation = _BlockRotation(mats)
-    # pcm1k TODO - ignore blocks that are above the limit for now
-#    data[:] = blockRotation.roll[blocks, data]
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    data[belowLimit] = blockRotation.roll[blocks[belowLimit], data[belowLimit]]
+    _rotateBlocksArray(blocks, data, mats, _rollProps)

@@ -274,9 +274,8 @@ class mce(object):
         return blockInfo
 
     @staticmethod
-    def readBlocksToCopy(command):
-        # pcm1k TODO - id limit
-        blocksToCopy = range(materials.id_limit)
+    def readBlocksToCopy(command, mats=None):
+        blocksToCopy = range(max(mats.topBlockID, materials.id_limit) if mats is not None else materials.id_limit)
         while len(command):
             word = command.pop()
             if word == "noair":
@@ -361,9 +360,9 @@ class mce(object):
         destPoint = self.readPoint(command)
 
         destPoint = map(int, map(floor, destPoint))
-        blocksToCopy = self.readBlocksToCopy(command)
-
         tempSchematic = self.level.extractSchematic(box)
+        blocksToCopy = self.readBlocksToCopy(command, mats=tempSchematic.materials)
+
         self.level.copyBlocksFrom(tempSchematic, BoundingBox((0, 0, 0), box.origin), destPoint, blocksToCopy)
 
         self.needsSave = True
@@ -516,9 +515,8 @@ class mce(object):
 
         filename = command.pop(0)
         destPoint = self.readPoint(command)
-        blocksToCopy = self.readBlocksToCopy(command)
-
         importLevel = mclevel.fromFile(filename)
+        blocksToCopy = self.readBlocksToCopy(command, mats=importLevel.materials)
 
         self.level.copyBlocksFrom(importLevel, importLevel.bounds, destPoint, blocksToCopy, create=True)
 

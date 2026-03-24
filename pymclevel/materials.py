@@ -1,5 +1,5 @@
 from logging import getLogger
-from numpy import zeros, rollaxis, indices, resize, array
+from numpy import array, cumsum, resize, stack, unique, zeros
 import traceback
 from collections import defaultdict
 from pprint import pformat
@@ -106,13 +106,17 @@ class Block(object):
         return "%s:%s" % (self.namespace, idStr)
 
     @property
+    def propertiesRaw(self):
+        return self.materials.properties[self.ID][self.blockData]
+
+    @property
     def properties(self):
         """Returns the block properties as a tuple.
         Will instead return either {"data": <blockData>} if both properties and
         idStr are unavailable, or {"_mcedit_data": <blockData>} if just
         properties is unavailable"""
         blockData = self.blockData
-        properties = self.materials.properties[self.ID][blockData]
+        properties = self.propertiesRaw
         if properties is None:
             if bool(self.idStr):
                 # normal idStr, but special properties
@@ -128,10 +132,6 @@ class Block(object):
     @property
     def yaml(self):
         return self.materials._yaml[self.ID][self.blockData]
-
-    @property
-    def allProperties(self):
-        return self.materials.allProperties[self.ID]
 
 
 # these are exclusive
@@ -175,6 +175,7 @@ class BlockstateAPI(object):
         block = self._mats.blockWithID(bid, data)
         return block.Blockstate
 
+#    def blockstateToID(self, name, properties, create=False, validate=True, verbatim=False):
     def blockstateToID(self, name, properties, create=False):
         """
         Converts from a BlockState to a numerical ID/Data pair
@@ -196,7 +197,7 @@ class BlockstateAPI(object):
 
         mats = self._mats
 
-        # pcm1k TODO - use allProperties
+        # pcm1k TODO - validate using allProperties?
         block = mats.blockWithStringID(name)
         if block is None:
             if not create or mats.locked:
@@ -222,21 +223,19 @@ class BlockstateAPI(object):
             except ValueError:
                 return bid, -1
 
-        def compareDicts(dict1, dict2):
-            if dict1 is None or dict2 is None:
-                return False
-            for key, value in dict2.iteritems():
-                # pcm1k TODO - This line only tries to match properties that exist in both dicts. This might be nice in some cases, but it also means that data can be lost. Maybe have a "strict" mode?
-#                if key in dict1 and dict1[key] != value:
-                if key not in dict1 or dict1[key] != value:
-                    return False
-            return True
+        defaultProps = block.propertiesRaw
+        if bool(defaultProps):
+            # copy properties from the default state if they are missing
+            # pcm1k TODO - option to disable this?
+            propertiesNew = dict(defaultProps)
+            propertiesNew.update(properties)
+            properties = propertiesNew
 
-        # pcm1k TODO - use a map to quickly get the right property?
-        for data, otherProps in enumerate(mats.properties[bid]):
-            if compareDicts(otherProps, properties):
-#                if len(otherProps) != len(properties):
-#                    continue
+        propsDict = mats._propertiesDict[bid]
+        if bool(propsDict):
+            propItems = tuple(sorted(properties.iteritems()))
+            data = propsDict.get(propItems)
+            if data is not None:
                 return bid, data
 
         if not create or mats.locked:
@@ -308,24 +307,24 @@ def _nextPowerOfTwo(n):
     return n << 1
 
 
-def _padNumpy(array, padValue, index_):
-    if index_ < array.shape[0]:
-        return array
-    newSize = _nextPowerOfTwo(index_ + 1)
-    result = resize(array, (newSize,) + array.shape[1:])
-    result[array.shape[0]:] = padValue
+def _padNumpy(array_, padValue, index):
+    if index < array_.shape[0]:
+        return array_
+    newSize = _nextPowerOfTwo(index + 1)
+    result = resize(array_, (newSize,) + array_.shape[1:])
+    result[array_.shape[0]:] = padValue
     return result
 
 
 def _padList(list_, padValue, *indexes):
-    for index_ in indexes[:-1]:
+    for index in indexes[:-1]:
         # handle all but the last index
-        neededDiff = index_ - (len(list_) - 1)
+        neededDiff = index - (len(list_) - 1)
         if neededDiff > 0:
             list_.extend([None] * neededDiff)
             list_[-1] = list2 = []
         else:
-            list2 = list_[index_]
+            list2 = list_[index]
         list_ = list2
     # handle the last index
     neededDiff = indexes[-1] - (len(list_) - 1)
@@ -384,8 +383,10 @@ class MCMaterials(BaseTypeSet):
         self.idStr = [""] * id_limit
         self.namespace = ["minecraft"] * id_limit
         self.allProperties = [None] * id_limit
-        self._minData = zeros(id_limit, dtype="uint8")
-        self._minData[:] = 255
+        self._propertiesDict = [None] * id_limit
+        # if bit 7 is not set, then _defaultData stores the minimum data value instead
+        self._defaultData = zeros(id_limit, dtype="uint8")
+        self._defaultData[:] = 0x7F
         self.topData = zeros(id_limit, dtype="uint16")
         self.topData[:] = data_limit
 
@@ -510,65 +511,67 @@ class MCMaterials(BaseTypeSet):
                 toReturn.append(v)
         return toReturn
 
+    # pcm1k TODO - maybe default to data=None
     def blockWithID(self, block_id, data=0):
+        def getDefaultData(blockID):
+            defaultData = self._defaultData
+            if blockID >= len(defaultData):
+                return 0
+            data = defaultData[blockID] & 0x7F
+            if data == 0x7F:
+                data = 0
+            return data
+
+        if data is None:
+            data = getDefaultData(block_id)
         block = self.blocksByID.get((block_id, data))
         if block is None:
             block = Block(self, block_id, blockData=data)
         return block
 
     def blockWithStringID(self, stringID, data=None, create=False):
-        def getMinData(blockID, data):
-            if data is not None:
-                return data
-            if blockID >= len(self._minData):
-                return 0
-            data = self._minData[blockID]
-            if data == 255:
-                data = 0
-            return data
-
         stringID = stringID.lower()
         if stringID.startswith("mcedit:unknown_"):
             try:
                 blockID = int(stringID[15:])
             except ValueError:
                 return None
-            return self.blockWithID(blockID, getMinData(blockID, data))
+            return self.blockWithID(blockID, data)
 
         if ":" not in stringID:
             stringID = "minecraft:" + stringID
 
         blockID = self._stringIDToID.get(stringID)
         if blockID is not None:
-            return self.blockWithID(blockID, getMinData(blockID, data))
+            return self.blockWithID(blockID, data)
 
         if not create or self.locked:
             return None
         # add dummy with no properties
         block = self._addDummyBlock(stringID, None)
         blockID = block.ID
-        return self.blockWithID(blockID, getMinData(blockID, data))
+        return self.blockWithID(blockID, data)
 
     def blockWithName(self, name):
         return self._blocksByName.get(name.lower())
 
     @contextmanager
     def tempBlocks(self):
-        minDataSaved = self._minData
+        defaultDataSaved = self._defaultData
         topDataSaved = self.topData
 
         topBlockIDSaved = self.topBlockID
 
         self._tempBlocksFlag = True
 
-        self._minData = array(minDataSaved)
+        self._defaultData = array(defaultDataSaved)
         self.topData = array(topDataSaved)
         try:
             yield
         finally:
             self._tempBlocksFlag = False
 
-            self._minData = minDataSaved
+            self._defaultData = defaultDataSaved
             self.topData = topDataSaved
 
             self.topBlockID = topBlockIDSaved
@@ -590,7 +593,9 @@ class MCMaterials(BaseTypeSet):
                 namespace = "minecraft"
         if properties is not None:
             properties = dict(properties)
-        return self.addBlock(blockID, blockData, idStr=stringID, namespace=namespace, properties=properties, invalid=True, **kw)
+        return self.addBlock(blockID, blockData, idStr=stringID,
+            namespace=namespace, name="%s:%s" % (namespace, stringID),
+            properties=properties, invalid=True, **kw)
 
     def addJSONBlocksFromVersion(self, platform, version):
         # Load first the versioned stuff
@@ -713,6 +718,7 @@ class MCMaterials(BaseTypeSet):
         _padList(self.idStr, "", blockID)
         _padList(self.namespace, "minecraft", blockID)
         _padList(self.allProperties, None, blockID)
+        _padList(self._propertiesDict, None, blockID)
         _padList(self.names, self.defaultName, blockID, blockData)
         _padList(self.aka, "", blockID, blockData)
         _padList(self.search, "", blockID, blockData)
@@ -723,7 +729,7 @@ class MCMaterials(BaseTypeSet):
         self.flatColors = _padNumpy(self.flatColors, self.defaultColor, blockID)
         self.lightEmission = _padNumpy(self.lightEmission, self.defaultBrightness, blockID)
         self.lightAbsorption = _padNumpy(self.lightAbsorption, self.defaultOpacity, blockID)
-        self._minData = _padNumpy(self._minData, 255, blockID)
+        self._defaultData = _padNumpy(self._defaultData, 0x7F, blockID)
         self.topData = _padNumpy(self.topData, data_limit, blockID)
 
     def addBlock(self, blockID, blockData=0, **kw):
@@ -747,11 +753,28 @@ class MCMaterials(BaseTypeSet):
             self.names[blockID][blockData] = name
         properties = kw.pop("properties", {} if not invalid else None)
         self.properties[blockID][blockData] = properties
+
         allProperties = kw.pop("allProperties", None)
         if allProperties is not None:
-            self.allProperties[blockID] = allProperties
-        # pcm1k TODO - "calculate" allProperties if unavailable?
-        # pcm1k TODO - thing is, not all properties will be represented by a defined blockData, so we really actually need allProperties in the JSON to be complete
+            self.allProperties[blockID] = {key: set(values) for key, values in allProperties.iteritems()}
+        elif bool(properties):
+            # "calculate" allProperties if unavailable
+            # pcm1k TODO - thing is, not all properties will be represented by a defined blockData, so we might actually need allProperties in the JSON to be complete
+            allProperties = self.allProperties[blockID]
+            if allProperties is None:
+                self.allProperties[blockID] = allProperties = {}
+            for key, value in properties.iteritems():
+                values = allProperties.get(key)
+                if values is None:
+                    allProperties[key] = values = set()
+                values.add(value)
+
+        if properties is not None:
+            propItems = tuple(sorted(properties.iteritems()))
+            propertiesDict = self._propertiesDict[blockID]
+            if propertiesDict is None:
+                self._propertiesDict[blockID] = propertiesDict = {}
+            propertiesDict[propItems] = blockData
 
         brightness = kw.pop("brightness", None)
         if brightness is not None:
@@ -785,8 +808,13 @@ class MCMaterials(BaseTypeSet):
         elif blockData < data_limit:
             self.type[blockID][blockData] = block_type
 
-        if blockData < self._minData[blockID]:
-            self._minData[blockID] = blockData
+        default = kw.pop("default", False)
+        if default:
+            self._defaultData[blockID] = blockData | 0x80
+        elif self._defaultData[blockID] & 0x80 == 0:
+            if blockData < self._defaultData[blockID]:
+                self._defaultData[blockID] = blockData
+
         if blockData >= self.topData[blockID]:
             self.topData[blockID] = blockData + 1
         if blockID >= self.topBlockID:
@@ -804,7 +832,7 @@ class MCMaterials(BaseTypeSet):
             self.blocksByType[block_type].append(block)
 
             self.blocksByID[blockID, blockData] = block
-            if bool(name):
+            if not invalid and bool(name):
                 self._blocksByName[name.lower()] = block
 #                currentName = self.names[blockID][blockData]
 #                self._blocksByName[currentName.lower()] = block
@@ -1499,34 +1527,103 @@ indevMaterials = getMaterials(get_defs_ids(PLATFORM_INDEV, VERSION_LATEST), name
 pocketMaterials = getMaterials(get_defs_ids(PLATFORM_POCKET, VERSION_LATEST), name="Pocket")
 
 
-_indices = rollaxis(indices((id_limit, data_limit)), 0, 3)
+class UnlimitedBlockTable(object):
+    def __init__(self, topData, dtype, shape=()):
+        # plus 1 to have an extra entry at the end that will be the sum of all topData
+        indexTable = zeros(len(topData) + 1, dtype="uint32")
+        cumsum(topData, out=indexTable[1:])
+        self.table = zeros((indexTable[-1],) + shape, dtype=dtype)
+        self.indexTable = indexTable
+
+    @classmethod
+    def _topDataFromBlocks(cls, blocks):
+        if not bool(blocks):
+            return zeros(0, dtype="uint8")
+        topBlockID = max(blocks, key=lambda b: b.ID).ID + 1
+        topData = zeros(topBlockID, dtype="uint16")
+        # max data per block
+        for b in blocks:
+            if b.blockData >= topData[b.ID]:
+                topData[b.ID] = b.blockData + 1
+        return topData
+
+    @classmethod
+    def _topDataFromUniqueBlocks(cls, uniqueBlocks):
+        # needs to be reversed so that the max data value for each block comes first
+        uniqueBlocks = uniqueBlocks[::-1]
+        uniqueIds, indices = unique(uniqueBlocks[..., 0], axis=0, return_index=True)
+        topBlockID = uniqueIds[-1] + 1
+        topData = zeros(topBlockID, dtype="uint16")
+        # max data per block
+        topData[uniqueIds] = uniqueBlocks[indices, 1] + 1
+        return topData
+
+    @classmethod
+    def fromBlocks(cls, blocks, dtype, shape=()):
+        topData = cls._topDataFromBlocks(blocks)
+        return cls(topData, dtype, shape=shape)
+
+    @classmethod
+    def fromUniqueBlocks(cls, uniqueBlocks, dtype, shape=()):
+        topData = cls._topDataFromUniqueBlocks(uniqueBlocks)
+        return cls(topData, dtype, shape=shape)
+
+    def indexChecked(self, blocks, data):
+        indexTable = self.indexTable
+        belowMaxId = blocks < len(indexTable) - 1
+        blocks = blocks[belowMaxId]
+        data = data[belowMaxId]
+
+        dataIndex = indexTable[blocks] + data
+        belowMaxData = dataIndex < indexTable[1:][blocks]
+        dataIndex = dataIndex[belowMaxData]
+
+        # belowMaxId & belowMaxData
+        belowMaxId[belowMaxId] = belowMaxData
+
+        return belowMaxId, dataIndex
+
+    def __getitem__(self, key):
+        indexTable = self.indexTable
+        if isinstance(key, tuple):
+            if len(key) >= 2:
+                blocks, data = key
+                if isinstance(data, slice):
+                    return self.table[indexTable[blocks]:indexTable[1:][blocks]][data]
+                return self.table[indexTable[blocks] + data]
+            key = key[0]
+        return self.table[indexTable[key]:indexTable[1:][key]]
+
+    def __setitem__(self, key, value):
+        indexTable = self.indexTable
+        if isinstance(key, tuple):
+            if len(key) >= 2:
+                blocks, data = key
+                if isinstance(data, slice):
+                    self.table[indexTable[blocks]:indexTable[1:][blocks]][data] = value
+                else:
+                    self.table[indexTable[blocks] + data] = value
+                return
+            key = key[0]
+        self.table[indexTable[key]:indexTable[1:][key]] = value
+
+    def __len__(self):
+        return len(self.indexTable)
 
 
-def _createFilterTable(filters, unavailable, default=(0, 0)):
-    # a filter table is a id_limit table of (ID, data) pairs.
-    table = zeros((id_limit, data_limit, 2), dtype="uint16")
-    table[:] = _indices
-    for u in unavailable:
-        try:
-            if u[1] == 0:
-                u = u[0]
-        except TypeError, IndexError:
-            pass
-        table[u] = default
-    for f, t in filters:
-        try:
-            if f[1] == 0:
-                f = f[0]
-        except TypeError, IndexError:
-            pass
-        table[f] = t
-    return table
+def filterBlocksArray(blocks, data, filterFunc, dtype, shape=()):
+    uniqueBlocks = unique(stack((blocks.ravel(), data.ravel()), axis=1), axis=0)
+    table = UnlimitedBlockTable.fromUniqueBlocks(uniqueBlocks, dtype, shape=shape)
+    for blockID, blockData in uniqueBlocks:
+        table[blockID, blockData] = filterFunc(blockID, blockData)
+    return table[blocks, data]
 
 
 def _guessConvertBlock(fromBlock, matsTo):
     fromName = fromBlock.name
     if fromName == matsTo.defaultName:
         return fromBlock
+
     block = matsTo.blockWithName(fromName)
     if block is not None:
         return block
@@ -1539,110 +1636,54 @@ def _guessConvertBlock(fromBlock, matsTo):
     for b in matsTo.allBlocks:
         if fromName in b.aka or fromName in b.search:
             return b
+
     # pcm1k TODO - something needs to replace this hack
     if fromName == "Indigo Wool" or fromName == "Violet Wool":
         return matsTo.get("Purple Wool")
 
-    blockID, blockData = matsTo.blockstate_api.blockstateToID(*fromBlock.Blockstate)
-    if blockID != -1 and blockData != -1:
-        return matsTo.blockWithID(blockID, blockData)
     return None
 
 
-def guessFilterTable(matsFrom, matsTo):
-    """ Returns a pair (filters, unavailable)
-    filters is a list of (from, to) pairs;  from and to are (ID, data) pairs
-    unavailable is a list of (ID, data) pairs in matsFrom not found in matsTo.
+def _convertBlock(fromBlock, matsTo, default=(0, 0)):
+    convertedBlock = _guessConvertBlock(fromBlock, matsTo)
+    if convertedBlock is not None and convertedBlock is not fromBlock:
+        # actually got converted to a different block
+        return convertedBlock.ID, convertedBlock.blockData
 
-    Searches the 'name' and 'aka' fields to find matches.
-    """
-    filters = []
-    unavailable = []
-    for fromBlock in matsFrom.allBlocks:
-        if fromBlock.ID >= id_limit or fromBlock.blockData >= data_limit:
-            continue
-        block = _guessConvertBlock(fromBlock, matsTo)
+    # try to create a new block
+    blockIDNew, blockDataNew = matsTo.blockstate_api.blockstateToID(*fromBlock.Blockstate, create=True)
+    if blockIDNew != -1 and blockDataNew != -1:
+        return blockIDNew, blockDataNew
 
-        if block is not None:
-            if block != fromBlock:
-                filters.append(((fromBlock.ID, fromBlock.blockData), (block.ID, block.blockData)))
-        else:
-            unavailable.append((fromBlock.ID, fromBlock.blockData))
-
-    return filters, unavailable
+    # trying to emulate the old behavior... I guess
+    if fromBlock.ID < id_limit and fromBlock.blockData < data_limit:
+        if (fromBlock.ID, fromBlock.blockData) not in fromBlock.materials.blocksByID:
+            return fromBlock.ID, fromBlock.blockData
+    return default
 
 
-allMaterials = (alphaMaterials, classicMaterials, pocketMaterials, indevMaterials)
+def _convertBlocksArray(blocks, data, destMats, sourceMats):
+    blockWithID = sourceMats.blockWithID
 
-_conversionFuncs = {}
+#    if data is None:
+#        data = 0
+    def filterFunc(blockID, blockData):
+        block = blockWithID(blockID, blockData)
+        convertedBlock = _convertBlock(block, destMats, default=(35, 0))
+        return convertedBlock
+    result = filterBlocksArray(blocks, data, filterFunc, "uint16", shape=(2,))
+    return result[..., 0], result[..., 1]
 
 
 _nullConversion = lambda b, d: (b, d)
 
 
-def _convertNoLimit(blocks, data, destMats, sourceMats):
-    blockWithID = sourceMats.blockWithID
-    blockstateToID = destMats.blockstate_api.blockstateToID
-
-    if data is None:
-        data = 0
-    blocksNew = array(blocks)
-    dataNew = array(data)
-    for pos in zip(*((blocks >= id_limit) | (data >= data_limit)).nonzero()):
-        block = blockWithID(blocks[pos], data[pos])
-        convertedBlock = _guessConvertBlock(block, destMats)
-        if convertedBlock is not None and convertedBlock is not block:
-            blocksNew[pos] = convertedBlock.ID
-            dataNew[pos] = convertedBlock.blockData
-            continue
-
-        blockIDNew, blockDataNew = blockstateToID(*block.Blockstate, create=True)
-        if blockIDNew == -1 or blockDataNew == -1:
-            continue
-        blocksNew[pos] = blockIDNew
-        dataNew[pos] = blockDataNew
-    return blocksNew, dataNew
-
-
-def _convertWithTable(blocks, data, table):
-    if data is None:
-        data = 0
-    belowLimit = (blocks < id_limit) & (data < data_limit)
-    t = table[blocks[belowLimit], data[belowLimit]]
-    blocksNew = array(blocks)
-    dataNew = array(data)
-    blocksNew[belowLimit] = t[..., 0]
-    dataNew[belowLimit] = t[..., 1]
-    return blocksNew, dataNew
-
-
+# pcm1k TODO - there is really no reason to have this anymore
 def conversionFunc(destMats, sourceMats):
     if destMats is sourceMats:
         return _nullConversion
-    destName = destMats.name
-    sourceName = sourceMats.name
-    # pcm1k TODO - You could probably have this in the MCMaterials itself. Have a WeakKeyDictionary with the key being destMats
-    func = _conversionFuncs.get((destName, sourceName))
-    if func is not None:
-        return func
 
-    destMatsNamed = namedMaterials.get(destName, destMats)
-    sourceMatsNamed = namedMaterials.get(sourceName, sourceMats)
-    filters, unavailable = guessFilterTable(sourceMatsNamed, destMatsNamed)
-    log.debug("")
-    log.debug("%s %s %s", sourceName, "=>", destName)
-    for a, b in [(sourceMatsNamed.blockWithID(*a), destMatsNamed.blockWithID(*b)) for a, b in filters]:
-        log.debug("{0:20}: \"{1}\"".format('"' + a.name + '"', b.name))
-
-    log.debug("")
-    log.debug("Missing blocks: %s", [sourceMatsNamed.blockWithID(*a).name for a in unavailable])
-
-    table = _createFilterTable(filters, unavailable, (35, 0))
-    def func(blocks, data):
-        blocks, data = _convertWithTable(blocks, data, table)
-        blocks, data = _convertNoLimit(blocks, data, destMats, sourceMats)
-        return blocks, data
-    _conversionFuncs[destName, sourceName] = func
+    func = lambda blocks, data: _convertBlocksArray(blocks, data, destMats, sourceMats)
     return func
 
 
@@ -1653,6 +1694,7 @@ def convertBlocks(destMats, sourceMats, blocks, blockData):
     return conversionFunc(destMats, sourceMats)(blocks, blockData)
 
 
+allMaterials = (alphaMaterials, classicMaterials, pocketMaterials, indevMaterials)
 namedMaterials = {i.name: i for i in allMaterials}
 
 
