@@ -3932,7 +3932,7 @@
                 222,
                 222
             ],
-            "name": "White Wool",
+            "name": "Wool",
             "tex": [
                 0,
                 4
@@ -4171,6 +4171,7 @@
                 0,
                 0
             ],
+            "name": "Poppy",
             "opacity": 0,
             "tex": [
                 12,
@@ -4447,6 +4448,7 @@
                 200,
                 200
             ],
+            "name": "Double Stone Slab",
             "tex": [
                 6,
                 0
@@ -4680,6 +4682,7 @@
                 200,
                 200
             ],
+            "name": "Stone Slab",
             "tex": [
                 6,
                 0
@@ -4846,6 +4849,7 @@
                 220,
                 50
             ],
+            "name": "Torch",
             "opacity": 0,
             "tex": [
                 0,
@@ -5040,6 +5044,7 @@
                 170,
                 30
             ],
+            "name": "Fire",
             "opacity": 0,
             "tex": [
                 15,
@@ -7390,6 +7395,7 @@
                 67,
                 50
             ],
+            "name": "Sugar Canes",
             "opacity": 0,
             "search": "reeds, papyrus",
             "tex": [
@@ -8529,6 +8535,7 @@
             },
             "id": 95,
             "idStr": "stained_glass",
+            "name": "Stained Glass",
             "opacity": 0,
             "tex": [
                 0,
@@ -15268,7 +15275,8 @@
                 150,
                 100,
                 50
-            ]
+            ],
+            "name": "Stained Clay"
         },
         {
             "data": {
@@ -15896,6 +15904,7 @@
                 192,
                 41
             ],
+            "name": "Leaves (Acacia/Dark Oak)",
             "opacity": 1,
             "tex": [
                 5,
@@ -16957,6 +16966,7 @@
                 77,
                 24
             ],
+            "name": "Double Plant",
             "opacity": 0,
             "tex": [
                 16,
@@ -19774,7 +19784,7 @@
                 120,
                 120
             ],
-            "name": "Double Purpur Slabs",
+            "name": "Double Purpur Slab",
             "tex": [
                 18,
                 19
