@@ -1675,23 +1675,11 @@ def _convertBlocksArray(blocks, data, destMats, sourceMats):
     return result[..., 0], result[..., 1]
 
 
-_nullConversion = lambda b, d: (b, d)
-
-
-# pcm1k TODO - there is really no reason to have this anymore
-def conversionFunc(destMats, sourceMats):
-    if destMats is sourceMats:
-        return _nullConversion
-
-    func = lambda blocks, data: _convertBlocksArray(blocks, data, destMats, sourceMats)
-    return func
-
-
 def convertBlocks(destMats, sourceMats, blocks, blockData):
     if sourceMats is destMats:
         return blocks, blockData
 
-    return conversionFunc(destMats, sourceMats)(blocks, blockData)
+    return _convertBlocksArray(blocks, blockData, destMats, sourceMats)
 
 
 allMaterials = (alphaMaterials, classicMaterials, pocketMaterials, indevMaterials)

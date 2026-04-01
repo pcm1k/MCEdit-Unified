@@ -168,23 +168,11 @@ def _convertBiomesArray(biomes, destTypes, sourceTypes):
     return result
 
 
-_nullConversion = lambda b, d: (b, d)
-
-
-# pcm1k TODO - there is really no reason to have this anymore
-def conversionFunc(destTypes, sourceTypes):
-    if destTypes is sourceTypes:
-        return _nullConversion
-
-    func = lambda biomes: _convertBiomesArray(biomes, destTypes, sourceTypes)
-    return func
-
-
 def convertBiomes(destTypes, sourceTypes, biomes):
     if sourceTypes is destTypes:
         return biomes
 
-    return conversionFunc(destTypes, sourceTypes)(biomes)
+    return _convertBiomesArray(biomes, destTypes, sourceTypes)
 
 
 getBiomeTypes = BiomeTypeSet.getTypeSet
